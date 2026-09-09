@@ -20,7 +20,7 @@ const BANKS = [
   { id: '雅思', file: 'levels/雅思.json', color: '#A89AB8' },
 ];
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
-// 错词复习节奏：在错误的第 1、1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
+// 错词复习节奏：在错误的第 1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
 const WRONG_INTERVALS = [1, 2, 3, 20, 40];
 const SELFBANK_ID = '自建';
 const K = {
@@ -255,6 +255,27 @@ function bankKey(bank, word) { return bank + '::' + word.toLowerCase(); }
 function todayStr(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function addDays(s, n) { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return todayStr(d); }
 function daysBetween(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
+// 按「锚点日期 + 节奏序列」取下一个档期：只取严格晚于 afterDay 的档期
+// 档期由锚点日期决定，与当天复习了几轮无关 —— 因此同一天多轮复习不会跳级
+function nextScheduleDate(anchor, intervals, afterDay) {
+  const after = afterDay || anchor;
+  for (const n of intervals) {
+    const d = addDays(anchor, n);
+    if (d > after) return d;
+  }
+  return '';                                   // 档期走完 → 已掌握，不再推送
+}
+// 依据单词当前路径（错词 / 新词）计算下次复习日；调用前需已更新 p.lastReview
+function scheduleNext(p) {
+  const today = todayStr();
+  const wb = wrongBook[bankKey(p.bank, p.word)];      // 答错日记在错题本里
+  if (p.wrongStage !== undefined) {
+    const anchor = p.wrongAnchor || (wb && wb.lastWrong) || p.lastWrong || p.firstLearned || today;
+    return nextScheduleDate(anchor, WRONG_INTERVALS, p.lastReview || anchor);
+  }
+  const anchor = p.firstLearned || today;
+  return nextScheduleDate(anchor, INTERVALS, p.lastReview || anchor);
+}
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
 function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function jsAttr(s) { return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
@@ -485,20 +506,24 @@ function resetWordForSelf(word) {
   if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
   return reset;
 }
-// 一次性校准：错词节奏改为 1/2/3/20/40 天后，把此前已进入错词路径的词按新节奏重排下次复习日
-// （以最后答错日为基准 + WRONG_INTERVALS[wrongStage]，保证"错后次日即复现"；幂等，仅执行一次）
-function calibrateWrongIntervals() {
-  if (settings.wrongCalibrated) return 0;
+// 一次性校准：改为"按学习日 / 答错日排档期"后，把既有单词的下次复习日统一重排
+// 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
+function calibrateSchedule() {
+  if (settings.scheduleV2) return 0;
   let n = 0;
-  Object.values(wrongBook).forEach(w => {
-    const p = progress[w.key];
-    if (!p || p.wrongStage === undefined) return;
-    const stage = Math.min(p.wrongStage, WRONG_INTERVALS.length - 1);
-    const base = w.lastWrong || p.lastReview || p.firstLearned || todayStr();
-    p.nextReview = addDays(base, WRONG_INTERVALS[stage]);
+  Object.values(progress).forEach(p => {
+    if (!p || !p.word) return;
+    if (p.wrongStage !== undefined) {
+      const wb = wrongBook[bankKey(p.bank, p.word)];   // 答错日记在错题本里
+      p.wrongAnchor = p.wrongAnchor || (wb && wb.lastWrong) || p.lastWrong || p.firstLearned || todayStr();
+      p.nextReview = nextScheduleDate(p.wrongAnchor, WRONG_INTERVALS, p.lastReview || p.wrongAnchor);
+      if (!p.nextReview) { delete p.wrongStage; delete p.wrongAnchor; }
+    } else {
+      p.nextReview = nextScheduleDate(p.firstLearned || todayStr(), INTERVALS, p.lastReview || p.firstLearned || todayStr());
+    }
     n++;
   });
-  settings.wrongCalibrated = true;
+  settings.scheduleV2 = true;
   if (n) saveAll();
   return n;
 }
@@ -768,7 +793,7 @@ function review() {
       <div class="sub-tip" id="rvDesc">${rvDesc}</div>
       <div class="sub-tip">今日构成：新学 ${nNew} 词 ＋ 需强化旧词 ${nOld} 词</div>
       ${isRecall && pool.length ? `<div class="rp-list" id="recallPreview">${pool.map(p => `<span class="rp-w">${esc(p.word)}</span>`).join('')}</div>` : ''}
-      <div class="sub-tip">复习节奏：新词按 1、2、3、5、7、15、30 天复习；答错的词将在错后第 1、1、2、3、20、40 天再次推送。</div>
+      <div class="sub-tip">复习节奏：新词按<b>学习日</b>之后的第 1、2、3、5、7、15、30 天推送；答错的词按<b>答错日</b>之后的第 1、2、3、20、40 天推送。档期按日期固定排定，与当天复习几轮无关。</div>
       <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
@@ -862,7 +887,7 @@ function renderReviewCard() {
 function markWrongNow(r) {
   let p = progress[r.key];
   if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
-  p.wrongStage = 0; p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
+  p.wrongStage = 0; p.wrongAnchor = todayStr(); p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
   const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
   if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }
   wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
@@ -966,24 +991,23 @@ function confirmCheck(after) {
     let p = progress[r.key];
     if (r.ok) {
       if (p) {
+        p.lastReview = todayStr();                 // 先记本次复习日，再据此取下一档期
         if (p.wrongStage !== undefined) {
-          // 错词路径：按 WRONG_INTERVALS 推进；走完 1/2/3/20/40 天则视为掌握，停止推送
-          p.wrongStage = p.wrongStage + 1;
-          if (p.wrongStage >= WRONG_INTERVALS.length) { delete p.wrongStage; p.nextReview = ''; }
-          else p.nextReview = addDays(todayStr(), WRONG_INTERVALS[p.wrongStage]);
-          p.lastReview = todayStr();
+          // 错词路径：档期 = 答错日之后的第 1、2、3、20、40 天；走完则视为掌握
+          const nx = scheduleNext(p);
+          if (nx) { p.nextReview = nx; p.wrongStage = Math.min((p.wrongStage || 0) + 1, WRONG_INTERVALS.length - 1); }
+          else { delete p.wrongStage; delete p.wrongAnchor; p.nextReview = ''; }
         } else {
-          p.stage = Math.min(p.stage + 1, INTERVALS.length - 1);
-          p.nextReview = addDays(todayStr(), INTERVALS[p.stage]);
-          p.lastReview = todayStr();
+          // 新词路径：档期 = 学习日之后的第 1、2、3、5、7、15、30 天（与当天复习几轮无关）
+          p.nextReview = nextScheduleDate(p.firstLearned || todayStr(), INTERVALS, p.lastReview);
         }
       }
     } else {
-      // 答错：进入/重置错词路径，下一次在错误后第 2 天推送
+      // 答错：锚点重置为今天，按答错日之后的第 1、2、3、20、40 天依次推送
       if (!p) {
         p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
       }
-      p.wrongStage = 0; p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
+      p.wrongStage = 0; p.wrongAnchor = todayStr(); p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
       const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
       if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
       wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
@@ -1424,9 +1448,9 @@ function dict() {
     Sync.reload();
     if (Sync.tryImportFromHash()) toast('已通过配对链接开启云同步');
     // 云端合并完成后再校准，避免被未校准的云端数据覆盖
-    if (Sync.on()) Sync.sync().catch(() => { }).then(calibrateWrongIntervals, calibrateWrongIntervals);
-    else calibrateWrongIntervals();
-  } else calibrateWrongIntervals();
+    if (Sync.on()) Sync.sync().catch(() => { }).then(calibrateSchedule, calibrateSchedule);
+    else calibrateSchedule();
+  } else calibrateSchedule();
   if (!Object.keys(BANK_DATA).length) {
     app().innerHTML = `${topbar('背单词工作台')}
       <div class="card"><h2>需要本地服务器</h2>

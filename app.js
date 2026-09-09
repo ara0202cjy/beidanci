@@ -872,7 +872,7 @@ function makeTypedQueue(pool, type) {
 function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   if (settings.reviewType === 'recall') {
-    reviewState = { pool: pool.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall' };
+    reviewState = { pool: shuffle(pool.map(e => ({ ...e, type: 'recall' }))), idx: 0, mode: 'recall' };
     review(); return;
   }
   reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0 };

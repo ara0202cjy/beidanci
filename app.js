@@ -16,8 +16,8 @@ const BANKS = [
   { id: 'CET4', file: 'levels/CET4.json', color: '#C2A878' },
   { id: '六级', file: 'levels/六级.json', color: '#C9A07E' },
   { id: '考研', file: 'levels/考研.json', color: '#C08C8C' },
-  { id: '托福', file: 'levels/托福.json', color: '#9A8FB0' },
   { id: '雅思', file: 'levels/雅思.json', color: '#A89AB8' },
+  { id: '托福', file: 'levels/托福.json', color: '#9A8FB0' },
 ];
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
 // 错词复习节奏：在错误的第 1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
@@ -48,7 +48,7 @@ function saveSession() { store.set(ACCT.session, currentAccount); }
 let progress, wrongBook, selfBank, settings, history, learnState;
 function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState }; }
 function loadState() {
-  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '小学', reviewType: 'sentence' };
+  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' };
   if (currentAccount) {
     const s = store.get(ACCT.data(currentAccount), null) || {};
     progress = s.progress || {};
@@ -65,7 +65,7 @@ function loadState() {
     history = store.get(K.history, {});
     learnState = store.get(K.learn, null);
   }
-  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '小学';
+  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
 }
 loadState();
 function saveAll() {
@@ -112,9 +112,9 @@ async function registerAccount(name, pwd) {
   saveAll();                                   // 先保存当前空间数据
   currentAccount = name; saveSession();
   progress = {}; wrongBook = {}; selfBank = [];
-  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '小学', reviewType: 'sentence' }, settings);
+  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' }, settings);
   history = {}; learnState = null;
-  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '小学';
+  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
   store.set(ACCT.data(name), snapshot());
   store.set(ACCT.sync(name), []);
   if (window.Sync) Sync.reload();
@@ -209,7 +209,7 @@ async function seedAccounts() {
   if (hasLegacy) {
     store.set(ACCT.data('lvcheng'), {
       progress: legacy.progress || {}, wrongBook: legacy.wrong || {}, selfBank: legacy.self || [],
-      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '小学', reviewType: 'sentence' }, legacy.settings || {}),
+      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' }, legacy.settings || {}),
       history: legacy.history || {}, learnState: legacy.learn || null,
     });
     currentAccount = 'lvcheng'; saveSession(); loadState();
@@ -230,10 +230,12 @@ let DICT = {};      // 离线查词词典（牛津8版抽取：{uk,us,meaning}�
 let COLLOC = {};    // 牛津搭配词典：{ word: [ {c, i:[{w,z}]} ] }
 let THES = {};      // 牛津同义词词典：{ word: [ {ex, g:[{c,s:[]}], ant:[]} ] }
 let PHRASE = {};    // 牛津短语动词：{ "bring about": {base, senses:[{en,zh,ex:[{en,zh}]}]} }
+let COMMON_SET = null; // 雅思与托福的交集（归一化词形），用于"先背相同词汇"
 
 async function loadData() {
   WB = await detectBase();
   await Promise.all(BANKS.map(b => fetch(WB + b.file).then(r => r.json()).then(d => { BANK_DATA[b.id] = d; }).catch(() => { })));
+  computeCommon(); // 计算雅思∩托福的共有词，供"先背相同词汇"排序使用
   ALL_INDEX = [];
   BANKS.forEach(b => (BANK_DATA[b.id]?.words || []).forEach(w => ALL_INDEX.push({ word: w.word, bank: b.id, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk })));
   selfBank.forEach(w => ALL_INDEX.push({ word: w.word, bank: SELFBANK_ID, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk }));
@@ -497,6 +499,21 @@ function sortByFreq(list) {
     .sort((a, b) => a.f - b.f || a.r - b.r)
     .map(x => x.w);
 }
+// 词形归一化（与小写、去首尾空白、合并内部空白），与词库对比脚本保持一致
+function wnorm(w) { return (w || '').toLowerCase().trim().replace(/\s+/g, ' '); }
+// 计算雅思与托福的共有词集合（归一化后精确匹配），结果存入 COMMON_SET
+function computeCommon() {
+  const a = BANK_DATA['雅思']?.words || [];
+  const bset = new Set((BANK_DATA['托福']?.words || []).map(w => wnorm(w.word)));
+  COMMON_SET = new Set(a.filter(w => bset.has(wnorm(w.word))).map(w => wnorm(w.word)));
+}
+function isCommon(word) { return COMMON_SET ? COMMON_SET.has(wnorm(word)) : false; }
+// 学习排序：雅思/托福两库的共有词优先背诵（先打共同基础），其余再按常见度排序
+function sortStudyOrder(list) {
+  return list.map(w => ({ w, common: isCommon(w.word) ? 0 : 1, f: FREQ[w.word.toLowerCase()] ?? 5, r: Math.random() }))
+    .sort((a, b) => a.common - b.common || a.f - b.f || a.r - b.r)
+    .map(x => x.w);
+}
 // 当前词库背完 → 自动跳到下一个还没背完的
 function nextBank(fromId) {
   const i = BANKS.findIndex(b => b.id === fromId);
@@ -515,7 +532,7 @@ function buildQueue() {
   const daily = Math.max(0, +settings.dailyNew || 0);
   const selfPart = sortByFreq(self).slice(0, daily);
   const rest = daily - selfPart.length;
-  const words = rest > 0 ? sortByFreq(unlearned(bank).map(w => ({ ...w, bank }))).slice(0, rest) : [];
+  const words = rest > 0 ? sortStudyOrder(unlearned(bank).map(w => ({ ...w, bank }))).slice(0, rest) : [];
   return { bank, queue: selfPart.concat(words) };
 }
 // 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送

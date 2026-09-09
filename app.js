@@ -370,6 +370,14 @@ function highlightVariants(en, word) {
   return esc(en).replace(re, m => '<mark>' + m + '</mark>');
 }
 function todayStat(d) { const h = history[d || todayStr()] || { new: [], review: [] }; return { new: (h.new || []).length, review: (h.review || []).length }; }
+// 当日学习量 = 新学 + 复习 的「去重单词数」：同一个词当天学/复习几轮都只算一次
+function dayTotal(d) {
+  const h = history[d] || { new: [], review: [] };
+  const s = new Set();
+  (h.new || []).forEach(x => { if (x && x.key) s.add(x.key); });
+  (h.review || []).forEach(x => { if (x && x.key) s.add(x.key); });
+  return s.size;
+}
 function obscureHtml(w) {
   const o = OBSCURE[(w.word || '').toLowerCase()];
   if (!o || (w.bank !== '初中' && w.bank !== '高中')) return '';
@@ -448,19 +456,31 @@ function detailInner(w) {
 function streakDays() {
   let n = 0; const d = new Date();
   for (let i = 0; i < 3650; i++) {
-    const h = history[todayStr(d)];
-    if (h && ((h.new || []).length || (h.review || []).length)) n++;
+    if (isChecked(todayStr(d))) n++;          // 需「单词复习 + 情境复习」两轮都完成
     else if (i > 0) break;
     d.setDate(d.getDate() - 1);
   }
   return n;
 }
-function recordHistory(type, entry) {
-  const d = todayStr();
+let REVIEW_DAY = null;                       // 补打卡时指向「原应打卡日」；null 表示今天
+function dayOf() { return REVIEW_DAY || todayStr(); }
+function recordHistory(type, entry, day) {
+  const d = day || todayStr();
   if (!history[d]) history[d] = { new: [], review: [] };
   const arr = history[d][type];
   if (!arr.some(x => x.key === entry.key)) arr.push(entry);
   saveAll();
+}
+// 打卡：单词复习记 recallDone、情境复习记 sentenceDone，两轮都完成才算当日已打卡
+function markReviewDone(kind) {
+  const d = dayOf();
+  if (!history[d]) history[d] = { new: [], review: [] };
+  history[d][kind + 'Done'] = true;
+  saveAll();
+}
+function isChecked(d) {
+  const h = history[d];
+  return !!(h && h.recallDone && h.sentenceDone);
 }
 function bankStat(id) {
   const total = BANK_DATA[id]?.count || 0;
@@ -651,7 +671,7 @@ function learn() {
   let bars = '';
   const d = new Date(); d.setDate(d.getDate() - 6);
   for (let i = 0; i < 7; i++) {
-    const ds = todayStr(d), st = todayStat(ds), tot = st.new + st.review;
+    const ds = todayStr(d), tot = dayTotal(ds);   // 去重后的单词数，与当天学几轮无关
     const h = Math.max(4, Math.min(56, tot * 3));
     bars += `<div style="flex:1;text-align:center">
       <div style="display:flex;align-items:flex-end;height:56px"><i style="display:block;width:100%;height:${h}px;background:${i === 6 ? 'var(--brand)' : '#F0D9BE'};border-radius:5px"></i></div>
@@ -759,6 +779,8 @@ function markLearned(w) {
     phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk,
     firstLearned: todayStr(), stage: 0, nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
   };
+  // 自建词库的词学完后即从自建词库移除（进度已写入 progress，继续走正常复习计划）
+  if (w.bank === SELFBANK_ID) selfBank = selfBank.filter(x => x.word !== w.word);
   recordHistory('new', { key, word: w.word, bank: w.bank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
   saveAll();
 }
@@ -772,17 +794,9 @@ function review() {
   renderSetup(); renderBox();
   function renderSetup() {
     const pool = buildReviewPool();
-    const _day = todayStr();
-    const _newKeys = new Set(((history[_day] || {}).new || []).map(x => x.key));
-    const nNew = pool.filter(p => _newKeys.has(p.key)).length;   // 今日新学
-    const nOld = pool.length - nNew;                             // 记忆曲线到期需强化的旧词
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
-    const rvDesc = isRecall
-      ? '单词复习：逐个显示单词——认识点「✓ 认识」直接过关（不展开），不认识点「✗ 不认识」（展开释义记忆并记入错题本）；全部判完后自动进入情境填词巩固。'
-      : isSent
-        ? '情境填词：展示词典例句，要填的词用横线标出，下方给出中文释义；在纸上写出该词，无例句的词按听写处理。'
-        : '听中文听写：仅显示中文释义与词性，在纸上写出英文；写完点「下一个」翻页，全部完成后点「提交核对」自查对错。';
+    // 三种题型下方的提示统一为「复习节奏」，未开始复习前不暴露任何待复习单词
     $('#reviewSetup').innerHTML = `
       <h2>今日复习 <span class="r">${pool.length} 词</span></h2>
       <div class="seg" id="rvType" style="margin-bottom:8px">
@@ -790,14 +804,11 @@ function review() {
         <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
-      <div class="sub-tip" id="rvDesc">${rvDesc}</div>
-      <div class="sub-tip">今日构成：新学 ${nNew} 词 ＋ 需强化旧词 ${nOld} 词</div>
-      ${isRecall && pool.length ? `<div class="rp-list" id="recallPreview">${pool.map(p => `<span class="rp-w">${esc(p.word)}</span>`).join('')}</div>` : ''}
-      <div class="sub-tip">复习节奏：新词按<b>学习日</b>之后的第 1、2、3、5、7、15、30 天推送；答错的词按<b>答错日</b>之后的第 1、2、3、20、40 天推送。档期按日期固定排定，与当天复习几轮无关。</div>
+      <div class="sub-tip" id="rvDesc">复习节奏：新词按<b>学习日</b>之后的第 1、2、3、5、7、15、30 天推送；答错的词按<b>答错日</b>之后的第 1、2、3、20、40 天推送。档期按日期固定排定，与当天复习几轮无关。</div>
       <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
-    $('#startReview').onclick = () => startReview(pool);
+    $('#startReview').onclick = () => { REVIEW_DAY = null; startReview(pool); };
     $('#makeup').onclick = openMakeup;
   }
   function renderBox() {
@@ -887,10 +898,10 @@ function renderReviewCard() {
 function markWrongNow(r) {
   let p = progress[r.key];
   if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
-  p.wrongStage = 0; p.wrongAnchor = todayStr(); p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
-  const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
+  p.wrongStage = 0; p.wrongAnchor = dayOf(); p.nextReview = addDays(dayOf(), WRONG_INTERVALS[0]); p.lastReview = dayOf();
+  const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: dayOf() };
   if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }
-  wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
+  wb.lastWrong = dayOf(); wrongBook[r.key] = wb;
   saveAll();
 }
 // 单词复习：逐词判定「认识 / 不认识」
@@ -991,7 +1002,7 @@ function confirmCheck(after) {
     let p = progress[r.key];
     if (r.ok) {
       if (p) {
-        p.lastReview = todayStr();                 // 先记本次复习日，再据此取下一档期
+        p.lastReview = dayOf();                    // 先记本次复习日（补打卡时为原应打卡日），再据此取下一档期
         if (p.wrongStage !== undefined) {
           // 错词路径：档期 = 答错日之后的第 1、2、3、20、40 天；走完则视为掌握
           const nx = scheduleNext(p);
@@ -1007,13 +1018,17 @@ function confirmCheck(after) {
       if (!p) {
         p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
       }
-      p.wrongStage = 0; p.wrongAnchor = todayStr(); p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
-      const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
+      p.wrongStage = 0; p.wrongAnchor = dayOf(); p.nextReview = addDays(dayOf(), WRONG_INTERVALS[0]); p.lastReview = dayOf();
+      const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: dayOf() };
       if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
-      wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
+      wb.lastWrong = dayOf(); wrongBook[r.key] = wb;
     }
   });
-  st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
+  st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
+  // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记
+  if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }
+  else if (settings.reviewType === 'sentence') markReviewDone('sentence');
+  else markReviewDone('recall');
   saveAll();
   if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
   st.done = true;
@@ -1043,15 +1058,19 @@ function renderSummary() {
   $('#backHome').onclick = () => goto('learn');
 }
 function openMakeup() {
-  const dates = Object.keys(history).sort().reverse();
-  openModal(`<h3>补打卡 · 选择日期</h3>
-    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">新学 ${history[d].new?.length || 0} ｜ 复习 ${history[d].review?.length || 0}</div></div><span class="tag">复习</span></div>`).join('') : '<div class="empty">暂无历史记录</div>'}</div>
+  // 只列出「尚未打卡」的日期
+  const dates = Object.keys(history).filter(d => !isChecked(d)).sort().reverse();
+  openModal(`<h3>补打卡 · 选择未打卡日期</h3>
+    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">当日学习 ${dayTotal(d)} 词（去重）</div></div><span class="tag">补卡</span></div>`).join('') : '<div class="empty">没有需要补打卡的日期 🎉</div>'}</div>
+    <div class="sub-tip" style="margin-top:8px">补打卡的学习进度按<b>原应打卡日</b>计算，不按今天。</div>
     <button class="btn ghost" style="margin-top:12px" onclick="closeModal()">取消</button>`);
   document.querySelectorAll('#mkList .item').forEach(it => it.onclick = () => {
-    const pool = buildReviewPool(it.dataset.d); closeModal();
+    const d = it.dataset.d;
+    const pool = buildReviewPool(d); closeModal();
     if (!pool.length) { toast('该日无复习内容'); return; }
-    reviewState = { pool: shuffle(pool), idx: 0 };
-    goto('review'); renderReviewCard();
+    REVIEW_DAY = d;                        // 进度与打卡均记到「原应打卡日」
+    settings.reviewType = 'recall'; saveAll();   // 补打卡走「单词复习→情境填词」双轮，方算完整打卡
+    startReview(pool);
   });
 }
 
@@ -1059,65 +1078,18 @@ function openMakeup() {
 function wrong() {
   app().innerHTML = `${topbar('错题本')}
     <div class="card strawberry">
-      <div class="wb-sortbar">
-        <div class="seg" id="wbSort">
-          <div class="on" data-s="count">错误次数</div>
-          <div data-s="added">加入时间</div>
-          <div data-s="last">最后错误</div>
-        </div>
-        <button class="btn ghost sm" id="wbDir">↓ 降序</button>
-      </div>
-      <div class="wb-filter">
-        <div class="seg sm" id="wbFilterDim">
-          <div class="on" data-f="all">全部</div>
-          <div data-f="count">错误次数</div>
-          <div data-f="added">加入时间</div>
-          <div data-f="last">最后错误</div>
-        </div>
-        <div class="seg sm" id="wbFilterVal"></div>
-      </div>
-      <div class="wb-bar">
+      <div class="wb-bar" style="margin-bottom:10px">
         <label class="wb-selall"><input type="checkbox" id="wbAll"> 全选</label>
         <button class="btn ghost sm" id="wbDel" disabled>批量删除 (0)</button>
         <button class="btn ghost sm" id="wbExp" disabled>📊 导出 Excel (0)</button>
+        <button class="btn ghost sm" id="wbDir">↓ 降序</button>
       </div>
       <div class="list" id="wrongList"></div>
       ${Object.keys(wrongBook).length ? '' : '<div class="empty">还没有错题，复习答错会自动入库</div>'}
     </div>`;
-  let sortBy = 'count', sortDesc = true;
-  let filterDim = 'all', filterVal = 'all';
+  let sortDesc = true;                     // 仅保留升/降序切换，默认按「最后错误」日期降序
   const list = $('#wrongList');
-  const FILTER_OPTS = {
-    all: [['all', '全部']],
-    count: [['all', '全部'], ['1', '1次'], ['2', '2次'], ['3', '3次及以上']],
-    added: [['all', '全部'], ['0-15', '0-15天'], ['16-30', '16-30天'], ['30-60', '30-60天'], ['60+', '60天以上']],
-    last: [['all', '全部'], ['0-15', '0-15天'], ['16-30', '16-30天'], ['30-60', '30-60天'], ['60+', '60天以上']],
-  };
-  const updateSortUI = () => {
-    document.querySelectorAll('#wbSort div').forEach(d => d.classList.toggle('on', d.dataset.s === sortBy));
-    const db = $('#wbDir'); if (db) db.textContent = sortDesc ? '↓ 降序' : '↑ 升序';
-  };
-  const renderFilterVal = () => {
-    const fv = $('#wbFilterVal');
-    fv.innerHTML = FILTER_OPTS[filterDim].map(([v, t]) => `<div data-v="${v}" class="${v === filterVal ? 'on' : ''}">${t}</div>`).join('');
-    fv.querySelectorAll('div').forEach(d => d.onclick = () => { filterVal = d.dataset.v; render(); });
-  };
-  const passFilter = (w) => {
-    if (filterDim === 'all' || filterVal === 'all') return true;
-    if (filterDim === 'count') {
-      const c = w.wrongCount || 0;
-      if (filterVal === '3') return c >= 3;
-      return String(c) === filterVal;
-    }
-    const dateStr = filterDim === 'added' ? (w.added || '') : (w.lastWrong || '');
-    if (!dateStr) return false;
-    const n = daysBetween(dateStr, todayStr());
-    if (filterVal === '0-15') return n <= 15;
-    if (filterVal === '16-30') return n >= 16 && n <= 30;
-    if (filterVal === '30-60') return n >= 31 && n <= 60;
-    if (filterVal === '60+') return n >= 61;
-    return true;
-  };
+  const updateSortUI = () => { const db = $('#wbDir'); if (db) db.textContent = sortDesc ? '↓ 降序' : '↑ 升序'; };
   const updateBar = () => {
     const n = list.querySelectorAll('input[data-key]:checked').length;
     const d = $('#wbDel'), e = $('#wbExp');
@@ -1127,12 +1099,9 @@ function wrong() {
   const render = () => {
     const allCb = $('#wbAll'); if (allCb) allCb.checked = false;
     updateSortUI();
-    const arr = Object.values(wrongBook).filter(passFilter);
+    const arr = Object.values(wrongBook);
     arr.sort((a, b) => {
-      let r = 0;
-      if (sortBy === 'count') r = (a.wrongCount || 0) - (b.wrongCount || 0);
-      else if (sortBy === 'added') r = String(a.added || '').localeCompare(String(b.added || ''));
-      else r = String(a.lastWrong || '').localeCompare(String(b.lastWrong || ''));
+      const r = String(a.lastWrong || '').localeCompare(String(b.lastWrong || ''));
       return sortDesc ? -r : r;
     });
     if (!arr.length) { list.innerHTML = '<div class="empty">没有符合筛选条件的错题</div>'; updateBar(); return; }
@@ -1148,7 +1117,7 @@ function wrong() {
         <label class="wb-check" onclick="event.stopPropagation()"><input type="checkbox" data-key="${esc(w.key)}"></label>
         <div class="wb-head">
           <div class="w clickable">${esc(w.word)} <span class="chev">▸</span></div>
-          <div class="meta">最后错：${esc(w.lastWrong || '-')}</div>
+          <div class="meta">最后错：${esc(w.lastWrong || '-')} ｜ 错 ${w.wrongCount || 0} 次</div>
           <button class="btn ghost sm wb-del">删</button>
         </div>
         <div class="wb-detail" style="display:none">
@@ -1172,14 +1141,7 @@ function wrong() {
     });
     updateBar();
   };
-  document.querySelectorAll('#wbSort div').forEach(d => d.onclick = () => { sortBy = d.dataset.s; render(); });
   $('#wbDir').onclick = () => { sortDesc = !sortDesc; render(); };
-  document.querySelectorAll('#wbFilterDim div').forEach(d => d.onclick = () => {
-    filterDim = d.dataset.f; filterVal = 'all';
-    document.querySelectorAll('#wbFilterDim div').forEach(x => x.classList.toggle('on', x.dataset.f === filterDim));
-    renderFilterVal(); render();
-  });
-  renderFilterVal();
   $('#wbAll').onchange = e => { list.querySelectorAll('input[data-key]').forEach(c => c.checked = e.target.checked); updateBar(); };
   $('#wbDel').onclick = () => {
     const keys = [...list.querySelectorAll('input[data-key]:checked')].map(c => c.dataset.key);

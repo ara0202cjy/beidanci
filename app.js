@@ -1409,10 +1409,9 @@ function dict() {
   if (window.Sync) {
     Sync.reload();
     if (Sync.tryImportFromHash()) toast('已通过配对链接开启云同步');
-    // 云端合并完成后再校准，避免被未校准的云端数据覆盖
-    if (Sync.on()) Sync.sync().catch(() => { }).then(calibrateSchedule, calibrateSchedule);
-    else calibrateSchedule();
-  } else calibrateSchedule();
+  }
+  // 关键：先用本地数据渲染界面，绝不因云端同步请求卡住（pending）而长时间白屏
+  calibrateSchedule();
   if (!Object.keys(BANK_DATA).length) {
     app().innerHTML = `${topbar('背单词工作台')}
       <div class="card"><h2>需要本地服务器</h2>
@@ -1423,4 +1422,10 @@ function dict() {
   }
   goto('learn');
   try { speechSynthesis.getVoices(); } catch (e) { }
+  // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
+  if (window.Sync && Sync.on()) {
+    Sync.sync()
+      .catch(() => { })
+      .then(() => { calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
+  }
 })();

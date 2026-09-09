@@ -138,7 +138,7 @@ const Sync = (function () {
   }
   async function gistCreate(t) {
     const r = await fetch(GH, {
-      method: 'POST', headers: ghHeaders(t),
+      method: 'POST', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ description: '背单词工作台 · 进度同步', public: false, files: { [FILE]: { content: JSON.stringify(localState()) } } }),
     });
     if (!r.ok) throw new Error('创建 Gist 失败 (' + r.status + ')');
@@ -148,20 +148,20 @@ const Sync = (function () {
   }
   async function gistPull(t) {
     if (!t.gistId) return null;
-    const r = await fetch(GH + '/' + t.gistId, { headers: ghHeaders(t) });
+    const r = await fetch(GH + '/' + t.gistId, { headers: ghHeaders(t), signal: AbortSignal.timeout(30000) });
     if (r.status === 404) throw new Error('云端存档不存在，请检查 Gist ID');
     if (!r.ok) throw new Error('读取失败 (' + r.status + ')');
     const d = await r.json();
     const f = d.files && d.files[FILE];
     if (!f) return null;
     let txt = f.content;
-    if (f.truncated) { const rr = await fetch(f.raw_url); txt = await rr.text(); }
+    if (f.truncated) { const rr = await fetch(f.raw_url, { signal: AbortSignal.timeout(30000) }); txt = await rr.text(); }
     try { return JSON.parse(txt); } catch (e) { return null; }
   }
   async function gistPush(state, t) {
     let id = t.gistId || await gistCreate(t);
     const r = await fetch(GH + '/' + id, {
-      method: 'PATCH', headers: ghHeaders(t),
+      method: 'PATCH', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(state) } } }),
     });
     if (!r.ok) throw new Error('写入失败 (' + r.status + ')');
@@ -169,13 +169,13 @@ const Sync = (function () {
 
   /* ---------- 通用 HTTP 后端 ---------- */
   async function httpPull(t) {
-    const r = await fetch(t.apiUrl, { headers: { Accept: 'application/json' } });
+    const r = await fetch(t.apiUrl, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
     if (!r.ok) throw new Error('读取失败 (' + r.status + ')');
     return await r.json();
   }
   async function httpPush(state, t) {
     let r = await fetch(t.apiUrl, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(30000), body: JSON.stringify(state),
     });
     if (!r.ok && r.status !== 200) { // 部分服务只接受 POST
       r = await fetch(t.apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });

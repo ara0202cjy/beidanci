@@ -1,6 +1,6 @@
 /* 离线缓存：加到主屏幕后，断网也能背（词库约 4MB，首次用后即缓存） */
 /* 采用「网络优先 + 缓存兜底」：每次都先拉最新代码，断网才回退缓存，避免部署后一直跑旧版 */
-const C = 'wb-v2';
+const C = 'wb-v3';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
   e.waitUntil(

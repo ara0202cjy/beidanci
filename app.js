@@ -470,8 +470,20 @@ function buildQueue() {
     const nb = nextBank(bank);
     if (nb) { toast(`${bank} 已背完，已切换到 ${nb}`); bank = nb; settings.curBank = nb; }
   }
-  const words = sortByFreq(unlearned(bank).map(w => ({ ...w, bank }))).slice(0, settings.dailyNew);
-  return { bank, queue: self.concat(words) };
+  // 每日推送总量固定为 settings.dailyNew：自建词库优先占额，剩余名额由当前大词库补足
+  const daily = Math.max(0, +settings.dailyNew || 0);
+  const selfPart = sortByFreq(self).slice(0, daily);
+  const rest = daily - selfPart.length;
+  const words = rest > 0 ? sortByFreq(unlearned(bank).map(w => ({ ...w, bank }))).slice(0, rest) : [];
+  return { bank, queue: selfPart.concat(words) };
+}
+// 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送
+function resetWordForSelf(word) {
+  const key = bankKey(SELFBANK_ID, word);
+  let reset = false;
+  if (progress[key]) { delete progress[key]; reset = true; }
+  if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
+  return reset;
 }
 
 /* ---------- 路由 ---------- */
@@ -632,10 +644,16 @@ function renderLearnBox() {
   const box = $('#learnBox'); if (!box) return;
   if (!learnState || !learnState.queue.length) {
     setLearnActive(false);
-    const self = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
+    const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
     const left = unlearned(settings.curBank).length;
+    const daily = Math.max(0, +settings.dailyNew || 0);
+    const selfTake = Math.min(selfLeft, daily);
+    const bigTake = daily - selfTake;
+    const tip = selfLeft
+      ? `今日共推送 ${daily} 个新词：自建词库优先占 ${selfTake} 个${bigTake ? `，其余 ${bigTake} 个来自「${settings.curBank}」` : ''}${selfLeft > selfTake ? `（自建还剩 ${selfLeft - selfTake} 词，将逐日推完）` : ''}`
+      : `从「${settings.curBank}」按常见度推送 ${daily} 个新词`;
     box.innerHTML = `<h2>今日学习</h2>
-      <div class="sub-tip">从「${settings.curBank}」按常见度推送 ${settings.dailyNew} 个新词${self ? `，另有自建词库 ${self} 词优先` : ''}</div>
+      <div class="sub-tip">${tip}</div>
       <button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>
       ${(!left && !self) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
     $('#startLearn').onclick = startLearning;
@@ -712,10 +730,14 @@ function review() {
   renderSetup(); renderBox();
   function renderSetup() {
     const pool = buildReviewPool();
+    const _day = todayStr();
+    const _newKeys = new Set(((history[_day] || {}).new || []).map(x => x.key));
+    const nNew = pool.filter(p => _newKeys.has(p.key)).length;   // 今日新学
+    const nOld = pool.length - nNew;                             // 记忆曲线到期需强化的旧词
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
     const rvDesc = isRecall
-      ? '单词复习：以折叠卡片列出今日学习与复习的词，点击单词展开详情自测，再点收起；看完后点「完成复习」。'
+      ? '单词复习：逐个显示单词——认识点「✓ 认识」直接过关（不展开），不认识点「✗ 不认识」（展开释义记忆并记入错题本）；全部判完后自动进入情境填词巩固。'
       : isSent
         ? '情境填词：展示词典例句，要填的词用横线标出，下方给出中文释义；在纸上写出该词，无例句的词按听写处理。'
         : '听中文听写：仅显示中文释义与词性，在纸上写出英文；写完点「下一个」翻页，全部完成后点「提交核对」自查对错。';
@@ -727,6 +749,8 @@ function review() {
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
       <div class="sub-tip" id="rvDesc">${rvDesc}</div>
+      <div class="sub-tip">今日构成：新学 ${nNew} 词 ＋ 需强化旧词 ${nOld} 词</div>
+      ${isRecall && pool.length ? `<div class="rp-list" id="recallPreview">${pool.map(p => `<span class="rp-w">${esc(p.word)}</span>`).join('')}</div>` : ''}
       <div class="sub-tip">复习节奏：新词按 1、2、3、5、7、15、30 天复习；答错的词将在错后第 2、3、20、40 天再次推送。</div>
       <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
@@ -763,24 +787,25 @@ function buildReviewPool(dateStr) {
   }
   return pool;
 }
+// 按题型构造答题队列：sentence 有例句则用情境填词，否则降级为听中文听写
+function makeTypedQueue(pool, type) {
+  return shuffle(pool.map(e => {
+    const c = { ...e };
+    delete c._wrongAdded;                       // 新一轮重新计错
+    if (type === 'sentence') {
+      const exs = EXAMPLES[(e.word || '').toLowerCase()] || [];
+      if (exs.length) return { ...c, type: 'sentence', sentence: exs[Math.floor(Math.random() * exs.length)] };
+    }
+    return { ...c, type: 'word' };
+  }));
+}
 function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   if (settings.reviewType === 'recall') {
     reviewState = { pool: pool.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall' };
     review(); return;
   }
-  let pq = pool.map(e => ({ ...e, type: 'word' }));
-  if (settings.reviewType === 'sentence') {
-    pq = pool.map(e => {
-      const exs = EXAMPLES[(e.word || '').toLowerCase()] || [];
-      if (exs.length) {
-        const s = exs[Math.floor(Math.random() * exs.length)];
-        return { ...e, type: 'sentence', sentence: s };
-      }
-      return { ...e, type: 'word' };
-    });
-  }
-  reviewState = { pool: shuffle(pq), idx: 0 };
+  reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0 };
   review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页
@@ -816,32 +841,61 @@ function renderReviewCard() {
     else { st.idx++; renderReviewCard(); }
   };
 }
-// 单词复习：折叠卡列表，点击展开详情自测，关闭后继续；完成后统一提交（视为已复习）
+// 打叉：立即记入错题本，并让该词进入错词复习节奏（错后第 2、3、20、40 天）
+function markWrongNow(r) {
+  let p = progress[r.key];
+  if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
+  p.wrongStage = 0; p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
+  const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
+  if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }
+  wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
+  saveAll();
+}
+// 单词复习：逐词判定「认识 / 不认识」
+// ✓ 认识 → 不展开，直接进入下一词；✗ 不认识 → 展开详情记忆 + 记入错题本，点「继续」进入下一词
+// 本轮判定后不可回退修改；全部判完自动提交并进入情境填词巩固
 function renderRecall() {
   const box = $('#reviewBox'); if (!box) return;
   const st = reviewState;
-  let html = `<div class="sub-tip" style="margin-bottom:8px">点击单词可展开详情（释义/音标/例句），再点收起；过完所有词后点「完成复习」。</div>
-    <div class="list" id="recallList">`;
-  st.pool.forEach((c, i) => {
-    html += `<div class="recall-item" data-i="${i}">
-      <div class="recall-head"><span class="w">${esc(c.word)}</span><span class="recall-chev">▸</span></div>
-      <div class="recall-detail" style="display:none"></div>
-    </div>`;
-  });
-  html += `</div><div class="row" style="margin-top:14px"><button class="btn primary" id="recallDone">✓ 完成复习（${st.pool.length}）</button></div>`;
-  box.innerHTML = html;
-  box.querySelectorAll('.recall-item').forEach(it => {
-    const i = +it.dataset.i;
-    const head = it.querySelector('.recall-head');
-    const detail = it.querySelector('.recall-detail');
-    const chev = it.querySelector('.recall-chev');
-    let opened = false;
-    head.onclick = () => {
-      if (!opened) { detail.innerHTML = detailInner(st.pool[i]); detail.style.display = 'block'; chev.textContent = '▾'; it.classList.add('open'); opened = true; }
-      else { detail.style.display = 'none'; chev.textContent = '▸'; it.classList.remove('open'); opened = false; }
-    };
-  });
-  $('#recallDone').onclick = () => { st.check = st.pool.map(c => ({ ...c, ok: true })); confirmCheck(); };
+  if (st.idx === undefined) st.idx = 0;
+  while (st.idx < st.pool.length && st.pool[st.idx].recallOk === true) st.idx++;   // 已判"认识"的不停留
+  const cur = st.pool[st.idx];
+  if (!cur) { submitRecall(); return; }
+  const n = st.pool.length, i = st.idx;
+  const wronged = cur.recallOk === false;   // 已打叉 → 展示详情供记忆
+  box.innerHTML = `
+    <div class="stepbar"><span>单词复习 ${i + 1} / ${n}</span><span class="tag">${esc(cur.bank)}</span></div>
+    <div class="rq-word">
+      <div class="learn-word" style="margin:0">${esc(cur.word)}</div>
+      <button class="speaker-btn" id="rqSpeak" title="朗读单词发音">${icon('i-sound')}<span>朗读</span></button>
+    </div>
+    <div class="sub-tip rq-tip">${wronged ? '已记入错题本，请记住下面的内容' : '还记得它的中文意思吗？'}</div>
+    <div class="rq-detail" id="rqDetail" style="display:${wronged ? 'block' : 'none'}">${wronged ? detailInner(cur) : ''}</div>
+    <div class="row" style="margin-top:18px">
+      ${wronged
+      ? '<button class="btn primary" id="rqNext">记住了，继续 →</button>'
+      : '<button class="btn green" id="rqOk">✓ 认识</button><button class="btn red" id="rqNo">✗ 不认识</button>'}
+    </div>
+    <div class="sub-tip" style="text-align:center;margin-top:8px">本轮判定后不可修改</div>`;
+  $('#rqSpeak').onclick = () => speak(cur.word, 'en-US');
+  if (!wronged) {
+    $('#rqOk').onclick = () => { cur.recallOk = true; st.idx++; renderRecall(); };
+    $('#rqNo').onclick = () => { cur.recallOk = false; markWrongNow(cur); renderRecall(); };
+  } else {
+    $('#rqNext').onclick = () => { st.idx++; renderRecall(); };
+  }
+}
+// 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 2、3、20、40 天），随后自动进入情境填词
+function submitRecall() {
+  const st = reviewState;
+  st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
+  confirmCheck(() => startSentenceRound(st.pool));
+}
+// 单词复习收尾后进入情境填词：同一批词二次巩固（有例句走填词，无例句降级听写）
+function startSentenceRound(srcPool) {
+  settings.reviewType = 'sentence'; saveAll();
+  reviewState = { pool: makeTypedQueue(srcPool, 'sentence'), idx: 0 };
+  review(); renderReviewCard();
 }
 // 核对页：自行勾选对错，错误入错题本
 function renderCheck() {
@@ -888,11 +942,11 @@ function renderCheck() {
   okBtn.onclick = confirmCheck;
   box.appendChild(okBtn);
 }
-function confirmCheck() {
+function confirmCheck(after) {
   const st = reviewState;
   const wrong = st.check.filter(r => !r.ok);
   st.check.forEach(r => {
-    const p = progress[r.key];
+    let p = progress[r.key];
     if (r.ok) {
       if (p) {
         if (p.wrongStage !== undefined) {
@@ -914,11 +968,13 @@ function confirmCheck() {
       }
       p.wrongStage = 0; p.nextReview = addDays(todayStr(), WRONG_INTERVALS[0]); p.lastReview = todayStr();
       const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: todayStr() };
-      wb.wrongCount++; wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
+      if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
+      wb.lastWrong = todayStr(); wrongBook[r.key] = wb;
     }
   });
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
   saveAll();
+  if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
   st.done = true;
   renderSummary();
 }
@@ -1172,16 +1228,19 @@ orange"></textarea>
         <div class="bulk-list" id="bulkRows">${body}</div>
         <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" id="bulkOk">加入自建词库</button></div>`);
       $('#bulkOk').onclick = () => {
-        let added = 0, dup = 0;
+        let added = 0, dup = 0, reset = 0;
         rows.forEach(r => {
-          if (r.inSelf) { dup++; return; }
+          // 已存在的词也算"再次加入"：若此前已背过则重置为未背诵，重新推送
+          if (r.inSelf) { dup++; if (resetWordForSelf(r.w)) reset++; return; }
           let meaning = '', pu = '', pk = '';
           if (r.m) { meaning = r.m.meaning; pu = r.m.phonetic_us; pk = r.m.phonetic_uk; }
           else { const inp = document.querySelector(`#bulkRows .bulk-row[data-i="${r.idx}"] [data-meaning]`); meaning = inp ? inp.value.trim() : ''; }
           selfBank.push({ word: r.w, phonetic_us: pu, phonetic_uk: pk, meaning: meaning || '（未填释义）', added: todayStr() });
+          if (resetWordForSelf(r.w)) reset++;
           added++;
         });
-        saveAll(); closeModal(); banks(); toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}`);
+        saveAll(); closeModal(); banks();
+        toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}`);
       };
     };
   };
@@ -1323,9 +1382,16 @@ function dict() {
       const sb = it.querySelector('.self-btn');
       sb.onclick = (e) => {
         e.stopPropagation();
-        if (inSelf) { toast('已在自建词库'); return; }
+        if (inSelf) {
+          // 再次点击已存在的词：若已背过则重置为未背诵，使其重新推送
+          if (resetWordForSelf(x.word)) { saveAll(); toast('已重置为未背诵，将重新推送'); }
+          else toast('已在自建词库');
+          return;
+        }
         selfBank.push({ word: x.word, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning, added: todayStr() });
-        saveAll(); sb.textContent = '已加'; toast('已加入自建词库');
+        const wasLearned = resetWordForSelf(x.word);
+        saveAll(); sb.textContent = '已加';
+        toast(wasLearned ? '已加入自建词库（该词已重置为未背诵）' : '已加入自建词库');
       };
       list.appendChild(it);
     });

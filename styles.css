@@ -341,3 +341,14 @@ input[type=range] { accent-color: var(--brand); }
 .chk-item.bad { border-color: var(--red); background: var(--red-soft); }
 .chk-item .eg { margin-top: 6px; }
 .chk-item .mean-list { margin-top: 4px; gap: 6px; }
+
+/* ---------- 单词复习：逐词判定（✓认识 / ✗不认识） ---------- */
+.rq-word { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.rq-word .learn-word { flex: 1 1 auto; min-width: 0; }
+.rq-tip { margin-top: 10px; }
+.rq-detail { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.rq-detail .mean-list { margin-top: 8px; }
+.rq-detail .eg { margin-top: 8px; }
+/* 待复习词预览（胶囊列表） */
+.rp-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rp-w { font-size: 13px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }

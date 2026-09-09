@@ -1108,9 +1108,9 @@ function wrong() {
   const list = $('#wrongList');
   const FILTER_OPTS = {
     all: [['all', '全部']],
-    count: [['1', '1次'], ['2', '2次'], ['3', '3次'], ['4', '4次以上']],
-    last: [['15', '15天内'], ['30', '30天内'], ['60', '60天内'], ['60+', '60天以上']],
-    added: [['15', '15天内'], ['30', '30天内'], ['60', '60天内'], ['60+', '60天以上']],
+    count: [['all', '全部'], ['1', '1次'], ['2', '2次'], ['3', '3次'], ['4', '4次以上']],
+    last: [['all', '全部'], ['0-15', '0-15天'], ['16-30', '16-30天'], ['31-60', '31-60天'], ['60+', '60天以上']],
+    added: [['all', '全部'], ['0-15', '0-15天'], ['16-30', '16-30天'], ['31-60', '31-60天'], ['60+', '60天以上']],
   };
   const updateSortUI = () => {
     document.querySelectorAll('#wbSort div').forEach(d => d.classList.toggle('on', d.dataset.s === sortBy));
@@ -1131,11 +1131,9 @@ function wrong() {
     const dateStr = filterDim === 'added' ? (w.added || '') : (w.lastWrong || '');
     if (!dateStr) return false;
     const n = daysBetween(dateStr, todayStr());
-    if (filterVal === '15') return n <= 15;
-    if (filterVal === '30') return n <= 30;
-    if (filterVal === '60') return n <= 60;
-    if (filterVal === '60+') return n > 60;
-    return true;
+    if (filterVal === '60+') return n >= 61;                 // 60天以上（不含 60）
+    const [lo, hi] = filterVal.split('-').map(Number);
+    return n >= lo && n <= hi;                               // 0-15 / 16-30 / 31-60，互不重叠
   };
   const updateBar = () => {
     const n = list.querySelectorAll('input[data-key]:checked').length;

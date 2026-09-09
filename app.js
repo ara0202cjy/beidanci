@@ -1061,7 +1061,7 @@ function openMakeup() {
   // 只列出「尚未打卡」的日期
   const dates = Object.keys(history).filter(d => !isChecked(d)).sort().reverse();
   openModal(`<h3>补打卡 · 选择未打卡日期</h3>
-    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">当日学习 ${dayTotal(d)} 词（去重）</div></div><span class="tag">补卡</span></div>`).join('') : '<div class="empty">没有需要补打卡的日期 🎉</div>'}</div>
+    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">当日学习 ${dayTotal(d)} 词（去重）</div></div><span class="tag">补卡</span></div>`).join('') : '<div class="empty">打卡全部完成 🎉</div>'}</div>
     <div class="sub-tip" style="margin-top:8px">补打卡的学习进度按<b>原应打卡日</b>计算，不按今天。</div>
     <button class="btn ghost" style="margin-top:12px" onclick="closeModal()">取消</button>`);
   document.querySelectorAll('#mkList .item').forEach(it => it.onclick = () => {
@@ -1078,18 +1078,65 @@ function openMakeup() {
 function wrong() {
   app().innerHTML = `${topbar('错题本')}
     <div class="card strawberry">
-      <div class="wb-bar" style="margin-bottom:10px">
+      <div class="wb-sortbar">
+        <div class="seg sm" id="wbSort">
+          <div class="on" data-s="count">错误次数</div>
+          <div data-s="last">最后错误时间</div>
+          <div data-s="added">加入时间</div>
+        </div>
+        <button class="btn ghost sm" id="wbDir">↓ 降序</button>
+      </div>
+      <div class="wb-filter">
+        <div class="seg sm" id="wbFilterDim">
+          <div class="on" data-f="all">全部</div>
+          <div data-f="count">错误次数</div>
+          <div data-f="last">最后错误时间</div>
+          <div data-f="added">加入时间</div>
+        </div>
+        <div class="seg sm" id="wbFilterVal"></div>
+      </div>
+      <div class="wb-bar" style="margin:10px 0">
         <label class="wb-selall"><input type="checkbox" id="wbAll"> 全选</label>
         <button class="btn ghost sm" id="wbDel" disabled>批量删除 (0)</button>
         <button class="btn ghost sm" id="wbExp" disabled>📊 导出 Excel (0)</button>
-        <button class="btn ghost sm" id="wbDir">↓ 降序</button>
       </div>
       <div class="list" id="wrongList"></div>
       ${Object.keys(wrongBook).length ? '' : '<div class="empty">还没有错题，复习答错会自动入库</div>'}
     </div>`;
-  let sortDesc = true;                     // 仅保留升/降序切换，默认按「最后错误」日期降序
+  let sortBy = 'last', sortDesc = true;
+  let filterDim = 'all', filterVal = 'all';
   const list = $('#wrongList');
-  const updateSortUI = () => { const db = $('#wbDir'); if (db) db.textContent = sortDesc ? '↓ 降序' : '↑ 升序'; };
+  const FILTER_OPTS = {
+    all: [['all', '全部']],
+    count: [['1', '1次'], ['2', '2次'], ['3', '3次'], ['4', '4次以上']],
+    last: [['15', '15天内'], ['30', '30天内'], ['60', '60天内'], ['60+', '60天以上']],
+    added: [['15', '15天内'], ['30', '30天内'], ['60', '60天内'], ['60+', '60天以上']],
+  };
+  const updateSortUI = () => {
+    document.querySelectorAll('#wbSort div').forEach(d => d.classList.toggle('on', d.dataset.s === sortBy));
+    const db = $('#wbDir'); if (db) db.textContent = sortDesc ? '↓ 降序' : '↑ 升序';
+  };
+  const renderFilterVal = () => {
+    const fv = $('#wbFilterVal');
+    fv.innerHTML = FILTER_OPTS[filterDim].map(([v, t]) => `<div data-v="${v}" class="${v === filterVal ? 'on' : ''}">${t}</div>`).join('');
+    fv.querySelectorAll('div').forEach(d => d.onclick = () => { filterVal = d.dataset.v; render(); });
+  };
+  const passFilter = (w) => {
+    if (filterDim === 'all' || filterVal === 'all') return true;
+    if (filterDim === 'count') {
+      const c = w.wrongCount || 0;
+      if (filterVal === '4') return c >= 4;     // 4 次以上
+      return String(c) === filterVal;
+    }
+    const dateStr = filterDim === 'added' ? (w.added || '') : (w.lastWrong || '');
+    if (!dateStr) return false;
+    const n = daysBetween(dateStr, todayStr());
+    if (filterVal === '15') return n <= 15;
+    if (filterVal === '30') return n <= 30;
+    if (filterVal === '60') return n <= 60;
+    if (filterVal === '60+') return n > 60;
+    return true;
+  };
   const updateBar = () => {
     const n = list.querySelectorAll('input[data-key]:checked').length;
     const d = $('#wbDel'), e = $('#wbExp');
@@ -1099,9 +1146,12 @@ function wrong() {
   const render = () => {
     const allCb = $('#wbAll'); if (allCb) allCb.checked = false;
     updateSortUI();
-    const arr = Object.values(wrongBook);
+    const arr = Object.values(wrongBook).filter(passFilter);
     arr.sort((a, b) => {
-      const r = String(a.lastWrong || '').localeCompare(String(b.lastWrong || ''));
+      let r = 0;
+      if (sortBy === 'count') r = (a.wrongCount || 0) - (b.wrongCount || 0);
+      else if (sortBy === 'added') r = String(a.added || '').localeCompare(String(b.added || ''));
+      else r = String(a.lastWrong || '').localeCompare(String(b.lastWrong || ''));
       return sortDesc ? -r : r;
     });
     if (!arr.length) { list.innerHTML = '<div class="empty">没有符合筛选条件的错题</div>'; updateBar(); return; }
@@ -1141,7 +1191,14 @@ function wrong() {
     });
     updateBar();
   };
+  document.querySelectorAll('#wbSort div').forEach(d => d.onclick = () => { sortBy = d.dataset.s; render(); });
   $('#wbDir').onclick = () => { sortDesc = !sortDesc; render(); };
+  document.querySelectorAll('#wbFilterDim div').forEach(d => d.onclick = () => {
+    filterDim = d.dataset.f; filterVal = 'all';
+    document.querySelectorAll('#wbFilterDim div').forEach(x => x.classList.toggle('on', x.dataset.f === filterDim));
+    renderFilterVal(); render();
+  });
+  renderFilterVal();
   $('#wbAll').onchange = e => { list.querySelectorAll('input[data-key]').forEach(c => c.checked = e.target.checked); updateBar(); };
   $('#wbDel').onclick = () => {
     const keys = [...list.querySelectorAll('input[data-key]:checked')].map(c => c.dataset.key);

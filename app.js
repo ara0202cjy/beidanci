@@ -20,8 +20,8 @@ const BANKS = [
   { id: '雅思', file: 'levels/雅思.json', color: '#A89AB8' },
 ];
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
-// 错词复习节奏：在错误的第 2、3、20、40 天再次推送（独立于新词 INTERVALS）
-const WRONG_INTERVALS = [2, 3, 20, 40];
+// 错词复习节奏：在错误的第 1、1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
+const WRONG_INTERVALS = [1, 2, 3, 20, 40];
 const SELFBANK_ID = '自建';
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
@@ -751,7 +751,7 @@ function review() {
       <div class="sub-tip" id="rvDesc">${rvDesc}</div>
       <div class="sub-tip">今日构成：新学 ${nNew} 词 ＋ 需强化旧词 ${nOld} 词</div>
       ${isRecall && pool.length ? `<div class="rp-list" id="recallPreview">${pool.map(p => `<span class="rp-w">${esc(p.word)}</span>`).join('')}</div>` : ''}
-      <div class="sub-tip">复习节奏：新词按 1、2、3、5、7、15、30 天复习；答错的词将在错后第 2、3、20、40 天再次推送。</div>
+      <div class="sub-tip">复习节奏：新词按 1、2、3、5、7、15、30 天复习；答错的词将在错后第 1、1、2、3、20、40 天再次推送。</div>
       <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
@@ -777,7 +777,7 @@ function buildReviewPool(dateStr) {
       if (p.nextReview && p.nextReview <= day)
         add({ key: bankKey(p.bank, p.word), word: p.word, bank: p.bank, meaning: p.meaning, phonetic_us: p.phonetic_us, phonetic_uk: p.phonetic_uk });
     });
-    // 已排入复习计划的错词由 progress.nextReview 精确控制（错后第 2、3、20、40 天）；
+    // 已排入复习计划的错词由 progress.nextReview 精确控制（错后第 1、2、3、20、40 天）；
     // 未进入计划的错词按 WRONG_INTERVALS 兜底加考
     Object.values(wrongBook).forEach(w => {
       if (progress[w.key]) return;
@@ -841,7 +841,7 @@ function renderReviewCard() {
     else { st.idx++; renderReviewCard(); }
   };
 }
-// 打叉：立即记入错题本，并让该词进入错词复习节奏（错后第 2、3、20、40 天）
+// 打叉：立即记入错题本，并让该词进入错词复习节奏（错后第 1、2、3、20、40 天）
 function markWrongNow(r) {
   let p = progress[r.key];
   if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
@@ -885,7 +885,7 @@ function renderRecall() {
     $('#rqNext').onclick = () => { st.idx++; renderRecall(); };
   }
 }
-// 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 2、3、20、40 天），随后自动进入情境填词
+// 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 1、2、3、20、40 天），随后自动进入情境填词
 function submitRecall() {
   const st = reviewState;
   st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
@@ -950,7 +950,7 @@ function confirmCheck(after) {
     if (r.ok) {
       if (p) {
         if (p.wrongStage !== undefined) {
-          // 错词路径：按 WRONG_INTERVALS 推进；走完 2/3/20/40 天则视为掌握，停止推送
+          // 错词路径：按 WRONG_INTERVALS 推进；走完 1/2/3/20/40 天则视为掌握，停止推送
           p.wrongStage = p.wrongStage + 1;
           if (p.wrongStage >= WRONG_INTERVALS.length) { delete p.wrongStage; p.nextReview = ''; }
           else p.nextReview = addDays(todayStr(), WRONG_INTERVALS[p.wrongStage]);

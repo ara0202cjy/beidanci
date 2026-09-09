@@ -485,6 +485,23 @@ function resetWordForSelf(word) {
   if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
   return reset;
 }
+// 一次性校准：错词节奏改为 1/2/3/20/40 天后，把此前已进入错词路径的词按新节奏重排下次复习日
+// （以最后答错日为基准 + WRONG_INTERVALS[wrongStage]，保证"错后次日即复现"；幂等，仅执行一次）
+function calibrateWrongIntervals() {
+  if (settings.wrongCalibrated) return 0;
+  let n = 0;
+  Object.values(wrongBook).forEach(w => {
+    const p = progress[w.key];
+    if (!p || p.wrongStage === undefined) return;
+    const stage = Math.min(p.wrongStage, WRONG_INTERVALS.length - 1);
+    const base = w.lastWrong || p.lastReview || p.firstLearned || todayStr();
+    p.nextReview = addDays(base, WRONG_INTERVALS[stage]);
+    n++;
+  });
+  settings.wrongCalibrated = true;
+  if (n) saveAll();
+  return n;
+}
 
 /* ---------- 路由 ---------- */
 let CUR = 'learn';
@@ -1406,8 +1423,10 @@ function dict() {
   if (window.Sync) {
     Sync.reload();
     if (Sync.tryImportFromHash()) toast('已通过配对链接开启云同步');
-    if (Sync.on()) Sync.sync().catch(() => { });
-  }
+    // 云端合并完成后再校准，避免被未校准的云端数据覆盖
+    if (Sync.on()) Sync.sync().catch(() => { }).then(calibrateWrongIntervals, calibrateWrongIntervals);
+    else calibrateWrongIntervals();
+  } else calibrateWrongIntervals();
   if (!Object.keys(BANK_DATA).length) {
     app().innerHTML = `${topbar('背单词工作台')}
       <div class="card"><h2>需要本地服务器</h2>

@@ -1,0 +1,6168 @@
+{
+ "level": "六级",
+ "count": 1027,
+ "words": [
+  {
+   "word": "a.m",
+   "phonetic_us": "[ei em]",
+   "phonetic_uk": "[ei em]",
+   "meaning": "n.(缩)上午午前"
+  },
+  {
+   "word": "abnormal",
+   "phonetic_us": "[æb'nɔ:məl]",
+   "phonetic_uk": "[æb'nɔ:məl]",
+   "meaning": "adj.反常的不正常的不规则的变态的n.不正常的人"
+  },
+  {
+   "word": "abrupt",
+   "phonetic_us": "[ә’brΛpt]",
+   "phonetic_uk": "[ә’brΛpt]",
+   "meaning": "a. 突然的，意外的，唐突的"
+  },
+  {
+   "word": "absolutely",
+   "phonetic_us": "['æbsəlu:tli]",
+   "phonetic_uk": "['æbsəlu:tli]",
+   "meaning": "adv.独立地完全地绝对地"
+  },
+  {
+   "word": "absurd",
+   "phonetic_us": "[әb’sә:d]",
+   "phonetic_uk": "[әb’sә:d]",
+   "meaning": "a.不合理的，荒唐的"
+  },
+  {
+   "word": "accessory",
+   "phonetic_us": "[æk’sesәri]",
+   "phonetic_uk": "[æk’sesәri]",
+   "meaning": "n.同谋 a.附属的"
+  },
+  {
+   "word": "activate",
+   "phonetic_us": "[‘æktiveit]",
+   "phonetic_uk": "[‘æktiveit]",
+   "meaning": "vt. 刺激,使活动"
+  },
+  {
+   "word": "adhere",
+   "phonetic_us": "[әd’hiә]",
+   "phonetic_uk": "[әd’hiә]",
+   "meaning": "vi. (fml)粘附;追随;坚持(~ to sth)"
+  },
+  {
+   "word": "adjacent",
+   "phonetic_us": "[ә’dʒeisәnt]",
+   "phonetic_uk": "[ә’dʒeisәnt]",
+   "meaning": "a.毗连的；紧接着的"
+  },
+  {
+   "word": "adjoin",
+   "phonetic_us": "[ә’dʒɔin]",
+   "phonetic_uk": "[ә’dʒɔin]",
+   "meaning": "vt.贴近，毗连；靠近"
+  },
+  {
+   "word": "adolescent",
+   "phonetic_us": "[ædә’lesәnt]",
+   "phonetic_uk": "[ædә’lesәnt]",
+   "meaning": "a.青春期的,青年的n.青少年"
+  },
+  {
+   "word": "advent",
+   "phonetic_us": "[‘ædvәnt]",
+   "phonetic_uk": "[‘ædvәnt]",
+   "meaning": "n. 来到,来临"
+  },
+  {
+   "word": "adverse",
+   "phonetic_us": "[‘ædvә:s]",
+   "phonetic_uk": "[‘ædvә:s]",
+   "meaning": "a. 不利的,敌对的,相反的,逆的"
+  },
+  {
+   "word": "aero",
+   "phonetic_us": "['ɛərəu]",
+   "phonetic_uk": "['ɛərəu]",
+   "meaning": "adj.飞机的航空的飞行的"
+  },
+  {
+   "word": "aesthetic",
+   "phonetic_us": "[i:s’θetik]",
+   "phonetic_uk": "[i:s’θetik]",
+   "meaning": "a. 美学的,审美的,有美感"
+  },
+  {
+   "word": "affiliate",
+   "phonetic_us": "[ә’filieit]",
+   "phonetic_uk": "[ә’filieit]",
+   "meaning": "vt. 附属,接纳 vi. 有关"
+  },
+  {
+   "word": "affirm",
+   "phonetic_us": "[ә’fә:m]",
+   "phonetic_uk": "[ә’fә:m]",
+   "meaning": "vt.断言，批准；证实"
+  },
+  {
+   "word": "afflict",
+   "phonetic_us": "[ә’flikt]",
+   "phonetic_uk": "[ә’flikt]",
+   "meaning": "vt. 使痛苦,折磨"
+  },
+  {
+   "word": "Africa",
+   "phonetic_us": "['æfrikə]",
+   "phonetic_uk": "['æfrikə]",
+   "meaning": "n.非洲"
+  },
+  {
+   "word": "African",
+   "phonetic_us": "['æfrikən]",
+   "phonetic_uk": "['æfrikən]",
+   "meaning": "adj.非洲的非洲人的n.非洲人"
+  },
+  {
+   "word": "aggravate",
+   "phonetic_us": "[‘ægrәveit]",
+   "phonetic_uk": "[‘ægrәveit]",
+   "meaning": "vt. 使恶化,使更加重"
+  },
+  {
+   "word": "agitation",
+   "phonetic_us": "[ædʒi’teiʃәn]",
+   "phonetic_uk": "[ædʒi’teiʃәn]",
+   "meaning": "n.鼓动，煸动；搅动"
+  },
+  {
+   "word": "agony",
+   "phonetic_us": "['ægəni]",
+   "phonetic_uk": "['ægəni]",
+   "meaning": "n.极度痛苦挣扎"
+  },
+  {
+   "word": "AI",
+   "phonetic_us": "[ai]",
+   "phonetic_uk": "[ai]",
+   "meaning": "abbr.人工智能=(Artificial Intelligence)"
+  },
+  {
+   "word": "alien",
+   "phonetic_us": "[‘eiljәn]",
+   "phonetic_uk": "[‘eiljәn]",
+   "meaning": "a.外国的 n.外国人"
+  },
+  {
+   "word": "alleviate",
+   "phonetic_us": "[ә’li:vieit]",
+   "phonetic_uk": "[ә’li:vieit]",
+   "meaning": "vt. 减轻,使缓和"
+  },
+  {
+   "word": "allocate",
+   "phonetic_us": "[‘ælәkeit]",
+   "phonetic_uk": "[‘ælәkeit]",
+   "meaning": "vt. 分派,分配"
+  },
+  {
+   "word": "alloy",
+   "phonetic_us": "['ælɔi]",
+   "phonetic_uk": "['ælɔi]",
+   "meaning": "n.合金(金属的)成色vt.使...成合金搀以劣质减低成色影响或贬损vi.有合金能力"
+  },
+  {
+   "word": "alternate",
+   "phonetic_us": "[ɔ:l’tә:nit]",
+   "phonetic_uk": "[ɔ:l’tә:nit]",
+   "meaning": "vt.使交替 a.交替的"
+  },
+  {
+   "word": "ambiguous",
+   "phonetic_us": "[æm’bigjuәs]",
+   "phonetic_uk": "[æm’bigjuәs]",
+   "meaning": "a.模棱两可的；分歧的"
+  },
+  {
+   "word": "amend",
+   "phonetic_us": "[ә’mend]",
+   "phonetic_uk": "[ә’mend]",
+   "meaning": "vt. 修正,改善,vi. 改过自新"
+  },
+  {
+   "word": "amends",
+   "phonetic_us": "[ә’mendz]",
+   "phonetic_uk": "[ә’mendz]",
+   "meaning": "n. 赔偿"
+  },
+  {
+   "word": "America",
+   "phonetic_us": "[ə'merikə]",
+   "phonetic_uk": "[ə'merikə]",
+   "meaning": "n.美洲美国"
+  },
+  {
+   "word": "American",
+   "phonetic_us": "[ə'merikən]",
+   "phonetic_uk": "[ə'merikən]",
+   "meaning": "adj.美洲的美国的美式的n.美国人美式英语"
+  },
+  {
+   "word": "ampere",
+   "phonetic_us": "['æmpeə]",
+   "phonetic_uk": "['æmpeə]",
+   "meaning": "n.安培"
+  },
+  {
+   "word": "amplify",
+   "phonetic_us": "[‘æmplifai]",
+   "phonetic_uk": "[‘æmplifai]",
+   "meaning": "vt.放大，增强；扩大"
+  },
+  {
+   "word": "analogy",
+   "phonetic_us": "[ә’nælәdʒi]",
+   "phonetic_uk": "[ә’nælәdʒi]",
+   "meaning": "n.相似，类似；比拟"
+  },
+  {
+   "word": "announcer",
+   "phonetic_us": "[ə'naunsə]",
+   "phonetic_uk": "[ə'naunsə]",
+   "meaning": "n.宣告者播音员广播员告知者"
+  },
+  {
+   "word": "anonymous",
+   "phonetic_us": "[ә’nɔnimәs]",
+   "phonetic_uk": "[ә’nɔnimәs]",
+   "meaning": "a. 匿名的"
+  },
+  {
+   "word": "antarctic",
+   "phonetic_us": "[ænt’a:ktik]",
+   "phonetic_uk": "[ænt’a:ktik]",
+   "meaning": "a.南极的 n.南极区"
+  },
+  {
+   "word": "appendix",
+   "phonetic_us": "[ә’pendiks]",
+   "phonetic_uk": "[ә’pendiks]",
+   "meaning": "n.附录，附属物；阑尾"
+  },
+  {
+   "word": "appraisal",
+   "phonetic_us": "[ә’preizl]",
+   "phonetic_uk": "[ә’preizl]",
+   "meaning": "n. 评价,估价,鉴定"
+  },
+  {
+   "word": "appreciable",
+   "phonetic_us": "[ә’pri:ʃәbl]",
+   "phonetic_uk": "[ә’pri:ʃәbl]",
+   "meaning": "a.可估价的；可察觉的"
+  },
+  {
+   "word": "apprehension",
+   "phonetic_us": "[æpri’henʃәn]",
+   "phonetic_uk": "[æpri’henʃәn]",
+   "meaning": "n. 理解,忧惧,逮捕"
+  },
+  {
+   "word": "Arabian",
+   "phonetic_us": "[ə'reibiən]",
+   "phonetic_uk": "[ə'reibiən]",
+   "meaning": "adj.阿拉伯(人)的n.阿拉伯人"
+  },
+  {
+   "word": "arc",
+   "phonetic_us": "[a:k]",
+   "phonetic_uk": "[a:k]",
+   "meaning": "n.弧，弓形物；弧光"
+  },
+  {
+   "word": "arch",
+   "phonetic_us": "[a:tʃ]",
+   "phonetic_uk": "[a:tʃ]",
+   "meaning": "n.拱门 vt.用拱连接"
+  },
+  {
+   "word": "arctic",
+   "phonetic_us": "[‘a:ktik]",
+   "phonetic_uk": "[‘a:ktik]",
+   "meaning": "a.北极的 n.北极"
+  },
+  {
+   "word": "array",
+   "phonetic_us": "[ә’rei]",
+   "phonetic_uk": "[ә’rei]",
+   "meaning": "vt.装扮 n.队列；排列"
+  },
+  {
+   "word": "articulate",
+   "phonetic_us": "[a:’tikjulit]",
+   "phonetic_uk": "[a:’tikjulit]",
+   "meaning": "a. 发音清晰的，听得懂的"
+  },
+  {
+   "word": "ascend",
+   "phonetic_us": "[ә’send]",
+   "phonetic_uk": "[ә’send]",
+   "meaning": "vi.攀登，登高；追溯"
+  },
+  {
+   "word": "ascertain",
+   "phonetic_us": "[æsә’tein]",
+   "phonetic_uk": "[æsә’tein]",
+   "meaning": "vt.查明，确定，弄清"
+  },
+  {
+   "word": "ascribe",
+   "phonetic_us": "[әs’kraib]",
+   "phonetic_uk": "[әs’kraib]",
+   "meaning": "vt.把…归于"
+  },
+  {
+   "word": "Asia",
+   "phonetic_us": "['eiʃə]",
+   "phonetic_uk": "['eiʃə]",
+   "meaning": "n.亚洲"
+  },
+  {
+   "word": "Asian",
+   "phonetic_us": "['eiʃən]",
+   "phonetic_uk": "['eiʃən]",
+   "meaning": "adj.亚洲的n.亚洲人"
+  },
+  {
+   "word": "assault",
+   "phonetic_us": "[ә’sɔ:lt]",
+   "phonetic_uk": "[ә’sɔ:lt]",
+   "meaning": "vt.袭击；殴打 n.攻击"
+  },
+  {
+   "word": "assert",
+   "phonetic_us": "[ә’sә:t]",
+   "phonetic_uk": "[ә’sә:t]",
+   "meaning": "vt.断言，宣称；维护"
+  },
+  {
+   "word": "assimilate",
+   "phonetic_us": "[ә’simileit]",
+   "phonetic_uk": "[ә’simileit]",
+   "meaning": "vt. 使同化,吸收,比较"
+  },
+  {
+   "word": "Atlantic",
+   "phonetic_us": "[ət'læntik]",
+   "phonetic_uk": "[ət'læntik]",
+   "meaning": "adj.大西洋的n.大西洋"
+  },
+  {
+   "word": "augment",
+   "phonetic_us": "[ɔ:g’ment]",
+   "phonetic_uk": "[ɔ:g’ment]",
+   "meaning": "vt.vi.n. 增加,增大"
+  },
+  {
+   "word": "aural",
+   "phonetic_us": "['ɔ:rəl]",
+   "phonetic_uk": "['ɔ:rəl]",
+   "meaning": "adj.耳的听觉的"
+  },
+  {
+   "word": "Australia",
+   "phonetic_us": "[ɔ'streiliə]",
+   "phonetic_uk": "[ɔ'streiliə]",
+   "meaning": "n.澳大利亚"
+  },
+  {
+   "word": "Australian",
+   "phonetic_us": "[ɔ'streiliən]",
+   "phonetic_uk": "[ɔ'streiliən]",
+   "meaning": "adj.澳大利亚的n.澳大利亚人"
+  },
+  {
+   "word": "autonomy",
+   "phonetic_us": "[ɔ:’tɔnәmi]",
+   "phonetic_uk": "[ɔ:’tɔnәmi]",
+   "meaning": "n. 自治"
+  },
+  {
+   "word": "auxiliary",
+   "phonetic_us": "[ɔ:g'ziljəri]",
+   "phonetic_uk": "[ɔ:g'ziljəri]",
+   "meaning": "n.帮助者辅助物助动词adj.辅助的附属的附加的"
+  },
+  {
+   "word": "avail",
+   "phonetic_us": "[ә’veil]",
+   "phonetic_uk": "[ә’veil]",
+   "meaning": "vt.有益于 n.效用"
+  },
+  {
+   "word": "avert",
+   "phonetic_us": "[ә’vә:t]",
+   "phonetic_uk": "[ә’vә:t]",
+   "meaning": "vt. 转开,避免,防止"
+  },
+  {
+   "word": "awfully",
+   "phonetic_us": "['ɔ:fuli]",
+   "phonetic_uk": "['ɔ:fuli]",
+   "meaning": "adv.令人畏惧的很可怕地非常地极端地"
+  },
+  {
+   "word": "B.C.",
+   "phonetic_us": "['bi: si:]",
+   "phonetic_uk": "['bi: si:]",
+   "meaning": "(缩)公元前"
+  },
+  {
+   "word": "baffle",
+   "phonetic_us": "[‘bæfl]",
+   "phonetic_uk": "[‘bæfl]",
+   "meaning": "vt.使挫折 n.迷惑"
+  },
+  {
+   "word": "bald",
+   "phonetic_us": "[bɔ:ld]",
+   "phonetic_uk": "[bɔ:ld]",
+   "meaning": "a.秃头的；无毛的"
+  },
+  {
+   "word": "barn",
+   "phonetic_us": "[bɑ:n]",
+   "phonetic_uk": "[bɑ:n]",
+   "meaning": "n.谷仓牲口棚"
+  },
+  {
+   "word": "barren",
+   "phonetic_us": "[‘bærәn]",
+   "phonetic_uk": "[‘bærәn]",
+   "meaning": "a.贫瘠的；不妊的"
+  },
+  {
+   "word": "beginner",
+   "phonetic_us": "[bi'ginə]",
+   "phonetic_uk": "[bi'ginə]",
+   "meaning": "n.初学者生手"
+  },
+  {
+   "word": "bewilder",
+   "phonetic_us": "[bi’wildә]",
+   "phonetic_uk": "[bi’wildә]",
+   "meaning": "vt.迷惑，把…弄糊涂"
+  },
+  {
+   "word": "bibliography",
+   "phonetic_us": "[bibli’ɔgrәfi]",
+   "phonetic_uk": "[bibli’ɔgrәfi]",
+   "meaning": "n. 参考书目"
+  },
+  {
+   "word": "bitterly",
+   "phonetic_us": "['bitəli]",
+   "phonetic_uk": "['bitəli]",
+   "meaning": "adv.苦苦地悲痛地怨恨地残酷地"
+  },
+  {
+   "word": "bizarre",
+   "phonetic_us": "[bi’za:]",
+   "phonetic_uk": "[bi’za:]",
+   "meaning": "a. 奇异的"
+  },
+  {
+   "word": "blaze",
+   "phonetic_us": "[bleiz]",
+   "phonetic_uk": "[bleiz]",
+   "meaning": "n.火；闪光 vi.燃烧"
+  },
+  {
+   "word": "bleak",
+   "phonetic_us": "[bli:k]",
+   "phonetic_uk": "[bli:k]",
+   "meaning": "a. 萧瑟的,苍白的,荒凉的"
+  },
+  {
+   "word": "blood",
+   "phonetic_us": "[blʌd]",
+   "phonetic_uk": "[blʌd]",
+   "meaning": "n.血血液血统仇恨vt.流血"
+  },
+  {
+   "word": "blunder",
+   "phonetic_us": "[‘blΛndә]",
+   "phonetic_uk": "[‘blΛndә]",
+   "meaning": "vi.犯大错 n.大错"
+  },
+  {
+   "word": "blunt",
+   "phonetic_us": "[blΛnt]",
+   "phonetic_uk": "[blΛnt]",
+   "meaning": "a. 钝的,坦率的,麻痹的"
+  },
+  {
+   "word": "blush",
+   "phonetic_us": "[blΛʃ]",
+   "phonetic_uk": "[blΛʃ]",
+   "meaning": "vi.脸红，害臊 n.脸红"
+  },
+  {
+   "word": "bosom",
+   "phonetic_us": "['buzəm]",
+   "phonetic_uk": "['buzəm]",
+   "meaning": "n.胸胸部内心"
+  },
+  {
+   "word": "bough",
+   "phonetic_us": "[bau]",
+   "phonetic_uk": "[bau]",
+   "meaning": "n.大树枝"
+  },
+  {
+   "word": "boycott",
+   "phonetic_us": "[‘bɔikәt]",
+   "phonetic_uk": "[‘bɔikәt]",
+   "meaning": "vt.&n.联合抵制"
+  },
+  {
+   "word": "brace",
+   "phonetic_us": "[breis]",
+   "phonetic_uk": "[breis]",
+   "meaning": "n.支柱 vt.拉紧，撑牢"
+  },
+  {
+   "word": "Brazil",
+   "phonetic_us": "[brə'zil]",
+   "phonetic_uk": "[brə'zil]",
+   "meaning": "n.巴西"
+  },
+  {
+   "word": "Brazilian",
+   "phonetic_us": "[brə'ziljən]",
+   "phonetic_uk": "[brə'ziljən]",
+   "meaning": "n.巴西人adj.巴西的"
+  },
+  {
+   "word": "brim",
+   "phonetic_us": "[brim]",
+   "phonetic_uk": "[brim]",
+   "meaning": "n.边边缘帽沿v.(装)满(使)溢出"
+  },
+  {
+   "word": "brisk",
+   "phonetic_us": "[brisk]",
+   "phonetic_uk": "[brisk]",
+   "meaning": "adj.活泼的活跃的快的清新的敏锐的凛冽的"
+  },
+  {
+   "word": "bristle",
+   "phonetic_us": "['brisl]",
+   "phonetic_uk": "['brisl]",
+   "meaning": "n.短而硬的毛鬃毛"
+  },
+  {
+   "word": "Britain",
+   "phonetic_us": "['britən]",
+   "phonetic_uk": "['britən]",
+   "meaning": "n.不列颠英国"
+  },
+  {
+   "word": "British",
+   "phonetic_us": "['britiʃ]",
+   "phonetic_uk": "['britiʃ]",
+   "meaning": "adj.不列颠的英国的英联邦的n.英国人英国英语"
+  },
+  {
+   "word": "brittle",
+   "phonetic_us": "[‘britl]",
+   "phonetic_uk": "[‘britl]",
+   "meaning": "a.脆的；易损坏的"
+  },
+  {
+   "word": "broken",
+   "phonetic_us": "['brəukən]",
+   "phonetic_uk": "['brəukən]",
+   "meaning": "adj.被打碎的骨折的坏掉的坏掉的v.打破弄坏(break的过去分词)"
+  },
+  {
+   "word": "bronze",
+   "phonetic_us": "[brɔnz]",
+   "phonetic_uk": "[brɔnz]",
+   "meaning": "adj.青铜色的n.青铜青铜制品青铜色铜牌(第三名)vt.使成青铜色"
+  },
+  {
+   "word": "brood",
+   "phonetic_us": "[bru:d]",
+   "phonetic_uk": "[bru:d]",
+   "meaning": "n.窝同窝幼鸟vt.孵(蛋)沉思"
+  },
+  {
+   "word": "brook",
+   "phonetic_us": "[bruk]",
+   "phonetic_uk": "[bruk]",
+   "meaning": "n.小河溪流vt.(常用于否定句或疑问句)容忍忍受"
+  },
+  {
+   "word": "bruise",
+   "phonetic_us": "[bru:z]",
+   "phonetic_uk": "[bru:z]",
+   "meaning": "n.青肿伤痕擦伤瘀青挫伤vi.受伤擦伤vt.使挫伤"
+  },
+  {
+   "word": "brute",
+   "phonetic_us": "[bru:t]",
+   "phonetic_uk": "[bru:t]",
+   "meaning": "n.禽兽畜生畜生残忍的人adj.残忍的无理性的粗暴的"
+  },
+  {
+   "word": "buffer",
+   "phonetic_us": "[‘bΛfә]",
+   "phonetic_uk": "[‘bΛfә]",
+   "meaning": "n. 缓冲,缓冲区 vt. 缓冲"
+  },
+  {
+   "word": "bureaucracy",
+   "phonetic_us": "[bjuә’rɔkrәsi]",
+   "phonetic_uk": "[bjuә’rɔkrәsi]",
+   "meaning": "n.官僚主义；官僚机构"
+  },
+  {
+   "word": "buzz",
+   "phonetic_us": "[bΛz]",
+   "phonetic_uk": "[bΛz]",
+   "meaning": "vi.(蜂等)嗡嗡叫"
+  },
+  {
+   "word": "Canada",
+   "phonetic_us": "['kænədə]",
+   "phonetic_uk": "['kænədə]",
+   "meaning": "n.加拿大"
+  },
+  {
+   "word": "Canadian",
+   "phonetic_us": "[kə'neidjən]",
+   "phonetic_uk": "[kə'neidjən]",
+   "meaning": "adj.加拿大的加拿大人的n.加拿大人"
+  },
+  {
+   "word": "cannon",
+   "phonetic_us": "['kænən]",
+   "phonetic_uk": "['kænən]",
+   "meaning": "n.大炮火炮榴弹炮v.开炮"
+  },
+  {
+   "word": "canoe",
+   "phonetic_us": "[kə'nu:]",
+   "phonetic_uk": "[kə'nu:]",
+   "meaning": "n.独木舟皮艇划子轻舟v.乘独木舟"
+  },
+  {
+   "word": "canon",
+   "phonetic_us": "['kænən]",
+   "phonetic_uk": "['kænən]",
+   "meaning": "n. 教会法规标准、准则正典正式名单教堂里的教士佳能(财富500强公司之一总部所在地日本主要经营办公设备)"
+  },
+  {
+   "word": "canvas",
+   "phonetic_us": "[‘kænvәs]",
+   "phonetic_uk": "[‘kænvәs]",
+   "meaning": "n.粗帆布；一块油画布"
+  },
+  {
+   "word": "capsule",
+   "phonetic_us": "[‘kæpsju:l]",
+   "phonetic_uk": "[‘kæpsju:l]",
+   "meaning": "n. 胶囊,瓶帽,太空舱"
+  },
+  {
+   "word": "captive",
+   "phonetic_us": "['kæptiv]",
+   "phonetic_uk": "['kæptiv]",
+   "meaning": "n.俘虏被监禁的人迷恋者adj.被俘的被迷住的"
+  },
+  {
+   "word": "carve",
+   "phonetic_us": "[kɑ:v]",
+   "phonetic_uk": "[kɑ:v]",
+   "meaning": "vt.刻雕刻切开vi.雕刻切割"
+  },
+  {
+   "word": "cassette",
+   "phonetic_us": "[kə'set]",
+   "phonetic_uk": "[kə'set]",
+   "meaning": "n.盒式录音带盒子匣子盒式录音机"
+  },
+  {
+   "word": "casualty",
+   "phonetic_us": "[‘kæʒjuәlti]",
+   "phonetic_uk": "[‘kæʒjuәlti]",
+   "meaning": "n. 伤亡,受害者"
+  },
+  {
+   "word": "cathedral",
+   "phonetic_us": "[kә’θi:drәl]",
+   "phonetic_uk": "[kә’θi:drәl]",
+   "meaning": "n.总教堂；大教堂"
+  },
+  {
+   "word": "catholic",
+   "phonetic_us": "[‘kæθәlik]",
+   "phonetic_uk": "[‘kæθәlik]",
+   "meaning": "a.天主教的n.天主教徒"
+  },
+  {
+   "word": "cavity",
+   "phonetic_us": "[‘kæviti]",
+   "phonetic_uk": "[‘kæviti]",
+   "meaning": "n.洞，穴，空腔"
+  },
+  {
+   "word": "census",
+   "phonetic_us": "[‘sensәs]",
+   "phonetic_uk": "[‘sensәs]",
+   "meaning": "n. 户口普查 vt.统计调查"
+  },
+  {
+   "word": "ceramic",
+   "phonetic_us": "[si’ræmik]",
+   "phonetic_uk": "[si’ræmik]",
+   "meaning": "a. 陶器的 n. 陶瓷制品"
+  },
+  {
+   "word": "certify",
+   "phonetic_us": "[‘sә:tifai]",
+   "phonetic_uk": "[‘sә:tifai]",
+   "meaning": "vt.vi. 证明,保证"
+  },
+  {
+   "word": "chamber",
+   "phonetic_us": "['tʃeimbə]",
+   "phonetic_uk": "['tʃeimbə]",
+   "meaning": "n.会议室房间会所室腔vt.装入室中(枪膛)adj.室内演奏的"
+  },
+  {
+   "word": "cherry",
+   "phonetic_us": "['tʃeri]",
+   "phonetic_uk": "['tʃeri]",
+   "meaning": "n.樱桃樱桃树樱桃色"
+  },
+  {
+   "word": "childhood",
+   "phonetic_us": "['tʃaildhud]",
+   "phonetic_uk": "['tʃaildhud]",
+   "meaning": "n.童年幼年早期"
+  },
+  {
+   "word": "Chinese",
+   "phonetic_us": "['tʃai'ni:z]",
+   "phonetic_uk": "['tʃai'ni:z]",
+   "meaning": "adj.中国的n.中国人汉语"
+  },
+  {
+   "word": "chord",
+   "phonetic_us": "[kɔ:d]",
+   "phonetic_uk": "[kɔ:d]",
+   "meaning": "n.(乐器的)弦 vi.协调"
+  },
+  {
+   "word": "chronic",
+   "phonetic_us": "[‘krɔnik]",
+   "phonetic_uk": "[‘krɔnik]",
+   "meaning": "a.慢性的,习惯性的n.慢性病患者"
+  },
+  {
+   "word": "circumference",
+   "phonetic_us": "[sə'kʌmfərəns]",
+   "phonetic_uk": "[sə'kʌmfərəns]",
+   "meaning": "n.圆周周长周围圆周线胸围"
+  },
+  {
+   "word": "clamp",
+   "phonetic_us": "[klæmp]",
+   "phonetic_uk": "[klæmp]",
+   "meaning": "n.夹子 vt.夹住，夹紧"
+  },
+  {
+   "word": "clasp",
+   "phonetic_us": "[klɑ:sp]",
+   "phonetic_uk": "[klɑ:sp]",
+   "meaning": "n.扣子钩子别针紧握v.扣紧紧握密切合作"
+  },
+  {
+   "word": "clearance",
+   "phonetic_us": "[‘kliәrәns]",
+   "phonetic_uk": "[‘kliәrәns]",
+   "meaning": "n. 清除,解除,间隙"
+  },
+  {
+   "word": "cloak",
+   "phonetic_us": "[kləuk]",
+   "phonetic_uk": "[kləuk]",
+   "meaning": "n.斗篷覆盖(物)宽大外衣掩护v.遮掩隐匿"
+  },
+  {
+   "word": "closely",
+   "phonetic_us": "['kləusli]",
+   "phonetic_uk": "['kləusli]",
+   "meaning": "adv.紧密地接近地严密地"
+  },
+  {
+   "word": "closet",
+   "phonetic_us": "[‘klɔzit]",
+   "phonetic_uk": "[‘klɔzit]",
+   "meaning": "n.小房间；壁碗橱"
+  },
+  {
+   "word": "cluster",
+   "phonetic_us": "[‘klΛstә]",
+   "phonetic_uk": "[‘klΛstә]",
+   "meaning": "n.一串 vt.使成群"
+  },
+  {
+   "word": "clutch",
+   "phonetic_us": "[klΛtʃ]",
+   "phonetic_uk": "[klΛtʃ]",
+   "meaning": "vt.抓住 vi.掌握，攫"
+  },
+  {
+   "word": "coincide",
+   "phonetic_us": "[kәuin’said]",
+   "phonetic_uk": "[kәuin’said]",
+   "meaning": "vi.相符合；相巧合"
+  },
+  {
+   "word": "coincidence",
+   "phonetic_us": "[kәuin’sidәns]",
+   "phonetic_uk": "[kәuin’sidәns]",
+   "meaning": "n. 巧合,同时发生"
+  },
+  {
+   "word": "collide",
+   "phonetic_us": "[kә’laid]",
+   "phonetic_uk": "[kә’laid]",
+   "meaning": "vi.碰撞；冲突，抵触"
+  },
+  {
+   "word": "collision",
+   "phonetic_us": "[kə'liʒən]",
+   "phonetic_uk": "[kə'liʒən]",
+   "meaning": "n.碰撞冲突"
+  },
+  {
+   "word": "colonel",
+   "phonetic_us": "['kə:nl]",
+   "phonetic_uk": "['kə:nl]",
+   "meaning": "n.陆军上校中校"
+  },
+  {
+   "word": "comet",
+   "phonetic_us": "[‘kɔmit]",
+   "phonetic_uk": "[‘kɔmit]",
+   "meaning": "n. 慧星"
+  },
+  {
+   "word": "commemorate",
+   "phonetic_us": "[kә’memәreit]",
+   "phonetic_uk": "[kә’memәreit]",
+   "meaning": "vt. 纪念"
+  },
+  {
+   "word": "commend",
+   "phonetic_us": "[kә’mend]",
+   "phonetic_uk": "[kә’mend]",
+   "meaning": "vt.称赞，表扬；推荐"
+  },
+  {
+   "word": "commonly",
+   "phonetic_us": "['kɔmənli]",
+   "phonetic_uk": "['kɔmənli]",
+   "meaning": "adv.普通地一般地通常地"
+  },
+  {
+   "word": "commonwealth",
+   "phonetic_us": "[‘kɔmәnwelθ]",
+   "phonetic_uk": "[‘kɔmәnwelθ]",
+   "meaning": "n.共和国；联邦"
+  },
+  {
+   "word": "compartment",
+   "phonetic_us": "[kәm’pa:tmәnt]",
+   "phonetic_uk": "[kәm’pa:tmәnt]",
+   "meaning": "n. 间隔,个别室,车厢"
+  },
+  {
+   "word": "compile",
+   "phonetic_us": "[kәm’pail]",
+   "phonetic_uk": "[kәm’pail]",
+   "meaning": "vt.编辑，编制，搜集"
+  },
+  {
+   "word": "complement",
+   "phonetic_us": "[‘kәmplimәnt]",
+   "phonetic_uk": "[‘kәmplimәnt]",
+   "meaning": "vt.补充 n.补足(物)"
+  },
+  {
+   "word": "completely",
+   "phonetic_us": "[kəm'pli:tli]",
+   "phonetic_uk": "[kəm'pli:tli]",
+   "meaning": "adv.十分完全地全然"
+  },
+  {
+   "word": "compliment",
+   "phonetic_us": "[‘kɔmplimәnt]",
+   "phonetic_uk": "[‘kɔmplimәnt]",
+   "meaning": "n.问候 vt.赞美，祝贺"
+  },
+  {
+   "word": "composite",
+   "phonetic_us": "[‘kɔmpәzit]",
+   "phonetic_uk": "[‘kɔmpәzit]",
+   "meaning": "a.合成的 n.合成物"
+  },
+  {
+   "word": "compress",
+   "phonetic_us": "['kɔmpres,kəm'pres]",
+   "phonetic_uk": "['kɔmpres,kəm'pres]",
+   "meaning": "vt.压紧压缩"
+  },
+  {
+   "word": "concede",
+   "phonetic_us": "[kәn’si:d]",
+   "phonetic_uk": "[kәn’si:d]",
+   "meaning": "vt. 承认,退让 vi. 让步"
+  },
+  {
+   "word": "conceive",
+   "phonetic_us": "[kәn’si:v]",
+   "phonetic_uk": "[kәn’si:v]",
+   "meaning": "vt.设想，以为；怀孕"
+  },
+  {
+   "word": "conception",
+   "phonetic_us": "[kәn’sepʃәn]",
+   "phonetic_uk": "[kәn’sepʃәn]",
+   "meaning": "n.概念，观念，想法"
+  },
+  {
+   "word": "concession",
+   "phonetic_us": "[kәn’seʃәn]",
+   "phonetic_uk": "[kәn’seʃәn]",
+   "meaning": "n.让步，迁就"
+  },
+  {
+   "word": "concise",
+   "phonetic_us": "[kәn’sais]",
+   "phonetic_uk": "[kәn’sais]",
+   "meaning": "a. 简洁的,简明的"
+  },
+  {
+   "word": "condense",
+   "phonetic_us": "[kən'dens]",
+   "phonetic_uk": "[kən'dens]",
+   "meaning": "vt.压缩使缩短浓缩摘要"
+  },
+  {
+   "word": "confer",
+   "phonetic_us": "[kәn’fә:]",
+   "phonetic_uk": "[kәn’fә:]",
+   "meaning": "vt. 赠予,协议 vi. 协商"
+  },
+  {
+   "word": "configuration",
+   "phonetic_us": "[kәnfigju’reiʃәn]",
+   "phonetic_uk": "[kәnfigju’reiʃәn]",
+   "meaning": "n. 结构,配置,形态"
+  },
+  {
+   "word": "consecutive",
+   "phonetic_us": "[kәn’sekjutiv]",
+   "phonetic_uk": "[kәn’sekjutiv]",
+   "meaning": "a.连续,联贯的,始的"
+  },
+  {
+   "word": "conserve",
+   "phonetic_us": "[kәn’sә:v]",
+   "phonetic_uk": "[kәn’sә:v]",
+   "meaning": "vt. 保存,保全 n. 蜜饯,果酱"
+  },
+  {
+   "word": "conspicuous",
+   "phonetic_us": "[kәn’spikjuәs]",
+   "phonetic_uk": "[kәn’spikjuәs]",
+   "meaning": "a. 显著的,显眼的,出众的"
+  },
+  {
+   "word": "constituent",
+   "phonetic_us": "[kәn’stitjuәnt]",
+   "phonetic_uk": "[kәn’stitjuәnt]",
+   "meaning": "a.形成的 n.选民"
+  },
+  {
+   "word": "constrain",
+   "phonetic_us": "[kәn’strein]",
+   "phonetic_uk": "[kәn’strein]",
+   "meaning": "vt. 强迫,勉强,驱使"
+  },
+  {
+   "word": "consult",
+   "phonetic_us": "[kən'sʌlt]",
+   "phonetic_uk": "[kən'sʌlt]",
+   "meaning": "vt.向...请教查阅商讨"
+  },
+  {
+   "word": "contemplate",
+   "phonetic_us": "[‘kɔntempleit]",
+   "phonetic_uk": "[‘kɔntempleit]",
+   "meaning": "vt. 注视,沉思,打算 vi. 冥思苦想"
+  },
+  {
+   "word": "contrive",
+   "phonetic_us": "[kәn’traiv]",
+   "phonetic_uk": "[kәn’traiv]",
+   "meaning": "vt.vi. 发明,设计,图谋"
+  },
+  {
+   "word": "converge",
+   "phonetic_us": "[kәn’vә:dʒ]",
+   "phonetic_uk": "[kәn’vә:dʒ]",
+   "meaning": "vi. 聚合,集中于一点"
+  },
+  {
+   "word": "conversely",
+   "phonetic_us": "[kən'və:sli]",
+   "phonetic_uk": "[kən'və:sli]",
+   "meaning": "adv.相反地"
+  },
+  {
+   "word": "convict",
+   "phonetic_us": "[kәn’vikt,‘kɔnvikt]",
+   "phonetic_uk": "[kәn’vikt,‘kɔnvikt]",
+   "meaning": "n.囚犯,罪犯vt.宣告有罪"
+  },
+  {
+   "word": "conviction",
+   "phonetic_us": "[kәn’vikʃәn]",
+   "phonetic_uk": "[kәn’vikʃәn]",
+   "meaning": "n.确信，信服，深信"
+  },
+  {
+   "word": "cordial",
+   "phonetic_us": "['kɔ:djəl]",
+   "phonetic_uk": "['kɔ:djəl]",
+   "meaning": "adj.真诚的诚恳的热忱的兴奋的n.兴奋剂补品"
+  },
+  {
+   "word": "corps",
+   "phonetic_us": "[kɔ:ps]",
+   "phonetic_uk": "[kɔ:ps]",
+   "meaning": "n. 军团,队,团,兵种"
+  },
+  {
+   "word": "correlate",
+   "phonetic_us": "[‘kɔrileit]",
+   "phonetic_uk": "[‘kɔrileit]",
+   "meaning": "n.互相关联的事物"
+  },
+  {
+   "word": "corrode",
+   "phonetic_us": "[kә’rәud]",
+   "phonetic_uk": "[kә’rәud]",
+   "meaning": "vt.vi 腐蚀,侵蚀,破坏"
+  },
+  {
+   "word": "council",
+   "phonetic_us": "['kaunsil]",
+   "phonetic_uk": "['kaunsil]",
+   "meaning": "n.理事会委员会商议"
+  },
+  {
+   "word": "counsel",
+   "phonetic_us": "[‘kaunsәl]",
+   "phonetic_uk": "[‘kaunsәl]",
+   "meaning": "n.商议；忠告；律师"
+  },
+  {
+   "word": "courtesy",
+   "phonetic_us": "[‘kә:tisi]",
+   "phonetic_uk": "[‘kә:tisi]",
+   "meaning": "n.礼貌，谦恭，请安"
+  },
+  {
+   "word": "cradle",
+   "phonetic_us": "[‘kreidl]",
+   "phonetic_uk": "[‘kreidl]",
+   "meaning": "n.摇篮，发源地"
+  },
+  {
+   "word": "cricket",
+   "phonetic_us": "['krikit]",
+   "phonetic_uk": "['krikit]",
+   "meaning": "n.板球蟋蟀vi.打板球"
+  },
+  {
+   "word": "cripple",
+   "phonetic_us": "['kripl]",
+   "phonetic_uk": "['kripl]",
+   "meaning": "n.跛子残废的人v.使...跛使...成残废削弱"
+  },
+  {
+   "word": "crisp",
+   "phonetic_us": "[krisp]",
+   "phonetic_uk": "[krisp]",
+   "meaning": "a.脆的；卷曲的"
+  },
+  {
+   "word": "crow",
+   "phonetic_us": "[krəu]",
+   "phonetic_uk": "[krəu]",
+   "meaning": "n.鸦乌鸦啼叫欢叫vi.啼啼叫报晓欢叫vt.洋洋夸口自鸣得意"
+  },
+  {
+   "word": "crude",
+   "phonetic_us": "[kru:d]",
+   "phonetic_uk": "[kru:d]",
+   "meaning": "adj.简陋的天然的未加工的粗鲁的n.原油"
+  },
+  {
+   "word": "crust",
+   "phonetic_us": "[krʌst]",
+   "phonetic_uk": "[krʌst]",
+   "meaning": "n.面包皮硬外皮外壳坚硬的外壳vt.盖以硬皮vi.结硬皮"
+  },
+  {
+   "word": "culminate",
+   "phonetic_us": "[‘kΛlmineit]",
+   "phonetic_uk": "[‘kΛlmineit]",
+   "meaning": "vi.到绝顶,达于极点,高潮"
+  },
+  {
+   "word": "cumulative",
+   "phonetic_us": "[‘kjumjuleitiv]",
+   "phonetic_uk": "[‘kjumjuleitiv]",
+   "meaning": "a. 累积的"
+  },
+  {
+   "word": "cunning",
+   "phonetic_us": "['kʌniŋ]",
+   "phonetic_uk": "['kʌniŋ]",
+   "meaning": "adj.狡猾的狡诈的有眼光的精巧的可爱的n.狡诈灵巧"
+  },
+  {
+   "word": "curt",
+   "phonetic_us": "[kә:t]",
+   "phonetic_uk": "[kә:t]",
+   "meaning": "a. 简略的,简短的,生硬的"
+  },
+  {
+   "word": "cylinder",
+   "phonetic_us": "[‘silindә]",
+   "phonetic_uk": "[‘silindә]",
+   "meaning": "n.圆筒；柱(面)；汽缸"
+  },
+  {
+   "word": "cynical",
+   "phonetic_us": "[‘sinikәl]",
+   "phonetic_uk": "[‘sinikәl]",
+   "meaning": "a. 愤世嫉俗的,讽刺的,冷嘲的"
+  },
+  {
+   "word": "dazzle",
+   "phonetic_us": "[‘dæzl]",
+   "phonetic_uk": "[‘dæzl]",
+   "meaning": "vt.&vi.炫耀；迷惑"
+  },
+  {
+   "word": "decimal",
+   "phonetic_us": "[‘desimәl]",
+   "phonetic_uk": "[‘desimәl]",
+   "meaning": "a.小数的，十进制的"
+  },
+  {
+   "word": "dedicate",
+   "phonetic_us": "[‘dedikeit]",
+   "phonetic_uk": "[‘dedikeit]",
+   "meaning": "vt.奉献；献身"
+  },
+  {
+   "word": "deduce",
+   "phonetic_us": "[di'dju:s]",
+   "phonetic_uk": "[di'dju:s]",
+   "meaning": "vt.演绎推论推断溯源"
+  },
+  {
+   "word": "deepen",
+   "phonetic_us": "['di:pən]",
+   "phonetic_uk": "['di:pən]",
+   "meaning": "vt.加深使...加深使...强烈vi.深化加深变浓"
+  },
+  {
+   "word": "degenerate",
+   "phonetic_us": "[di’dʒenәreit]",
+   "phonetic_uk": "[di’dʒenәreit]",
+   "meaning": "a.堕落的 vi.vt.(使)变质,(使)退化"
+  },
+  {
+   "word": "degrade",
+   "phonetic_us": "[di’greid]",
+   "phonetic_uk": "[di’greid]",
+   "meaning": "vt.使降给；使堕落"
+  },
+  {
+   "word": "delt",
+   "phonetic_us": "[)处理应付分配给予]",
+   "phonetic_uk": "[)处理应付分配给予]",
+   "meaning": ""
+  },
+  {
+   "word": "denote",
+   "phonetic_us": "[di’nәut]",
+   "phonetic_uk": "[di’nәut]",
+   "meaning": "vt.指示，意味着"
+  },
+  {
+   "word": "denounce",
+   "phonetic_us": "[di’nauns]",
+   "phonetic_uk": "[di’nauns]",
+   "meaning": "vt.谴责，声讨；告发"
+  },
+  {
+   "word": "depict",
+   "phonetic_us": "[di’pikt]",
+   "phonetic_uk": "[di’pikt]",
+   "meaning": "vt. 描述,描写"
+  },
+  {
+   "word": "depute",
+   "phonetic_us": "[di’pju:t]",
+   "phonetic_uk": "[di’pju:t]",
+   "meaning": "vt. 指定代理人,委任"
+  },
+  {
+   "word": "designate",
+   "phonetic_us": "[‘dezigneit]",
+   "phonetic_uk": "[‘dezigneit]",
+   "meaning": "vt.指出，指示；指定"
+  },
+  {
+   "word": "despise",
+   "phonetic_us": "[dis’paiz]",
+   "phonetic_uk": "[dis’paiz]",
+   "meaning": "vt.鄙视，蔑视"
+  },
+  {
+   "word": "destined",
+   "phonetic_us": "[‘destind]",
+   "phonetic_uk": "[‘destind]",
+   "meaning": "a. (由神、命运) 预定的,注定的"
+  },
+  {
+   "word": "destiny",
+   "phonetic_us": "[‘destini]",
+   "phonetic_uk": "[‘destini]",
+   "meaning": "n. 命运,定数"
+  },
+  {
+   "word": "detach",
+   "phonetic_us": "[di’tætʃ]",
+   "phonetic_uk": "[di’tætʃ]",
+   "meaning": "vt.分开；派遣(军队)"
+  },
+  {
+   "word": "deviate",
+   "phonetic_us": "[‘di:vieit]",
+   "phonetic_uk": "[‘di:vieit]",
+   "meaning": "vt.(使)背离，偏离"
+  },
+  {
+   "word": "differentiate",
+   "phonetic_us": "[difә’renʃieit]",
+   "phonetic_uk": "[difә’renʃieit]",
+   "meaning": "vt.vi. 区别,区分"
+  },
+  {
+   "word": "diffuse",
+   "phonetic_us": "[di’fju:z]",
+   "phonetic_uk": "[di’fju:z]",
+   "meaning": "vt.vi. 散播,传播 a. 散开的,弥漫的"
+  },
+  {
+   "word": "dilute",
+   "phonetic_us": "[dai’lut]",
+   "phonetic_uk": "[dai’lut]",
+   "meaning": "vt. 冲淡,稀释 a. 淡的,稀释的"
+  },
+  {
+   "word": "diminish",
+   "phonetic_us": "[di’miniʃ]",
+   "phonetic_uk": "[di’miniʃ]",
+   "meaning": "vt.减少，减小，递减"
+  },
+  {
+   "word": "directly",
+   "phonetic_us": "[di'rektli]",
+   "phonetic_uk": "[di'rektli]",
+   "meaning": "adv.直接地立即完全"
+  },
+  {
+   "word": "directory",
+   "phonetic_us": "[di’rektәri]",
+   "phonetic_uk": "[di’rektәri]",
+   "meaning": "n.姓名地址录；董事会"
+  },
+  {
+   "word": "disadvantage",
+   "phonetic_us": "[.disəd'væntidʒ]",
+   "phonetic_uk": "[.disəd'væntidʒ]",
+   "meaning": "n.不利不利地位不利条件损害损失"
+  },
+  {
+   "word": "discern",
+   "phonetic_us": "[di’sә:n]",
+   "phonetic_uk": "[di’sә:n]",
+   "meaning": "vt.看出，辨出；辨别"
+  },
+  {
+   "word": "disclose",
+   "phonetic_us": "[dis’klәuz]",
+   "phonetic_uk": "[dis’klәuz]",
+   "meaning": "vt.揭开，揭发；透露"
+  },
+  {
+   "word": "discrepancy",
+   "phonetic_us": "[dis’krepәnsi]",
+   "phonetic_uk": "[dis’krepәnsi]",
+   "meaning": "n. 相差,差异,差别"
+  },
+  {
+   "word": "discrete",
+   "phonetic_us": "[di’skrit]",
+   "phonetic_uk": "[di’skrit]",
+   "meaning": "a. 不连续的, 离散的"
+  },
+  {
+   "word": "dishonour",
+   "phonetic_us": "[dis'ɔnə]",
+   "phonetic_uk": "[dis'ɔnə]",
+   "meaning": "n.不光彩丢脸的人耻辱拒付vt.使丢脸侮辱拒付=dishonor"
+  },
+  {
+   "word": "dismay",
+   "phonetic_us": "[dis’mei]",
+   "phonetic_uk": "[dis’mei]",
+   "meaning": "n.惊慌，沮丧，灰心"
+  },
+  {
+   "word": "dispatch",
+   "phonetic_us": "[dis’pætʃ]",
+   "phonetic_uk": "[dis’pætʃ]",
+   "meaning": "vt.派遣；调度 n.急件"
+  },
+  {
+   "word": "disperse",
+   "phonetic_us": "[dis’pә:s]",
+   "phonetic_uk": "[dis’pә:s]",
+   "meaning": "vt.(使)分散；驱散"
+  },
+  {
+   "word": "displace",
+   "phonetic_us": "[dis’pleis]",
+   "phonetic_uk": "[dis’pleis]",
+   "meaning": "vt.移置；取代；置换"
+  },
+  {
+   "word": "displease",
+   "phonetic_us": "[dis'pli:z]",
+   "phonetic_uk": "[dis'pli:z]",
+   "meaning": "vt.使不愉快使生气"
+  },
+  {
+   "word": "disposition",
+   "phonetic_us": "[dispә’ziʃәn]",
+   "phonetic_uk": "[dispә’ziʃәn]",
+   "meaning": "n. 性情,处置,处理,布置"
+  },
+  {
+   "word": "disregard",
+   "phonetic_us": "[‘disri’ga:d]",
+   "phonetic_uk": "[‘disri’ga:d]",
+   "meaning": "vt.不管，不顾 n.不管"
+  },
+  {
+   "word": "dissatisfy",
+   "phonetic_us": "[dis'sætisfai]",
+   "phonetic_uk": "[dis'sætisfai]",
+   "meaning": "vi.使不满使不平"
+  },
+  {
+   "word": "dissipate",
+   "phonetic_us": "[‘disipeit]",
+   "phonetic_uk": "[‘disipeit]",
+   "meaning": "vt.驱散；浪费vi.消散"
+  },
+  {
+   "word": "distil",
+   "phonetic_us": "[dis’til]",
+   "phonetic_uk": "[dis’til]",
+   "meaning": "v. 蒸馏, 提取....的精华"
+  },
+  {
+   "word": "distort",
+   "phonetic_us": "[dis’tɔ:t]",
+   "phonetic_uk": "[dis’tɔ:t]",
+   "meaning": "vt.歪曲，曲解，扭曲"
+  },
+  {
+   "word": "diversion",
+   "phonetic_us": "[dai’vә:ʃәn]",
+   "phonetic_uk": "[dai’vә:ʃәn]",
+   "meaning": "n.转移；改道；娱乐"
+  },
+  {
+   "word": "divert",
+   "phonetic_us": "[dai’vә:t]",
+   "phonetic_uk": "[dai’vә:t]",
+   "meaning": "vt.使转向 vi.转移"
+  },
+  {
+   "word": "divine",
+   "phonetic_us": "[di’vain]",
+   "phonetic_uk": "[di’vain]",
+   "meaning": "a.神的；敬神的"
+  },
+  {
+   "word": "doctrine",
+   "phonetic_us": "[‘dɔktrin]",
+   "phonetic_uk": "[‘dɔktrin]",
+   "meaning": "n.教义，主义；学说"
+  },
+  {
+   "word": "domain",
+   "phonetic_us": "[dә’mein]",
+   "phonetic_uk": "[dә’mein]",
+   "meaning": "n. 领域,领土,产业,范围"
+  },
+  {
+   "word": "dome",
+   "phonetic_us": "[dәum]",
+   "phonetic_uk": "[dәum]",
+   "meaning": "n.圆屋顶，拱顶"
+  },
+  {
+   "word": "dramatization",
+   "phonetic_us": "[.dræməti'zeiʃən]",
+   "phonetic_uk": "[.dræməti'zeiʃən]",
+   "meaning": "n.编剧改编成戏剧"
+  },
+  {
+   "word": "drawback",
+   "phonetic_us": "[‘drɔ:bæk]",
+   "phonetic_uk": "[‘drɔ:bæk]",
+   "meaning": "n.退款；妨碍；弊端"
+  },
+  {
+   "word": "dread",
+   "phonetic_us": "[dred]",
+   "phonetic_uk": "[dred]",
+   "meaning": "n.畏惧恐怖可怕的人可怕的事vt.惧怕恐惧adj.可怕的可怖的"
+  },
+  {
+   "word": "dreadfu",
+   "phonetic_us": "[‘dredful]",
+   "phonetic_uk": "[‘dredful]",
+   "meaning": "a.可怕的；令人敬畏的"
+  },
+  {
+   "word": "dubious",
+   "phonetic_us": "[‘dju:bjәs]",
+   "phonetic_uk": "[‘dju:bjәs]",
+   "meaning": "a. 可疑的,不确定的"
+  },
+  {
+   "word": "duplicate",
+   "phonetic_us": "[‘dju:plikit]",
+   "phonetic_uk": "[‘dju:plikit]",
+   "meaning": "n.复制品 vt.复制"
+  },
+  {
+   "word": "dwell",
+   "phonetic_us": "[dwel]",
+   "phonetic_uk": "[dwel]",
+   "meaning": "n.居住 vi.凝思，细想"
+  },
+  {
+   "word": "dwelling",
+   "phonetic_us": "['dweliŋ]",
+   "phonetic_uk": "['dweliŋ]",
+   "meaning": "n.住处寓所"
+  },
+  {
+   "word": "easter",
+   "phonetic_us": "[‘i:stә]",
+   "phonetic_uk": "[‘i:stә]",
+   "meaning": "n. 复活节"
+  },
+  {
+   "word": "eccentric",
+   "phonetic_us": "[ik’sentrik]",
+   "phonetic_uk": "[ik’sentrik]",
+   "meaning": "n.怪人,偏心圆 a.古怪的,不同圆心的"
+  },
+  {
+   "word": "eclipse",
+   "phonetic_us": "[i’klips]",
+   "phonetic_uk": "[i’klips]",
+   "meaning": "n.(日，月)食"
+  },
+  {
+   "word": "edible",
+   "phonetic_us": "[‘edibl]",
+   "phonetic_uk": "[‘edibl]",
+   "meaning": "a. 可食用的 n. 食品,食物"
+  },
+  {
+   "word": "ego",
+   "phonetic_us": "[‘egәu]",
+   "phonetic_uk": "[‘egәu]",
+   "meaning": "n. 自我"
+  },
+  {
+   "word": "eject",
+   "phonetic_us": "[i:’dʒekt]",
+   "phonetic_uk": "[i:’dʒekt]",
+   "meaning": "vt.逐出，排斥；喷射"
+  },
+  {
+   "word": "elaborate",
+   "phonetic_us": "[i'læbəreit]",
+   "phonetic_uk": "[i'læbəreit]",
+   "meaning": "adj.复杂的精心制作的精细的详尽的精心的v.详细地说明用心地作推敲"
+  },
+  {
+   "word": "elapse",
+   "phonetic_us": "[i’læps]",
+   "phonetic_uk": "[i’læps]",
+   "meaning": "vi.(时间)过去，消逝"
+  },
+  {
+   "word": "elastic",
+   "phonetic_us": "[i'læstik]",
+   "phonetic_uk": "[i'læstik]",
+   "meaning": "n.橡皮圈有松紧的东西松紧带adj.有弹性的灵活的可变的"
+  },
+  {
+   "word": "elegant",
+   "phonetic_us": "[‘eligәnt]",
+   "phonetic_uk": "[‘eligәnt]",
+   "meaning": "a.(举止、服饰)雅致的"
+  },
+  {
+   "word": "eleventh",
+   "phonetic_us": "[i'levnθ]",
+   "phonetic_uk": "[i'levnθ]",
+   "meaning": "num.第十一(个)"
+  },
+  {
+   "word": "elicit",
+   "phonetic_us": "[i’lisit]",
+   "phonetic_uk": "[i’lisit]",
+   "meaning": "vt. 引出,抽出,引起"
+  },
+  {
+   "word": "eligible",
+   "phonetic_us": "[‘elidʒәbl]",
+   "phonetic_uk": "[‘elidʒәbl]",
+   "meaning": "n. 有资格者,合格者 a.有资格的"
+  },
+  {
+   "word": "eloquent",
+   "phonetic_us": "[‘elәkwәnt]",
+   "phonetic_uk": "[‘elәkwәnt]",
+   "meaning": "a. 雄辩的,有口才的,动人的"
+  },
+  {
+   "word": "embark",
+   "phonetic_us": "[im’ba:k]",
+   "phonetic_uk": "[im’ba:k]",
+   "meaning": "vi. 乘船,着手,从事,上飞机"
+  },
+  {
+   "word": "embed",
+   "phonetic_us": "[im’bed]",
+   "phonetic_uk": "[im’bed]",
+   "meaning": "vt. 使插入,使嵌入"
+  },
+  {
+   "word": "embody",
+   "phonetic_us": "[im’bɔdi]",
+   "phonetic_uk": "[im’bɔdi]",
+   "meaning": "vt.体现；包含，收录"
+  },
+  {
+   "word": "empirical",
+   "phonetic_us": "[im’pirikәl]",
+   "phonetic_uk": "[im’pirikәl]",
+   "meaning": "a.经验主义的"
+  },
+  {
+   "word": "enclose",
+   "phonetic_us": "[in'kləuz]",
+   "phonetic_uk": "[in'kləuz]",
+   "meaning": "vt.围住圈起附上放入封套"
+  },
+  {
+   "word": "enclosure",
+   "phonetic_us": "[in’klәuʒә]",
+   "phonetic_uk": "[in’klәuʒә]",
+   "meaning": "n.围绕；围场，围栏"
+  },
+  {
+   "word": "endeavor",
+   "phonetic_us": "[in’dɛvә]",
+   "phonetic_uk": "[in’dɛvә]",
+   "meaning": "vi.&n.努力，尽力"
+  },
+  {
+   "word": "endow",
+   "phonetic_us": "[in’dau]",
+   "phonetic_uk": "[in’dau]",
+   "meaning": "vt.资助；赋予，授予"
+  },
+  {
+   "word": "England",
+   "phonetic_us": "['inglənd]",
+   "phonetic_uk": "['inglənd]",
+   "meaning": "n.英格兰英国"
+  },
+  {
+   "word": "English",
+   "phonetic_us": "['iŋgliʃ]",
+   "phonetic_uk": "['iŋgliʃ]",
+   "meaning": "n.英语adj.英国人的英国的英语的vt.译成英语把...(外来语言)加到英语中 Englishman"
+  },
+  {
+   "word": "ensue",
+   "phonetic_us": "[in’sju:]",
+   "phonetic_uk": "[in’sju:]",
+   "meaning": "vt. 追求 vi. 跟着发生,继起"
+  },
+  {
+   "word": "entail",
+   "phonetic_us": "[in’teil]",
+   "phonetic_uk": "[in’teil]",
+   "meaning": "vt. 使必需,使承担"
+  },
+  {
+   "word": "entity",
+   "phonetic_us": "[‘entiti]",
+   "phonetic_uk": "[‘entiti]",
+   "meaning": "n. 实体,实存物,存在"
+  },
+  {
+   "word": "envisage",
+   "phonetic_us": "[in’vizidʒ]",
+   "phonetic_uk": "[in’vizidʒ]",
+   "meaning": "vt. 面对,正视,想象"
+  },
+  {
+   "word": "epoch",
+   "phonetic_us": "[‘i:pɔk]",
+   "phonetic_uk": "[‘i:pɔk]",
+   "meaning": "n.(新)时代；历元"
+  },
+  {
+   "word": "equation",
+   "phonetic_us": "[i'kweiʃən]",
+   "phonetic_uk": "[i'kweiʃən]",
+   "meaning": "n.方程(式)等式均衡相等"
+  },
+  {
+   "word": "equator",
+   "phonetic_us": "[i’kweitә]",
+   "phonetic_uk": "[i’kweitә]",
+   "meaning": "n.赤道，天球赤道"
+  },
+  {
+   "word": "equilibrium",
+   "phonetic_us": "[i:kwi’libriәm]",
+   "phonetic_uk": "[i:kwi’libriәm]",
+   "meaning": "n.平衡，均衡；均衡论"
+  },
+  {
+   "word": "erect",
+   "phonetic_us": "[i'rekt]",
+   "phonetic_uk": "[i'rekt]",
+   "meaning": "vt.建造建立使竖立adj.直立的竖立的笔直的"
+  },
+  {
+   "word": "erosion",
+   "phonetic_us": "[i’rәuʒәn]",
+   "phonetic_uk": "[i’rәuʒәn]",
+   "meaning": "n.腐蚀，侵蚀；糜烂"
+  },
+  {
+   "word": "erupt",
+   "phonetic_us": "[i’rΛpt]",
+   "phonetic_uk": "[i’rΛpt]",
+   "meaning": "vi. 爆发 vt. 喷出"
+  },
+  {
+   "word": "escort",
+   "phonetic_us": "[‘eskɔ:t]",
+   "phonetic_uk": "[‘eskɔ:t]",
+   "meaning": "n.&vt.护卫，护送"
+  },
+  {
+   "word": "esp.",
+   "phonetic_us": "[is'peʃəl]",
+   "phonetic_uk": "[is'peʃəl]",
+   "meaning": "adj.(=especial)特别的特殊的尤其adv.(=especially)特别特殊"
+  },
+  {
+   "word": "esthetic",
+   "phonetic_us": "[es’θetik]",
+   "phonetic_uk": "[es’θetik]",
+   "meaning": "a. 审美的"
+  },
+  {
+   "word": "etc.",
+   "phonetic_us": "[et'setərə]",
+   "phonetic_uk": "[et'setərə]",
+   "meaning": "n.附加的人附加物以及其它等等=etcetera"
+  },
+  {
+   "word": "Europe",
+   "phonetic_us": "['juərəp]",
+   "phonetic_uk": "['juərəp]",
+   "meaning": "n.欧洲"
+  },
+  {
+   "word": "European",
+   "phonetic_us": "[.juərə'pi(:)ən]",
+   "phonetic_uk": "[.juərə'pi(:)ən]",
+   "meaning": "adj.欧洲的n.欧洲人"
+  },
+  {
+   "word": "evaporate",
+   "phonetic_us": "[i'væpəreit]",
+   "phonetic_uk": "[i'væpəreit]",
+   "meaning": "vt.使蒸发vi.蒸发失去水分消失"
+  },
+  {
+   "word": "evoke",
+   "phonetic_us": "[i’vәuk]",
+   "phonetic_uk": "[i’vәuk]",
+   "meaning": "vt. 唤起,引起"
+  },
+  {
+   "word": "exactly",
+   "phonetic_us": "[ig'zæktli]",
+   "phonetic_uk": "[ig'zæktli]",
+   "meaning": "adv.确切地恰恰正是"
+  },
+  {
+   "word": "exclusively",
+   "phonetic_us": "[iks'klu:sivli]",
+   "phonetic_uk": "[iks'klu:sivli]",
+   "meaning": "adv.专门地排他地(独占地专门地仅仅只)"
+  },
+  {
+   "word": "exempt",
+   "phonetic_us": "[ig’zempt]",
+   "phonetic_uk": "[ig’zempt]",
+   "meaning": "a. 免除的 vt. 使免除,豁免"
+  },
+  {
+   "word": "exotic",
+   "phonetic_us": "[ig’zɔutik]",
+   "phonetic_uk": "[ig’zɔutik]",
+   "meaning": "a.异国的,外来的n.外来物,舶来品"
+  },
+  {
+   "word": "expedition",
+   "phonetic_us": "[ekspi’diʃәn]",
+   "phonetic_uk": "[ekspi’diʃәn]",
+   "meaning": "n.探险；探险队"
+  },
+  {
+   "word": "expire",
+   "phonetic_us": "[iks’paiә]",
+   "phonetic_uk": "[iks’paiә]",
+   "meaning": "vi.满期，到期；断气"
+  },
+  {
+   "word": "exposition",
+   "phonetic_us": "[ekspә’ziʃәn]",
+   "phonetic_uk": "[ekspә’ziʃәn]",
+   "meaning": "n.说明，解释；陈列"
+  },
+  {
+   "word": "exquisite",
+   "phonetic_us": "[‘ekskwizit]",
+   "phonetic_uk": "[‘ekskwizit]",
+   "meaning": "a. 精致的,细腻的,敏锐的"
+  },
+  {
+   "word": "extinct",
+   "phonetic_us": "[iks’tiŋkt]",
+   "phonetic_uk": "[iks’tiŋkt]",
+   "meaning": "a.绝种的；熄灭了的"
+  },
+  {
+   "word": "extract",
+   "phonetic_us": "[iks’trækt, ‘ekstrækt]",
+   "phonetic_uk": "[iks’trækt, ‘ekstrækt]",
+   "meaning": "vt.取出；榨取 n.摘录"
+  },
+  {
+   "word": "extravagant",
+   "phonetic_us": "[iks’trævigәnt]",
+   "phonetic_uk": "[iks’trævigәnt]",
+   "meaning": "a.奢侈的；过度的"
+  },
+  {
+   "word": "extremely",
+   "phonetic_us": "[iks'tri:mli]",
+   "phonetic_uk": "[iks'tri:mli]",
+   "meaning": "adv.极端极其非常"
+  },
+  {
+   "word": "fabricate",
+   "phonetic_us": "[‘fæbrikeit]",
+   "phonetic_uk": "[‘fæbrikeit]",
+   "meaning": "vt.制作，组合；捏造"
+  },
+  {
+   "word": "facet",
+   "phonetic_us": "[‘fæsit]",
+   "phonetic_uk": "[‘fæsit]",
+   "meaning": "n. 小平面,方面,刻面"
+  },
+  {
+   "word": "Fahrenheit",
+   "phonetic_us": "['færənhait, 'fɑ:r-]",
+   "phonetic_uk": "['færənhait, 'fɑ:r-]",
+   "meaning": "n.华氏温度计adj.华氏的"
+  },
+  {
+   "word": "father-in-law",
+   "phonetic_us": "['fɑ:ðərinlɔ:]",
+   "phonetic_uk": "['fɑ:ðərinlɔ:]",
+   "meaning": "n.岳父公公"
+  },
+  {
+   "word": "feast",
+   "phonetic_us": "[fi:st]",
+   "phonetic_uk": "[fi:st]",
+   "meaning": "n.盛宴宴会酒席筵席节日节会vt. &vi.款宴享乐请客"
+  },
+  {
+   "word": "feeble",
+   "phonetic_us": "[‘fi:bl]",
+   "phonetic_uk": "[‘fi:bl]",
+   "meaning": "a.虚弱的；微弱的"
+  },
+  {
+   "word": "feminine",
+   "phonetic_us": "[‘feminin]",
+   "phonetic_uk": "[‘feminin]",
+   "meaning": "a.女性的；女子气的"
+  },
+  {
+   "word": "fertilize",
+   "phonetic_us": "['fə:tilaiz]",
+   "phonetic_uk": "['fə:tilaiz]",
+   "meaning": "v.施肥使丰饶"
+  },
+  {
+   "word": "finite",
+   "phonetic_us": "[‘fainait]",
+   "phonetic_uk": "[‘fainait]",
+   "meaning": "a.有限的；有尽的"
+  },
+  {
+   "word": "fitting",
+   "phonetic_us": "[‘fitiŋ]",
+   "phonetic_uk": "[‘fitiŋ]",
+   "meaning": "a.适当的 n.配合"
+  },
+  {
+   "word": "flank",
+   "phonetic_us": "[flæŋk]",
+   "phonetic_uk": "[flæŋk]",
+   "meaning": "n.肋，肋腹；侧面"
+  },
+  {
+   "word": "flap",
+   "phonetic_us": "[flæp]",
+   "phonetic_uk": "[flæp]",
+   "meaning": "vt.&n.拍打 vi.拍动"
+  },
+  {
+   "word": "flare",
+   "phonetic_us": "[flɛə]",
+   "phonetic_uk": "[flɛə]",
+   "meaning": "vi.闪耀闪光vt.使闪亮n.闪光闪耀[天]耀斑"
+  },
+  {
+   "word": "flatter",
+   "phonetic_us": "[‘flætә]",
+   "phonetic_uk": "[‘flætә]",
+   "meaning": "vt.奉承，阿谀，谄媚"
+  },
+  {
+   "word": "fling",
+   "phonetic_us": "[fliŋ]",
+   "phonetic_uk": "[fliŋ]",
+   "meaning": "vi.&vt.(用力)扔，抛"
+  },
+  {
+   "word": "flu",
+   "phonetic_us": "[flu:]",
+   "phonetic_uk": "[flu:]",
+   "meaning": "n.流行性感冒"
+  },
+  {
+   "word": "flush",
+   "phonetic_us": "[flʌʃ]",
+   "phonetic_uk": "[flʌʃ]",
+   "meaning": "vi.奔流(脸)发红冲刷旺盛成长vt.用水冲洗惊起(一群鸟)抄...老窝使兴奋adj.丰足的齐平的满盈的adv.正直地羞涩地n.流溢面红旺盛冲水(尤指冲马桶)突然萌发(纸牌)同花顺清一色"
+  },
+  {
+   "word": "flutter",
+   "phonetic_us": "[‘flΛtә]",
+   "phonetic_uk": "[‘flΛtә]",
+   "meaning": "vi.(鸟)振翼；飘动"
+  },
+  {
+   "word": "foam",
+   "phonetic_us": "[fәum]",
+   "phonetic_uk": "[fәum]",
+   "meaning": "n.泡沫；泡沫塑料"
+  },
+  {
+   "word": "foil",
+   "phonetic_us": "[fɔil]",
+   "phonetic_uk": "[fɔil]",
+   "meaning": "n. 箔,金属薄片 vt. 贴箔于, 衬托"
+  },
+  {
+   "word": "footstep",
+   "phonetic_us": "['futstep]",
+   "phonetic_uk": "['futstep]",
+   "meaning": "n.脚步脚步声足迹"
+  },
+  {
+   "word": "forbidden",
+   "phonetic_us": "[fə'bidn]",
+   "phonetic_uk": "[fə'bidn]",
+   "meaning": "adj.被禁止的"
+  },
+  {
+   "word": "formidable",
+   "phonetic_us": "[‘fɔ:midәbl]",
+   "phonetic_uk": "[‘fɔ:midәbl]",
+   "meaning": "a.可怕的；难对付的"
+  },
+  {
+   "word": "fort",
+   "phonetic_us": "[fɔ:t]",
+   "phonetic_uk": "[fɔ:t]",
+   "meaning": "n.要塞，堡垒"
+  },
+  {
+   "word": "fortnight",
+   "phonetic_us": "['fɔ:tnait]",
+   "phonetic_uk": "['fɔ:tnait]",
+   "meaning": "n.两星期十四天"
+  },
+  {
+   "word": "fortunately",
+   "phonetic_us": "['fɔitʃənitli]",
+   "phonetic_uk": "['fɔitʃənitli]",
+   "meaning": "adv.幸运地幸亏"
+  },
+  {
+   "word": "foster",
+   "phonetic_us": "[‘fɔstә]",
+   "phonetic_uk": "[‘fɔstә]",
+   "meaning": "vt.养育，抚养；培养"
+  },
+  {
+   "word": "foul",
+   "phonetic_us": "[faul]",
+   "phonetic_uk": "[faul]",
+   "meaning": "a.肮脏的；丑恶的"
+  },
+  {
+   "word": "fourth",
+   "phonetic_us": "[fɔ:θ]",
+   "phonetic_uk": "[fɔ:θ]",
+   "meaning": "num.第四四分之一n.四分之一"
+  },
+  {
+   "word": "fracture",
+   "phonetic_us": "[‘fræktʃә]",
+   "phonetic_uk": "[‘fræktʃә]",
+   "meaning": "n.破裂；裂痕 vi.破裂"
+  },
+  {
+   "word": "fragile",
+   "phonetic_us": "[‘frædʒail]",
+   "phonetic_uk": "[‘frædʒail]",
+   "meaning": "a.脆的；体质弱的"
+  },
+  {
+   "word": "France",
+   "phonetic_us": "[frɑ:ns]",
+   "phonetic_uk": "[frɑ:ns]",
+   "meaning": "n.法国法兰西"
+  },
+  {
+   "word": "fraud",
+   "phonetic_us": "[frɔ:d]",
+   "phonetic_uk": "[frɔ:d]",
+   "meaning": "n. 骗子,欺骗,欺诈,诡计"
+  },
+  {
+   "word": "freely",
+   "phonetic_us": "['fri:li]",
+   "phonetic_uk": "['fri:li]",
+   "meaning": "adv.自由地免费地直率地大量地"
+  },
+  {
+   "word": "French",
+   "phonetic_us": "[frentʃ]",
+   "phonetic_uk": "[frentʃ]",
+   "meaning": "adj.法国(人)的法语的n.法国人法语vt.剁肉蔬菜切成长条"
+  },
+  {
+   "word": "frequently",
+   "phonetic_us": "['fri:kwəntli]",
+   "phonetic_uk": "['fri:kwəntli]",
+   "meaning": "adv.时常常常经常地频繁地"
+  },
+  {
+   "word": "friction",
+   "phonetic_us": "['frikʃən]",
+   "phonetic_uk": "['frikʃən]",
+   "meaning": "n.摩擦摩擦力分歧"
+  },
+  {
+   "word": "fringe",
+   "phonetic_us": "[‘frindʒ]",
+   "phonetic_uk": "[‘frindʒ]",
+   "meaning": "n.穗，毛边；边缘"
+  },
+  {
+   "word": "frown",
+   "phonetic_us": "[fraun]",
+   "phonetic_uk": "[fraun]",
+   "meaning": "vt. &vi.皱眉蹙额不同意n.皱眉不悦"
+  },
+  {
+   "word": "furious",
+   "phonetic_us": "[‘fjuәriәs]",
+   "phonetic_uk": "[‘fjuәriәs]",
+   "meaning": "a.狂怒的；狂暴的"
+  },
+  {
+   "word": "fuse",
+   "phonetic_us": "[fju:z]",
+   "phonetic_uk": "[fju:z]",
+   "meaning": "n.保险丝，导火线"
+  },
+  {
+   "word": "fusion",
+   "phonetic_us": "[‘fjuʒәn]",
+   "phonetic_uk": "[‘fjuʒәn]",
+   "meaning": "n. 熔合物,结合,熔合"
+  },
+  {
+   "word": "galaxy",
+   "phonetic_us": "[‘gælәksi]",
+   "phonetic_uk": "[‘gælәksi]",
+   "meaning": "n. 银河,星系,一群显赫的人物"
+  },
+  {
+   "word": "gaseous",
+   "phonetic_us": "['gæsiəs]",
+   "phonetic_uk": "['gæsiəs]",
+   "meaning": "adj.气体的气态的"
+  },
+  {
+   "word": "gasp",
+   "phonetic_us": "[gɑ:sp]",
+   "phonetic_uk": "[gɑ:sp]",
+   "meaning": "vi.气喘喘息v.喘气喘息渴望"
+  },
+  {
+   "word": "gauge",
+   "phonetic_us": "[geidʒ]",
+   "phonetic_uk": "[geidʒ]",
+   "meaning": "vt.量测量估计判断n.测量标准轨距口径直径测量仪器"
+  },
+  {
+   "word": "gene",
+   "phonetic_us": "[dʒi:n]",
+   "phonetic_uk": "[dʒi:n]",
+   "meaning": "n. 基因,因子"
+  },
+  {
+   "word": "gently",
+   "phonetic_us": "['dʒentli]",
+   "phonetic_uk": "['dʒentli]",
+   "meaning": "ad.有礼貌地柔和地轻轻地温柔地"
+  },
+  {
+   "word": "German",
+   "phonetic_us": "['dʒə:mən]",
+   "phonetic_uk": "['dʒə:mən]",
+   "meaning": "adj.德国(人)的德语的日耳曼的n.德国人德语日耳曼人"
+  },
+  {
+   "word": "Germany",
+   "phonetic_us": "['dʒə:məni]",
+   "phonetic_uk": "['dʒə:məni]",
+   "meaning": "n.德意志德国"
+  },
+  {
+   "word": "glare",
+   "phonetic_us": "[glɛә]",
+   "phonetic_uk": "[glɛә]",
+   "meaning": "vi.瞪眼 n.瞪眼"
+  },
+  {
+   "word": "gleam",
+   "phonetic_us": "[gli:m]",
+   "phonetic_uk": "[gli:m]",
+   "meaning": "n.微光 vi.发微光"
+  },
+  {
+   "word": "glide",
+   "phonetic_us": "[glaid]",
+   "phonetic_uk": "[glaid]",
+   "meaning": "vi.滑动；消逝 n.滑行"
+  },
+  {
+   "word": "glitter",
+   "phonetic_us": "[‘glitә]",
+   "phonetic_uk": "[‘glitә]",
+   "meaning": "vi.闪闪发光 n.闪光"
+  },
+  {
+   "word": "graze",
+   "phonetic_us": "[greiz]",
+   "phonetic_uk": "[greiz]",
+   "meaning": "vi.喂草；放牧(牲畜)"
+  },
+  {
+   "word": "grease",
+   "phonetic_us": "[gri:s, gri:z]",
+   "phonetic_uk": "[gri:s, gri:z]",
+   "meaning": "n.动物脂，脂肪"
+  },
+  {
+   "word": "greatly",
+   "phonetic_us": "['greitli]",
+   "phonetic_uk": "['greitli]",
+   "meaning": "adv.大大地非常很"
+  },
+  {
+   "word": "greedy",
+   "phonetic_us": "['gri:di]",
+   "phonetic_uk": "['gri:di]",
+   "meaning": "adj.贪吃的贪婪的"
+  },
+  {
+   "word": "Greek",
+   "phonetic_us": "[gri:k]",
+   "phonetic_uk": "[gri:k]",
+   "meaning": "adj.希腊(人)的n.希腊人希腊语"
+  },
+  {
+   "word": "grim",
+   "phonetic_us": "[grim]",
+   "phonetic_uk": "[grim]",
+   "meaning": "a.冷酷无情的，严厉的"
+  },
+  {
+   "word": "groan",
+   "phonetic_us": "[grәun]",
+   "phonetic_uk": "[grәun]",
+   "meaning": "vi.哼，呻吟 n.呻吟"
+  },
+  {
+   "word": "grope",
+   "phonetic_us": "[grәup]",
+   "phonetic_uk": "[grәup]",
+   "meaning": "vi.(暗中)摸索，探索"
+  },
+  {
+   "word": "gunpowder",
+   "phonetic_us": "['gʌn.paudə]",
+   "phonetic_uk": "['gʌn.paudə]",
+   "meaning": "n.黑色火药有烟火药"
+  },
+  {
+   "word": "haircut",
+   "phonetic_us": "['hɛəkʌt]",
+   "phonetic_uk": "['hɛəkʌt]",
+   "meaning": "n.理发发式"
+  },
+  {
+   "word": "hamper",
+   "phonetic_us": "[‘hæmpә]",
+   "phonetic_uk": "[‘hæmpә]",
+   "meaning": "vt.妨碍，阻碍，牵制"
+  },
+  {
+   "word": "handkerchief",
+   "phonetic_us": "['hæŋkətʃif]",
+   "phonetic_uk": "['hæŋkətʃif]",
+   "meaning": "n.手帕方头巾围巾"
+  },
+  {
+   "word": "hare",
+   "phonetic_us": "[hɛə]",
+   "phonetic_uk": "[hɛə]",
+   "meaning": "n.野兔"
+  },
+  {
+   "word": "hawk",
+   "phonetic_us": "[hɔ:k]",
+   "phonetic_uk": "[hɔ:k]",
+   "meaning": "n.鹰隼掠夺别人的人鹰派人物清嗓v.用训好的鹰捕猎像鹰一般地袭击鹰啸清嗓沿街叫卖"
+  },
+  {
+   "word": "heave",
+   "phonetic_us": "[hi:v]",
+   "phonetic_uk": "[hi:v]",
+   "meaning": "vt.(用力地)举起；抛"
+  },
+  {
+   "word": "heavily",
+   "phonetic_us": "['hevili]",
+   "phonetic_uk": "['hevili]",
+   "meaning": "adv.重重地很重地沉重地沉闷地大量地"
+  },
+  {
+   "word": "helmet",
+   "phonetic_us": "['helmit]",
+   "phonetic_uk": "['helmit]",
+   "meaning": "n.头盔钢盔遮阳帽甲"
+  },
+  {
+   "word": "hemisphere",
+   "phonetic_us": "[‘hemisfiә]",
+   "phonetic_uk": "[‘hemisfiә]",
+   "meaning": "n.半球；半球地图"
+  },
+  {
+   "word": "henceforth",
+   "phonetic_us": "[‘hens’fɔ:θ]",
+   "phonetic_uk": "[‘hens’fɔ:θ]",
+   "meaning": "ad.今后，从今以后"
+  },
+  {
+   "word": "hero",
+   "phonetic_us": "['hiərəu]",
+   "phonetic_uk": "['hiərəu]",
+   "meaning": "n.男主角英雄勇士"
+  },
+  {
+   "word": "heroic",
+   "phonetic_us": "[hi'rəuik]",
+   "phonetic_uk": "[hi'rəuik]",
+   "meaning": "adj.英雄的英勇的巨大的"
+  },
+  {
+   "word": "heroine",
+   "phonetic_us": "['herəuin]",
+   "phonetic_uk": "['herəuin]",
+   "meaning": "n.女主角女英雄"
+  },
+  {
+   "word": "hierarchy",
+   "phonetic_us": "[‘haiәra:ki]",
+   "phonetic_uk": "[‘haiәra:ki]",
+   "meaning": "n.等级制度，统治集团"
+  },
+  {
+   "word": "hillside",
+   "phonetic_us": "['hil'said]",
+   "phonetic_uk": "['hil'said]",
+   "meaning": "n.(小山)山腰山坡"
+  },
+  {
+   "word": "hinge",
+   "phonetic_us": "[hindʒ]",
+   "phonetic_uk": "[hindʒ]",
+   "meaning": "n.合页，折叶，铰链"
+  },
+  {
+   "word": "hitherto",
+   "phonetic_us": "[‘hiðә’tu:]",
+   "phonetic_uk": "[‘hiðә’tu:]",
+   "meaning": "ad.迄今，到目前为止"
+  },
+  {
+   "word": "hoist",
+   "phonetic_us": "[hɔist]",
+   "phonetic_uk": "[hɔist]",
+   "meaning": "vt.升起 vi.扯起来"
+  },
+  {
+   "word": "homogeneous",
+   "phonetic_us": "[hɔmә’dʒi:njәs]",
+   "phonetic_uk": "[hɔmә’dʒi:njәs]",
+   "meaning": "a.同类的；均匀的"
+  },
+  {
+   "word": "hose",
+   "phonetic_us": "[hәuz]",
+   "phonetic_uk": "[hәuz]",
+   "meaning": "n.长筒袜；软管"
+  },
+  {
+   "word": "hostage",
+   "phonetic_us": "[‘hɔstidʒ]",
+   "phonetic_uk": "[‘hɔstidʒ]",
+   "meaning": "n.人质，抵押品"
+  },
+  {
+   "word": "hover",
+   "phonetic_us": "[‘hɔvә]",
+   "phonetic_uk": "[‘hɔvә]",
+   "meaning": "vi.徘徊；傍徨；翱翔"
+  },
+  {
+   "word": "humid",
+   "phonetic_us": "['hju:mid]",
+   "phonetic_uk": "['hju:mid]",
+   "meaning": "adj.湿的湿气重的潮湿的"
+  },
+  {
+   "word": "humidity",
+   "phonetic_us": "[hju:’miditi]",
+   "phonetic_uk": "[hju:’miditi]",
+   "meaning": "n.湿气；湿度"
+  },
+  {
+   "word": "hurl",
+   "phonetic_us": "[hә:l]",
+   "phonetic_uk": "[hә:l]",
+   "meaning": "vt.猛投 vi.猛冲"
+  },
+  {
+   "word": "hurricane",
+   "phonetic_us": "[‘hΛrikәn]",
+   "phonetic_uk": "[‘hΛrikәn]",
+   "meaning": "n.飓风，十二级风"
+  },
+  {
+   "word": "hypothesis",
+   "phonetic_us": "[hai’pɔθisi:z]",
+   "phonetic_uk": "[hai’pɔθisi:z]",
+   "meaning": "n.假设；前提"
+  },
+  {
+   "word": "hysterical",
+   "phonetic_us": "[his’terikәl]",
+   "phonetic_uk": "[his’terikәl]",
+   "meaning": "a. 歇斯底里的,异常兴奋的"
+  },
+  {
+   "word": "I",
+   "phonetic_us": "[ai]",
+   "phonetic_uk": "[ai]",
+   "meaning": "pron.(主格)我"
+  },
+  {
+   "word": "ideology",
+   "phonetic_us": "[aidi’ɔlәdʒi]",
+   "phonetic_uk": "[aidi’ɔlәdʒi]",
+   "meaning": "n. 意识形态,思想体系"
+  },
+  {
+   "word": "ignite",
+   "phonetic_us": "[ig’nait]",
+   "phonetic_uk": "[ig’nait]",
+   "meaning": "vt.引燃 vi.着火"
+  },
+  {
+   "word": "illuminate",
+   "phonetic_us": "[i’lju:mineit]",
+   "phonetic_uk": "[i’lju:mineit]",
+   "meaning": "vt.照明，照亮；阐明"
+  },
+  {
+   "word": "immerse",
+   "phonetic_us": "[i’mә:s]",
+   "phonetic_uk": "[i’mә:s]",
+   "meaning": "vt.沉浸；给…施洗礼"
+  },
+  {
+   "word": "impair",
+   "phonetic_us": "[im’pɛә]",
+   "phonetic_uk": "[im’pɛә]",
+   "meaning": "vt. 损害,减少,削弱"
+  },
+  {
+   "word": "impart",
+   "phonetic_us": "[im’pa:t]",
+   "phonetic_uk": "[im’pa:t]",
+   "meaning": "vt.给予，传递；告诉"
+  },
+  {
+   "word": "imperative",
+   "phonetic_us": "[im’perәtiv]",
+   "phonetic_uk": "[im’perәtiv]",
+   "meaning": "n. 命令, a.命令式的,急需的,强制的"
+  },
+  {
+   "word": "impetus",
+   "phonetic_us": "[‘impitәs]",
+   "phonetic_uk": "[‘impitәs]",
+   "meaning": "n. 动力,推动力,激励"
+  },
+  {
+   "word": "imprison",
+   "phonetic_us": "[im'prizn]",
+   "phonetic_uk": "[im'prizn]",
+   "meaning": "vt.关押监禁限制束缚"
+  },
+  {
+   "word": "inaugurate",
+   "phonetic_us": "[i’nɔ:gjureit]",
+   "phonetic_uk": "[i’nɔ:gjureit]",
+   "meaning": "vt.开始；使就职"
+  },
+  {
+   "word": "incident",
+   "phonetic_us": "['insidənt]",
+   "phonetic_uk": "['insidənt]",
+   "meaning": "n.发生的事事件(常指)军事冲突插曲事变adj.难免的附带的(物理)入射的"
+  },
+  {
+   "word": "incorporate",
+   "phonetic_us": "[in’kɔ:pәreit]",
+   "phonetic_uk": "[in’kɔ:pәreit]",
+   "meaning": "vt.结合，合并，收编"
+  },
+  {
+   "word": "incorrect",
+   "phonetic_us": "[.inkə'rekt]",
+   "phonetic_uk": "[.inkə'rekt]",
+   "meaning": "adj.不正确的错误的"
+  },
+  {
+   "word": "incur",
+   "phonetic_us": "[in’kә:]",
+   "phonetic_uk": "[in’kә:]",
+   "meaning": "vt. 招致,蒙受,遭遇"
+  },
+  {
+   "word": "indefinite",
+   "phonetic_us": "[in’definit]",
+   "phonetic_uk": "[in’definit]",
+   "meaning": "a.不明确的；不定的"
+  },
+  {
+   "word": "India",
+   "phonetic_us": "['indiə]",
+   "phonetic_uk": "['indiə]",
+   "meaning": "n.印度"
+  },
+  {
+   "word": "Indian",
+   "phonetic_us": "['indjən]",
+   "phonetic_uk": "['indjən]",
+   "meaning": "adj.印度的印度人的印第安人的n.印度人印第安人"
+  },
+  {
+   "word": "indignant",
+   "phonetic_us": "[in’dignәnt]",
+   "phonetic_uk": "[in’dignәnt]",
+   "meaning": "a.愤慨的，义愤的"
+  },
+  {
+   "word": "indignation",
+   "phonetic_us": "[indig’neiʃәn]",
+   "phonetic_uk": "[indig’neiʃәn]",
+   "meaning": "n.愤怒，愤慨，义愤"
+  },
+  {
+   "word": "indirect",
+   "phonetic_us": "[.indi'rekt]",
+   "phonetic_uk": "[.indi'rekt]",
+   "meaning": "adj.间接的不坦率的迂回的次要的欺骗的"
+  },
+  {
+   "word": "indulge",
+   "phonetic_us": "[in’dΛldʒ]",
+   "phonetic_uk": "[in’dΛldʒ]",
+   "meaning": "vt.放纵(感情)vi.纵情"
+  },
+  {
+   "word": "inefficient",
+   "phonetic_us": "[.ini'fiʃənt]",
+   "phonetic_uk": "[.ini'fiʃənt]",
+   "meaning": "adj.效率低的无效率的不称职的无能的"
+  },
+  {
+   "word": "inertia",
+   "phonetic_us": "[i’nә:ʃjә]",
+   "phonetic_uk": "[i’nә:ʃjә]",
+   "meaning": "n.惯性，惯量；无力"
+  },
+  {
+   "word": "inexpensive",
+   "phonetic_us": "[.inik'spensiv]",
+   "phonetic_uk": "[.inik'spensiv]",
+   "meaning": "adj.花费不多的廉价的"
+  },
+  {
+   "word": "inflict",
+   "phonetic_us": "[in’flikt]",
+   "phonetic_uk": "[in’flikt]",
+   "meaning": "vt. 施以,加害,使承受"
+  },
+  {
+   "word": "ingenious",
+   "phonetic_us": "[in’dʒi:njәs]",
+   "phonetic_uk": "[in’dʒi:njәs]",
+   "meaning": "a.机灵的；精巧制成的"
+  },
+  {
+   "word": "inhibit",
+   "phonetic_us": "[in’hibit]",
+   "phonetic_uk": "[in’hibit]",
+   "meaning": "vt. 禁止,抑制"
+  },
+  {
+   "word": "inject",
+   "phonetic_us": "[in’dʒekt]",
+   "phonetic_uk": "[in’dʒekt]",
+   "meaning": "vt.注射；注满；喷射"
+  },
+  {
+   "word": "injection",
+   "phonetic_us": "[in'dʒekʃən]",
+   "phonetic_uk": "[in'dʒekʃən]",
+   "meaning": "n.注射注入注射物数学函数充满"
+  },
+  {
+   "word": "inlet",
+   "phonetic_us": "[‘inlet]",
+   "phonetic_uk": "[‘inlet]",
+   "meaning": "n.进口，水湾 vt.引进"
+  },
+  {
+   "word": "innumerable",
+   "phonetic_us": "[i’nju:mәrәbl]",
+   "phonetic_uk": "[i’nju:mәrәbl]",
+   "meaning": "a.无数的，数不清的"
+  },
+  {
+   "word": "inser",
+   "phonetic_us": "[in'sə:t]",
+   "phonetic_uk": "[in'sə:t]",
+   "meaning": "t vt.插入嵌入登载n.插入物"
+  },
+  {
+   "word": "instantly",
+   "phonetic_us": "['instəntli]",
+   "phonetic_uk": "['instəntli]",
+   "meaning": "adv.立即即刻"
+  },
+  {
+   "word": "institution",
+   "phonetic_us": "[.insti'tju:ʃən]",
+   "phonetic_uk": "[.insti'tju:ʃən]",
+   "meaning": "n.协会制度习俗机构创立"
+  },
+  {
+   "word": "instruct",
+   "phonetic_us": "[in'strʌkt]",
+   "phonetic_uk": "[in'strʌkt]",
+   "meaning": "vt.教指示通知命令指导"
+  },
+  {
+   "word": "instruction",
+   "phonetic_us": "[in'strʌkʃən]",
+   "phonetic_uk": "[in'strʌkʃən]",
+   "meaning": "n.命令指令教学教训说明须知"
+  },
+  {
+   "word": "insufficient",
+   "phonetic_us": "[.insə'fiʃənt]",
+   "phonetic_uk": "[.insə'fiʃənt]",
+   "meaning": "adj.不足的不适当的"
+  },
+  {
+   "word": "insulate",
+   "phonetic_us": "[‘insjuleit]",
+   "phonetic_uk": "[‘insjuleit]",
+   "meaning": "vt.使绝缘，使绝热"
+  },
+  {
+   "word": "integral",
+   "phonetic_us": "[‘intigrәl]",
+   "phonetic_uk": "[‘intigrәl]",
+   "meaning": "a.组成的；整的"
+  },
+  {
+   "word": "intellect",
+   "phonetic_us": "[‘intilekt]",
+   "phonetic_uk": "[‘intilekt]",
+   "meaning": "n.理智，智力，才智"
+  },
+  {
+   "word": "intelligible",
+   "phonetic_us": "[in’tælidʒәbl]",
+   "phonetic_uk": "[in’tælidʒәbl]",
+   "meaning": "a.可理解,易理解的,明了的"
+  },
+  {
+   "word": "interim",
+   "phonetic_us": "[‘intәrim]",
+   "phonetic_uk": "[‘intәrim]",
+   "meaning": "a.中间的,暂时,间歇的,n.过渡时期"
+  },
+  {
+   "word": "intermittent",
+   "phonetic_us": "[intә’mitnt]",
+   "phonetic_uk": "[intә’mitnt]",
+   "meaning": "a. 间歇的,断断续续的"
+  },
+  {
+   "word": "intersection",
+   "phonetic_us": "[intә’sekʃәn]",
+   "phonetic_uk": "[intә’sekʃәn]",
+   "meaning": "n. 交集,十字路口,交叉点"
+  },
+  {
+   "word": "intervene",
+   "phonetic_us": "[intә’vi:n]",
+   "phonetic_uk": "[intә’vi:n]",
+   "meaning": "vi.干涉，干预；播进"
+  },
+  {
+   "word": "intimidate",
+   "phonetic_us": "[in’timideit]",
+   "phonetic_uk": "[in’timideit]",
+   "meaning": "vt. 威胁,恐吓,胁迫"
+  },
+  {
+   "word": "intricate",
+   "phonetic_us": "[‘intrikit]",
+   "phonetic_uk": "[‘intrikit]",
+   "meaning": "a. 复杂的,错综的,缠结的,难懂的"
+  },
+  {
+   "word": "intrigue",
+   "phonetic_us": "[in’tri:g]",
+   "phonetic_uk": "[in’tri:g]",
+   "meaning": "n.阴谋vi.密谋,耍诡计vt.激起兴趣"
+  },
+  {
+   "word": "intrinsic",
+   "phonetic_us": "[in’trinsik]",
+   "phonetic_uk": "[in’trinsik]",
+   "meaning": "a. 本质的,原有的,真正的"
+  },
+  {
+   "word": "intuition",
+   "phonetic_us": "[intju’iʃәn]",
+   "phonetic_uk": "[intju’iʃәn]",
+   "meaning": "n. 直觉,直觉的知识"
+  },
+  {
+   "word": "invalid",
+   "phonetic_us": "[‘invәli:d, in’vælid]",
+   "phonetic_uk": "[‘invәli:d, in’vælid]",
+   "meaning": "n.病人 a.有病的，无效的"
+  },
+  {
+   "word": "inventory",
+   "phonetic_us": "[‘invәn’tәuri]",
+   "phonetic_uk": "[‘invәn’tәuri]",
+   "meaning": "n. 详细目录,存货清单"
+  },
+  {
+   "word": "invert",
+   "phonetic_us": "[in’vә:t, ‘invә:t]",
+   "phonetic_uk": "[in’vә:t, ‘invә:t]",
+   "meaning": "vt. 使反转,使颠倒,使转化"
+  },
+  {
+   "word": "irrespective",
+   "phonetic_us": "[iris’pektiv]",
+   "phonetic_uk": "[iris’pektiv]",
+   "meaning": "a.不考虑的，不顾的"
+  },
+  {
+   "word": "irritate",
+   "phonetic_us": "[‘iriteit]",
+   "phonetic_uk": "[‘iriteit]",
+   "meaning": "vt.激怒；引起不愉快"
+  },
+  {
+   "word": "Italian",
+   "phonetic_us": "[i'tæljən]",
+   "phonetic_uk": "[i'tæljən]",
+   "meaning": "adj.意大利n.意大利人"
+  },
+  {
+   "word": "Italy",
+   "phonetic_us": "['itəli]",
+   "phonetic_uk": "['itəli]",
+   "meaning": "n.意大利"
+  },
+  {
+   "word": "ivory",
+   "phonetic_us": "[‘aivәri]",
+   "phonetic_uk": "[‘aivәri]",
+   "meaning": "n.象牙；牙质；乳白色"
+  },
+  {
+   "word": "Japan",
+   "phonetic_us": "[dʒə'pæn]",
+   "phonetic_uk": "[dʒə'pæn]",
+   "meaning": "n.日本日本国日本漆日本式漆器日本式物品"
+  },
+  {
+   "word": "Japanese",
+   "phonetic_us": "[dʒæpə'ni:z]",
+   "phonetic_uk": "[dʒæpə'ni:z]",
+   "meaning": "adj.日本的日本人的日语的n.日本人日语"
+  },
+  {
+   "word": "jeopardize",
+   "phonetic_us": "[‘dʒepәdaiz]",
+   "phonetic_uk": "[‘dʒepәdaiz]",
+   "meaning": "vt. 危害,使受危困,使陷危地"
+  },
+  {
+   "word": "jerk",
+   "phonetic_us": "[dʒә:k]",
+   "phonetic_uk": "[dʒә:k]",
+   "meaning": "vt.猛地一拉 vi.急拉"
+  },
+  {
+   "word": "jew",
+   "phonetic_us": "[dʒu:]",
+   "phonetic_uk": "[dʒu:]",
+   "meaning": "n.犹太人"
+  },
+  {
+   "word": "jewish",
+   "phonetic_us": "['dʒu:iʃ]",
+   "phonetic_uk": "['dʒu:iʃ]",
+   "meaning": "adj.犹太人的"
+  },
+  {
+   "word": "jolly",
+   "phonetic_us": "['dʒɔli]",
+   "phonetic_uk": "['dʒɔli]",
+   "meaning": "adj.快活的愉快的高兴的宜人的令人高兴的v.恭维哄开玩笑戏虐adv.非常极为n.(尤英)欢乐欢庆(复数)follies:娱乐乐趣"
+  },
+  {
+   "word": "junction",
+   "phonetic_us": "[‘dʒΛŋkʃәn]",
+   "phonetic_uk": "[‘dʒΛŋkʃәn]",
+   "meaning": "n.连接；接头；中继线"
+  },
+  {
+   "word": "keeper",
+   "phonetic_us": "['ki:pə]",
+   "phonetic_uk": "['ki:pə]",
+   "meaning": "n.看护人饲养员保管人"
+  },
+  {
+   "word": "kidney",
+   "phonetic_us": "[‘kidni]",
+   "phonetic_uk": "[‘kidni]",
+   "meaning": "n.肾，腰子；性格"
+  },
+  {
+   "word": "knock",
+   "phonetic_us": "[nɔk]",
+   "phonetic_uk": "[nɔk]",
+   "meaning": "vi. &vt.敲击打互撞攻击n.敲敲打敲门"
+  },
+  {
+   "word": "lantern",
+   "phonetic_us": "['læntən]",
+   "phonetic_uk": "['læntən]",
+   "meaning": "n.提灯灯笼[建]天窗屋顶气窗"
+  },
+  {
+   "word": "latent",
+   "phonetic_us": "[‘leitәnt]",
+   "phonetic_uk": "[‘leitәnt]",
+   "meaning": "a.存在但看不见的"
+  },
+  {
+   "word": "Latin",
+   "phonetic_us": "['lætin]",
+   "phonetic_uk": "['lætin]",
+   "meaning": "adj.拉丁的拉丁人的拉丁语系国家的n.拉丁语拉丁人"
+  },
+  {
+   "word": "latitude",
+   "phonetic_us": "[‘lætitju:d]",
+   "phonetic_uk": "[‘lætitju:d]",
+   "meaning": "n.纬度；黄纬"
+  },
+  {
+   "word": "layman",
+   "phonetic_us": "[‘leimәn]",
+   "phonetic_uk": "[‘leimәn]",
+   "meaning": "n. 俗人,门外汉,凡人"
+  },
+  {
+   "word": "leaflet",
+   "phonetic_us": "[‘li:flit]",
+   "phonetic_uk": "[‘li:flit]",
+   "meaning": "n.传单，活页；广告"
+  },
+  {
+   "word": "legitimate",
+   "phonetic_us": "[li’dʒitimit]",
+   "phonetic_uk": "[li’dʒitimit]",
+   "meaning": "a. 合法的,正当的 vt. 使合法"
+  },
+  {
+   "word": "lessen",
+   "phonetic_us": "['lesn]",
+   "phonetic_uk": "['lesn]",
+   "meaning": "vt.减少减轻缩小变小"
+  },
+  {
+   "word": "lever",
+   "phonetic_us": "['levə]",
+   "phonetic_uk": "['levə]",
+   "meaning": "n.杆杠杆控制杆似杠杆之工具vt.撬开使用杠杆"
+  },
+  {
+   "word": "lieutenant",
+   "phonetic_us": "[lu:'tenənt]",
+   "phonetic_uk": "[lu:'tenənt]",
+   "meaning": "n.陆军中尉副职官员助理人员"
+  },
+  {
+   "word": "lifetime",
+   "phonetic_us": "['laiftaim]",
+   "phonetic_uk": "['laiftaim]",
+   "meaning": "n.一生终身寿命使用期限"
+  },
+  {
+   "word": "lighten",
+   "phonetic_us": "['laitn]",
+   "phonetic_uk": "['laitn]",
+   "meaning": "vt.照亮使明亮点亮变亮减轻"
+  },
+  {
+   "word": "lightly",
+   "phonetic_us": "['laitli]",
+   "phonetic_uk": "['laitli]",
+   "meaning": "adv.轻轻地轻松地轻快地轻蔑地轻率地轻微地"
+  },
+  {
+   "word": "lightning",
+   "phonetic_us": "['laitniŋ]",
+   "phonetic_uk": "['laitniŋ]",
+   "meaning": "n.闪电闪电放电adj.闪电般的快速的vi.打闪"
+  },
+  {
+   "word": "lime",
+   "phonetic_us": "[laim]",
+   "phonetic_uk": "[laim]",
+   "meaning": "n.石灰酸橙酸橙树粘鸟胶钙vt.施石灰涂上粘性物质沾上粘鸟胶adj.与石灰或石灰石相关的"
+  },
+  {
+   "word": "limp",
+   "phonetic_us": "[limp]",
+   "phonetic_uk": "[limp]",
+   "meaning": "vi.蹒跚，跛行 n.跛行"
+  },
+  {
+   "word": "linen",
+   "phonetic_us": "['linin]",
+   "phonetic_uk": "['linin]",
+   "meaning": "n.亚麻布亚麻线亚麻织物亚麻制品adj.亚麻布制的亚麻的"
+  },
+  {
+   "word": "liner",
+   "phonetic_us": "[‘lainә]",
+   "phonetic_uk": "[‘lainә]",
+   "meaning": "n.班船，班机"
+  },
+  {
+   "word": "linger",
+   "phonetic_us": "[‘liŋgә]",
+   "phonetic_uk": "[‘liŋgә]",
+   "meaning": "vi.逗留，徘徊；拖延"
+  },
+  {
+   "word": "locomotive",
+   "phonetic_us": "[.ləukə'məutiv]",
+   "phonetic_uk": "[.ləukə'məutiv]",
+   "meaning": "n.火车头机车adj.运转的火车头的移动的"
+  },
+  {
+   "word": "loft",
+   "phonetic_us": "[lɔ:ft]",
+   "phonetic_uk": "[lɔ:ft]",
+   "meaning": "n.阁楼顶楼"
+  },
+  {
+   "word": "lofty",
+   "phonetic_us": "[‘lɔfti]",
+   "phonetic_uk": "[‘lɔfti]",
+   "meaning": "a.高耸的；高尚的"
+  },
+  {
+   "word": "longitude",
+   "phonetic_us": "[‘lɔndʒitju:d]",
+   "phonetic_uk": "[‘lɔndʒitju:d]",
+   "meaning": "n.经线，经度"
+  },
+  {
+   "word": "loop",
+   "phonetic_us": "[lu:p]",
+   "phonetic_uk": "[lu:p]",
+   "meaning": "n.圈环环孔弯曲部份回路vt.使...成环以圈结以环连结vi.形成环环形地行动"
+  },
+  {
+   "word": "loudspeaker",
+   "phonetic_us": "['laud'spi:kə]",
+   "phonetic_uk": "['laud'spi:kə]",
+   "meaning": "n.扬声器喇叭"
+  },
+  {
+   "word": "lounge",
+   "phonetic_us": "[laundʒ]",
+   "phonetic_uk": "[laundʒ]",
+   "meaning": "n.(旅馆等的)休息室"
+  },
+  {
+   "word": "lubricate",
+   "phonetic_us": "[‘lju:brikeit]",
+   "phonetic_uk": "[‘lju:brikeit]",
+   "meaning": "vt.使润滑vi.加润滑油"
+  },
+  {
+   "word": "lumber",
+   "phonetic_us": "['lʌmbə]",
+   "phonetic_uk": "['lʌmbə]",
+   "meaning": "n.木材木料制材v.伐木vi.缓慢地移动vt.拖累"
+  },
+  {
+   "word": "luminous",
+   "phonetic_us": "[‘lju:minәs]",
+   "phonetic_uk": "[‘lju:minәs]",
+   "meaning": "a.发光的；光明的"
+  },
+  {
+   "word": "magnify",
+   "phonetic_us": "[‘mægnifai]",
+   "phonetic_uk": "[‘mægnifai]",
+   "meaning": "vt.放大，扩大"
+  },
+  {
+   "word": "magnitude",
+   "phonetic_us": "[‘mægnitju:d]",
+   "phonetic_uk": "[‘mægnitju:d]",
+   "meaning": "n.大小；重大；星等"
+  },
+  {
+   "word": "mainly",
+   "phonetic_us": "['meinli]",
+   "phonetic_uk": "['meinli]",
+   "meaning": "adv.主要地大体上"
+  },
+  {
+   "word": "majesty",
+   "phonetic_us": "[‘mædʒisti]",
+   "phonetic_uk": "[‘mædʒisti]",
+   "meaning": "n.威严，尊严；陛下"
+  },
+  {
+   "word": "manifest",
+   "phonetic_us": "[‘mænifest]",
+   "phonetic_uk": "[‘mænifest]",
+   "meaning": "vt.表明 a.明白的"
+  },
+  {
+   "word": "manoeuvre",
+   "phonetic_us": "[mә’nu:vә]",
+   "phonetic_uk": "[mә’nu:vә]",
+   "meaning": "n.vi. 调遣,演习vt. 调动,操纵"
+  },
+  {
+   "word": "manuscript",
+   "phonetic_us": "[‘mænjuskript]",
+   "phonetic_uk": "[‘mænjuskript]",
+   "meaning": "n.手稿，底稿，原稿"
+  },
+  {
+   "word": "marble",
+   "phonetic_us": "['mɑ:bl]",
+   "phonetic_uk": "['mɑ:bl]",
+   "meaning": "n.大理石vt.使有大理石的花纹"
+  },
+  {
+   "word": "married",
+   "phonetic_us": "['mærid]",
+   "phonetic_uk": "['mærid]",
+   "meaning": "adj.已婚的婚姻的"
+  },
+  {
+   "word": "masculine",
+   "phonetic_us": "[‘ma:skjulin]",
+   "phonetic_uk": "[‘ma:skjulin]",
+   "meaning": "a.男性的；强壮的"
+  },
+  {
+   "word": "meadow",
+   "phonetic_us": "[‘medәu]",
+   "phonetic_uk": "[‘medәu]",
+   "meaning": "n.草地，牧草地"
+  },
+  {
+   "word": "mechanically",
+   "phonetic_us": "[mi'kænikəli]",
+   "phonetic_uk": "[mi'kænikəli]",
+   "meaning": "adv.机械地"
+  },
+  {
+   "word": "mediate",
+   "phonetic_us": "[‘midieit]",
+   "phonetic_uk": "[‘midieit]",
+   "meaning": "a. 居间的,间接的vt. 斡旋,调停"
+  },
+  {
+   "word": "medieval",
+   "phonetic_us": "[medi’i:vәl]",
+   "phonetic_uk": "[medi’i:vәl]",
+   "meaning": "a. 中古的,中世纪的"
+  },
+  {
+   "word": "mediterranean",
+   "phonetic_us": "[meditә’reinjәn]",
+   "phonetic_uk": "[meditә’reinjәn]",
+   "meaning": "n.地中海 a.地中海的"
+  },
+  {
+   "word": "melody",
+   "phonetic_us": "[‘melәdi]",
+   "phonetic_uk": "[‘melәdi]",
+   "meaning": "n.旋律，曲调；歌曲"
+  },
+  {
+   "word": "menace",
+   "phonetic_us": "[‘menәs]",
+   "phonetic_uk": "[‘menәs]",
+   "meaning": "vt.&vi.&n.(进行)威胁"
+  },
+  {
+   "word": "mercury",
+   "phonetic_us": "['mə:kjuri]",
+   "phonetic_uk": "['mə:kjuri]",
+   "meaning": "n.水银汞(Mercury)水星"
+  },
+  {
+   "word": "merge",
+   "phonetic_us": "[mә:dʒ]",
+   "phonetic_uk": "[mә:dʒ]",
+   "meaning": "vt. 使合并,使并为一体"
+  },
+  {
+   "word": "metropolitan",
+   "phonetic_us": "[metrә’pɔlitәn]",
+   "phonetic_uk": "[metrә’pɔlitәn]",
+   "meaning": "a.主要都市的n.大主教"
+  },
+  {
+   "word": "microcomputer",
+   "phonetic_us": "['maikrəukəm'pju:tə]",
+   "phonetic_uk": "['maikrəukəm'pju:tə]",
+   "meaning": "n.微型计算机微机"
+  },
+  {
+   "word": "midst",
+   "phonetic_us": "[midst]",
+   "phonetic_uk": "[midst]",
+   "meaning": "n.中部中间当中prep.(=amidst)在...当中"
+  },
+  {
+   "word": "militant",
+   "phonetic_us": "[‘militәnt]",
+   "phonetic_uk": "[‘militәnt]",
+   "meaning": "a. 好战的"
+  },
+  {
+   "word": "miner",
+   "phonetic_us": "['mainə]",
+   "phonetic_uk": "['mainə]",
+   "meaning": "n.矿工"
+  },
+  {
+   "word": "mingle",
+   "phonetic_us": "[‘miŋgl]",
+   "phonetic_uk": "[‘miŋgl]",
+   "meaning": "vt.使混合vi.混合起来"
+  },
+  {
+   "word": "miniature",
+   "phonetic_us": "[‘minjәtʃә]",
+   "phonetic_uk": "[‘minjәtʃә]",
+   "meaning": "n.缩影 a.缩小的"
+  },
+  {
+   "word": "missionary",
+   "phonetic_us": "[‘miʃәnәri]",
+   "phonetic_uk": "[‘miʃәnәri]",
+   "meaning": "n.传教士"
+  },
+  {
+   "word": "moan",
+   "phonetic_us": "[məun]",
+   "phonetic_uk": "[məun]",
+   "meaning": "n.呻吟声悲叹声抱怨声vi.呻吟v.抱怨呻吟"
+  },
+  {
+   "word": "mobilize",
+   "phonetic_us": "[‘mәubilaiz]",
+   "phonetic_uk": "[‘mәubilaiz]",
+   "meaning": "vt.动员 vi.动员起来"
+  },
+  {
+   "word": "mock",
+   "phonetic_us": "[mɔk]",
+   "phonetic_uk": "[mɔk]",
+   "meaning": "n.嘲弄 vt.嘲弄，挖苦"
+  },
+  {
+   "word": "molecule",
+   "phonetic_us": "['mɔlikju:l]",
+   "phonetic_uk": "['mɔlikju:l]",
+   "meaning": "n.分子克分子"
+  },
+  {
+   "word": "momen",
+   "phonetic_us": "['məumənt]",
+   "phonetic_uk": "['məumənt]",
+   "meaning": "t n.片刻瞬间时刻准确时刻非常重要的时机力矩"
+  },
+  {
+   "word": "momentum",
+   "phonetic_us": "[mou’mentәm]",
+   "phonetic_uk": "[mou’mentәm]",
+   "meaning": "n. 动力,要素"
+  },
+  {
+   "word": "monopoly",
+   "phonetic_us": "[mә’nɔpәli]",
+   "phonetic_uk": "[mә’nɔpәli]",
+   "meaning": "n.垄断，独占，专利"
+  },
+  {
+   "word": "mortal",
+   "phonetic_us": "[‘mɔ:tl]",
+   "phonetic_uk": "[‘mɔ:tl]",
+   "meaning": "a.终有一死的；致死的"
+  },
+  {
+   "word": "mosquito",
+   "phonetic_us": "[məs'ki:təu]",
+   "phonetic_uk": "[məs'ki:təu]",
+   "meaning": "n.蚊子"
+  },
+  {
+   "word": "mourn",
+   "phonetic_us": "[mɔ:n]",
+   "phonetic_uk": "[mɔ:n]",
+   "meaning": "vi.哀痛，哀悼"
+  },
+  {
+   "word": "multitude",
+   "phonetic_us": "[‘mΛltitju:d]",
+   "phonetic_uk": "[‘mΛltitju:d]",
+   "meaning": "n.大批，大群；大量"
+  },
+  {
+   "word": "murderer",
+   "phonetic_us": "['mə:dərə]",
+   "phonetic_uk": "['mə:dərə]",
+   "meaning": "n.杀人犯凶手"
+  },
+  {
+   "word": "murmur",
+   "phonetic_us": "[‘mә:mә]",
+   "phonetic_uk": "[‘mә:mә]",
+   "meaning": "vi. 低语,低声而言 n.低语"
+  },
+  {
+   "word": "mute",
+   "phonetic_us": "[mju:t]",
+   "phonetic_uk": "[mju:t]",
+   "meaning": "adj.缄默的哑的无声的n.哑巴默音字母弱音器vt.减音减弱vi.(鸟)排泄"
+  },
+  {
+   "word": "mutter",
+   "phonetic_us": "['mʌtə]",
+   "phonetic_uk": "['mʌtə]",
+   "meaning": "vi.轻声低语喃喃自语作低沉声抱怨出怨言n.喃喃低语"
+  },
+  {
+   "word": "mutton",
+   "phonetic_us": "['mʌtn]",
+   "phonetic_uk": "['mʌtn]",
+   "meaning": "n.羊肉"
+  },
+  {
+   "word": "naive",
+   "phonetic_us": "[na:’i:v]",
+   "phonetic_uk": "[na:’i:v]",
+   "meaning": "a. 天真的,纯真的,朴素的"
+  },
+  {
+   "word": "navigation",
+   "phonetic_us": "[.nævi'geiʃən]",
+   "phonetic_uk": "[.nævi'geiʃən]",
+   "meaning": "n.航行航海术导航"
+  },
+  {
+   "word": "needless",
+   "phonetic_us": "['ni:dlis]",
+   "phonetic_uk": "['ni:dlis]",
+   "meaning": "adj.不需要的无用的"
+  },
+  {
+   "word": "negligible",
+   "phonetic_us": "[‘neglidʒәbl]",
+   "phonetic_uk": "[‘neglidʒәbl]",
+   "meaning": "a.微不足道的"
+  },
+  {
+   "word": "Negro",
+   "phonetic_us": "['ni:grəu]",
+   "phonetic_uk": "['ni:grəu]",
+   "meaning": "n.(含歧视意味)黑人adj.黑人的"
+  },
+  {
+   "word": "newly",
+   "phonetic_us": "['nju:li]",
+   "phonetic_uk": "['nju:li]",
+   "meaning": "adv.新近重新地最近"
+  },
+  {
+   "word": "nitrogen",
+   "phonetic_us": "['naitrədʒən]",
+   "phonetic_uk": "['naitrədʒən]",
+   "meaning": "n.氮"
+  },
+  {
+   "word": "Nominal",
+   "phonetic_us": "[‘nɔminl]",
+   "phonetic_uk": "[‘nɔminl]",
+   "meaning": "a. 名义上的,名字的 n. 名词性词"
+  },
+  {
+   "word": "nominate",
+   "phonetic_us": "[‘nɔmineit]",
+   "phonetic_uk": "[‘nɔmineit]",
+   "meaning": "vt.提名，推荐；任命"
+  },
+  {
+   "word": "Nonetheless",
+   "phonetic_us": "[‘nΛnðә’les]",
+   "phonetic_uk": "[‘nΛnðә’les]",
+   "meaning": "adv. 尽管如此,然而"
+  },
+  {
+   "word": "notorious",
+   "phonetic_us": "[nәu’tɔ:riәs]",
+   "phonetic_uk": "[nәu’tɔ:riәs]",
+   "meaning": "a.臭名昭著的"
+  },
+  {
+   "word": "notwithstanding",
+   "phonetic_us": "[nɔtwiθ’stændiŋ]",
+   "phonetic_uk": "[nɔtwiθ’stændiŋ]",
+   "meaning": "prep.尽管，虽然"
+  },
+  {
+   "word": "numerical",
+   "phonetic_us": "[nju’merikәl]",
+   "phonetic_uk": "[nju’merikәl]",
+   "meaning": "a.数字的，数值的"
+  },
+  {
+   "word": "nylon",
+   "phonetic_us": "['nailɔn]",
+   "phonetic_uk": "['nailɔn]",
+   "meaning": "n.尼龙耐纶(复数nylons)：女长袜"
+  },
+  {
+   "word": "oak",
+   "phonetic_us": "[əuk]",
+   "phonetic_uk": "[əuk]",
+   "meaning": "n.栎属植物栎木橡树橡木adj.橡木制的"
+  },
+  {
+   "word": "oar",
+   "phonetic_us": "[ɔ:]",
+   "phonetic_uk": "[ɔ:]",
+   "meaning": "n.浆橹划手v.划行"
+  },
+  {
+   "word": "oath",
+   "phonetic_us": "[әuθ]",
+   "phonetic_uk": "[әuθ]",
+   "meaning": "n.誓言，誓约，宣誓"
+  },
+  {
+   "word": "obscene",
+   "phonetic_us": "[ɔb’si:n]",
+   "phonetic_uk": "[ɔb’si:n]",
+   "meaning": "a. 淫秽的,猥亵的"
+  },
+  {
+   "word": "obscure",
+   "phonetic_us": "[әb’skjuә]",
+   "phonetic_uk": "[әb’skjuә]",
+   "meaning": "a.阴暗的；蒙昧的"
+  },
+  {
+   "word": "obtain",
+   "phonetic_us": "[əb'tein]",
+   "phonetic_uk": "[əb'tein]",
+   "meaning": "vt.获得得到买到vi.通用流行存在"
+  },
+  {
+   "word": "obvious",
+   "phonetic_us": "['ɔbviəs]",
+   "phonetic_uk": "['ɔbviəs]",
+   "meaning": "adj.明显的显而易见的"
+  },
+  {
+   "word": "obviously",
+   "phonetic_us": "['ɔbviəsli]",
+   "phonetic_uk": "['ɔbviəsli]",
+   "meaning": "adv.明显地显然地"
+  },
+  {
+   "word": "occasion",
+   "phonetic_us": "[ə'keiʒən]",
+   "phonetic_uk": "[ə'keiʒən]",
+   "meaning": "n.场合时刻时机机会理由vt.致使惹起引起"
+  },
+  {
+   "word": "occasional",
+   "phonetic_us": "[ə'keiʒənəl]",
+   "phonetic_uk": "[ə'keiʒənəl]",
+   "meaning": "adj.偶然的临时的不时的"
+  },
+  {
+   "word": "occasionally",
+   "phonetic_us": "[ə'keiʒənəli]",
+   "phonetic_uk": "[ə'keiʒənəli]",
+   "meaning": "adv.偶然非经常地"
+  },
+  {
+   "word": "occupation",
+   "phonetic_us": "[.ɔkju'peiʃən]",
+   "phonetic_uk": "[.ɔkju'peiʃən]",
+   "meaning": "n.占领占据侵占职业居住"
+  },
+  {
+   "word": "Oceania",
+   "phonetic_us": "[.əuʃi'einiə]",
+   "phonetic_uk": "[.əuʃi'einiə]",
+   "meaning": "n.大洋洲"
+  },
+  {
+   "word": "offset",
+   "phonetic_us": "[‘ɔ:fset]",
+   "phonetic_uk": "[‘ɔ:fset]",
+   "meaning": "n.分支，抵销 vt.抵销"
+  },
+  {
+   "word": "offspring",
+   "phonetic_us": "[‘ɔ(:)fspriŋ]",
+   "phonetic_uk": "[‘ɔ(:)fspriŋ]",
+   "meaning": "n.儿女，子孙，后代"
+  },
+  {
+   "word": "oh",
+   "phonetic_us": "[əu]",
+   "phonetic_uk": "[əu]",
+   "meaning": "int.嗬哦唉呀"
+  },
+  {
+   "word": "opaque",
+   "phonetic_us": "[әu’peik]",
+   "phonetic_uk": "[әu’peik]",
+   "meaning": "a.不透明的；不传导的"
+  },
+  {
+   "word": "oppress",
+   "phonetic_us": "[ә’pres]",
+   "phonetic_uk": "[ә’pres]",
+   "meaning": "vt.压迫，压制；压抑"
+  },
+  {
+   "word": "optical",
+   "phonetic_us": "['ɔptikəl]",
+   "phonetic_uk": "['ɔptikəl]",
+   "meaning": "adj.眼的眼睛的视觉的光学的"
+  },
+  {
+   "word": "optimum",
+   "phonetic_us": "[‘ɔptimiәm]",
+   "phonetic_uk": "[‘ɔptimiәm]",
+   "meaning": "n.最适条件，最适度"
+  },
+  {
+   "word": "Orthodox",
+   "phonetic_us": "[‘ɔ:θәdɔks]",
+   "phonetic_uk": "[‘ɔ:θәdɔks]",
+   "meaning": "a. 正统的,传统的,惯常的"
+  },
+  {
+   "word": "ought",
+   "phonetic_us": "[ɔ:t]",
+   "phonetic_uk": "[ɔ:t]",
+   "meaning": "v.aux.应当应该conj.应该大概"
+  },
+  {
+   "word": "outskirt",
+   "phonetic_us": "['aut.skə:t]",
+   "phonetic_uk": "['aut.skə:t]",
+   "meaning": "n.外边郊区"
+  },
+  {
+   "word": "overflow",
+   "phonetic_us": "[әuvә’flәu]",
+   "phonetic_uk": "[әuvә’flәu]",
+   "meaning": "vt.从…中溢出"
+  },
+  {
+   "word": "overlap",
+   "phonetic_us": "[әuvә’læp]",
+   "phonetic_uk": "[әuvә’læp]",
+   "meaning": "vt.与…交搭 vi.重迭"
+  },
+  {
+   "word": "Overt",
+   "phonetic_us": "[‘әuvә:t]",
+   "phonetic_uk": "[‘әuvә:t]",
+   "meaning": "a. 明显的,公然的"
+  },
+  {
+   "word": "owl",
+   "phonetic_us": "[aul]",
+   "phonetic_uk": "[aul]",
+   "meaning": "n.猫头鹰枭"
+  },
+  {
+   "word": "oxide",
+   "phonetic_us": "[‘ɔksaid]",
+   "phonetic_uk": "[‘ɔksaid]",
+   "meaning": "n.氧化物"
+  },
+  {
+   "word": "P.M.",
+   "phonetic_us": "[pi:'em]",
+   "phonetic_uk": "[pi:'em]",
+   "meaning": "n.下午午后abbr.下午(=post meridiem"
+  },
+  {
+   "word": "pamphlet",
+   "phonetic_us": "[‘pæmflit]",
+   "phonetic_uk": "[‘pæmflit]",
+   "meaning": "n.小册子"
+  },
+  {
+   "word": "paradise",
+   "phonetic_us": "[‘pærәdais]",
+   "phonetic_uk": "[‘pærәdais]",
+   "meaning": "n.伊甸乐园；天堂"
+  },
+  {
+   "word": "paralyze",
+   "phonetic_us": "[‘pærәlaiz]",
+   "phonetic_uk": "[‘pærәlaiz]",
+   "meaning": "vt. 使瘫痪,使麻痹"
+  },
+  {
+   "word": "parameter",
+   "phonetic_us": "[pә’ræmitә]",
+   "phonetic_uk": "[pә’ræmitә]",
+   "meaning": "n.参(变)数；参量"
+  },
+  {
+   "word": "partition",
+   "phonetic_us": "[pa:’tiʃәn]",
+   "phonetic_uk": "[pa:’tiʃәn]",
+   "meaning": "n.分开，分割；融墙"
+  },
+  {
+   "word": "pasture",
+   "phonetic_us": "[‘pa:stʃә]",
+   "phonetic_uk": "[‘pa:stʃә]",
+   "meaning": "n.牧场；牲畜饲养"
+  },
+  {
+   "word": "pathetic",
+   "phonetic_us": "[pә’θetik]",
+   "phonetic_uk": "[pә’θetik]",
+   "meaning": "a.哀婉动人的；可怜的"
+  },
+  {
+   "word": "patriotic",
+   "phonetic_us": "[pætri’ɔtik]",
+   "phonetic_uk": "[pætri’ɔtik]",
+   "meaning": "a.爱国的"
+  },
+  {
+   "word": "patrol",
+   "phonetic_us": "[pә’trәul]",
+   "phonetic_uk": "[pә’trәul]",
+   "meaning": "n.巡逻 n.巡逻，巡查"
+  },
+  {
+   "word": "pedal",
+   "phonetic_us": "[‘pedl]",
+   "phonetic_uk": "[‘pedl]",
+   "meaning": "n.踏脚，踏板，脚蹬"
+  },
+  {
+   "word": "peel",
+   "phonetic_us": "[pi:l]",
+   "phonetic_uk": "[pi:l]",
+   "meaning": "vt.剥(皮)，削(皮)"
+  },
+  {
+   "word": "Pendulum",
+   "phonetic_us": "[‘pendjulәm]",
+   "phonetic_uk": "[‘pendjulәm]",
+   "meaning": "n.(钟等的)摆"
+  },
+  {
+   "word": "perfume",
+   "phonetic_us": "[‘pә:fju:m, pә:’fju:m]",
+   "phonetic_uk": "[‘pә:fju:m, pә:’fju:m]",
+   "meaning": "n.香味，芳香；香料"
+  },
+  {
+   "word": "perish",
+   "phonetic_us": "[‘periʃ]",
+   "phonetic_uk": "[‘periʃ]",
+   "meaning": "vi.死亡，夭折；枯萎"
+  },
+  {
+   "word": "Permeate",
+   "phonetic_us": "[‘pә:miet]",
+   "phonetic_uk": "[‘pә:miet]",
+   "meaning": "vt. 弥漫,渗透,充满 vi. 透入"
+  },
+  {
+   "word": "perpetual",
+   "phonetic_us": "[pә’petʃuәl]",
+   "phonetic_uk": "[pә’petʃuәl]",
+   "meaning": "a.永久的；四季开花的"
+  },
+  {
+   "word": "perplex",
+   "phonetic_us": "[pә’pleks]",
+   "phonetic_uk": "[pә’pleks]",
+   "meaning": "vt.迷惑，困惑，难住"
+  },
+  {
+   "word": "pest",
+   "phonetic_us": "[pest]",
+   "phonetic_uk": "[pest]",
+   "meaning": "n.害虫；害人虫"
+  },
+  {
+   "word": "petition",
+   "phonetic_us": "[pi’tiʃәn]",
+   "phonetic_uk": "[pi’tiʃәn]",
+   "meaning": "n.请愿 vt.向…请愿"
+  },
+  {
+   "word": "Physiological",
+   "phonetic_us": "[fiziә’lɔdʒikәl]",
+   "phonetic_uk": "[fiziә’lɔdʒikәl]",
+   "meaning": "a. 生理学的, 生理学上的"
+  },
+  {
+   "word": "pipeline",
+   "phonetic_us": "['paip.lain]",
+   "phonetic_uk": "['paip.lain]",
+   "meaning": "n.管道管线"
+  },
+  {
+   "word": "plaster",
+   "phonetic_us": "['plɑ:stə]",
+   "phonetic_uk": "['plɑ:stə]",
+   "meaning": "n.灰泥硬膏熟石膏膏药v.涂以灰泥敷以膏药使...平"
+  },
+  {
+   "word": "plateau",
+   "phonetic_us": "[‘plætәu]",
+   "phonetic_uk": "[‘plætәu]",
+   "meaning": "n.高原；平稳时期"
+  },
+  {
+   "word": "Plausible",
+   "phonetic_us": "[‘plɔ: zәbl]",
+   "phonetic_uk": "[‘plɔ: zәbl]",
+   "meaning": "a. 似乎真实的, 似乎合理的"
+  },
+  {
+   "word": "plea",
+   "phonetic_us": "[pli:]",
+   "phonetic_uk": "[pli:]",
+   "meaning": "n.请愿，请求，恳求"
+  },
+  {
+   "word": "plead",
+   "phonetic_us": "[pli:d]",
+   "phonetic_uk": "[pli:d]",
+   "meaning": "vt.为…辩护 vi.抗辩"
+  },
+  {
+   "word": "pluck",
+   "phonetic_us": "[plʌk]",
+   "phonetic_uk": "[plʌk]",
+   "meaning": "vt.采摘拉下猛拉拔n.拉猛拉勇气动物内脏"
+  },
+  {
+   "word": "poke",
+   "phonetic_us": "[pәuk]",
+   "phonetic_uk": "[pәuk]",
+   "meaning": "vt.戳，刺；伸(头等)"
+  },
+  {
+   "word": "ponder",
+   "phonetic_us": "[‘pɔndә]",
+   "phonetic_uk": "[‘pɔndә]",
+   "meaning": "vt.考虑 vi.沉思"
+  },
+  {
+   "word": "Pope",
+   "phonetic_us": "[pәup]",
+   "phonetic_uk": "[pәup]",
+   "meaning": "n.(罗马天主教的)教皇"
+  },
+  {
+   "word": "porch",
+   "phonetic_us": "[pɔ:tʃ]",
+   "phonetic_uk": "[pɔ:tʃ]",
+   "meaning": "n.门廊，入口处"
+  },
+  {
+   "word": "pore",
+   "phonetic_us": "[pɔ:]",
+   "phonetic_uk": "[pɔ:]",
+   "meaning": "n.毛孔，气孔，细孔"
+  },
+  {
+   "word": "porridge",
+   "phonetic_us": "['pɔridʒ]",
+   "phonetic_uk": "['pɔridʒ]",
+   "meaning": "n.粥麦片粥"
+  },
+  {
+   "word": "portrait",
+   "phonetic_us": "['pɔ:trit]",
+   "phonetic_uk": "['pɔ:trit]",
+   "meaning": "n.消像画像adj.(文件页面)竖的"
+  },
+  {
+   "word": "portray",
+   "phonetic_us": "[pɔ:’trei]",
+   "phonetic_uk": "[pɔ:’trei]",
+   "meaning": "vt. 描绘,描写,描写...的肖像,"
+  },
+  {
+   "word": "Portugal",
+   "phonetic_us": "['pɔ:tjugəl]",
+   "phonetic_uk": "['pɔ:tjugəl]",
+   "meaning": "n.葡萄牙"
+  },
+  {
+   "word": "Portuguese",
+   "phonetic_us": "[.pɔ:tju'gi:z]",
+   "phonetic_uk": "[.pɔ:tju'gi:z]",
+   "meaning": "n.葡萄牙人葡萄牙语adj.葡萄牙的葡萄牙人的葡萄牙语的"
+  },
+  {
+   "word": "postulate",
+   "phonetic_us": "[‘pɔstjuleit]",
+   "phonetic_uk": "[‘pɔstjuleit]",
+   "meaning": "vt.要求，假定，假设"
+  },
+  {
+   "word": "practically",
+   "phonetic_us": "['præktikəli]",
+   "phonetic_uk": "['præktikəli]",
+   "meaning": "adv.实际上几乎简直adj.实际的几乎"
+  },
+  {
+   "word": "precede",
+   "phonetic_us": "[pri(:)’si:d]",
+   "phonetic_uk": "[pri(:)’si:d]",
+   "meaning": "vt.先于… vi.领先"
+  },
+  {
+   "word": "preceding",
+   "phonetic_us": "[pri'si:diŋ]",
+   "phonetic_uk": "[pri'si:diŋ]",
+   "meaning": "adj.在前的在先的"
+  },
+  {
+   "word": "precipitate",
+   "phonetic_us": "[pri’sipiteit]",
+   "phonetic_uk": "[pri’sipiteit]",
+   "meaning": "a.突如其来的vt.使突然发生n.沉淀物"
+  },
+  {
+   "word": "preclude",
+   "phonetic_us": "[pri’klu:d]",
+   "phonetic_uk": "[pri’klu:d]",
+   "meaning": "vt. 预先排除,预防,阻止,妨碍"
+  },
+  {
+   "word": "predecessor",
+   "phonetic_us": "[‘pri:disesә]",
+   "phonetic_uk": "[‘pri:disesә]",
+   "meaning": "n.前辈，前任者"
+  },
+  {
+   "word": "predominant",
+   "phonetic_us": "[pri’dɔminәnt]",
+   "phonetic_uk": "[pri’dɔminәnt]",
+   "meaning": "a.占优势的；主要的"
+  },
+  {
+   "word": "premature",
+   "phonetic_us": "[pri:mә’tjuә]",
+   "phonetic_uk": "[pri:mә’tjuә]",
+   "meaning": "a. 早熟,过早的 n. 早产儿"
+  },
+  {
+   "word": "premise",
+   "phonetic_us": "[‘premis, pri’maiz]",
+   "phonetic_uk": "[‘premis, pri’maiz]",
+   "meaning": "n. 前提,假设，房产"
+  },
+  {
+   "word": "premium",
+   "phonetic_us": "[‘pri:mjәm]",
+   "phonetic_uk": "[‘pri:mjәm]",
+   "meaning": "n. 额外费用,奖金,奖赏,保险费"
+  },
+  {
+   "word": "preside",
+   "phonetic_us": "[pri’zaid]",
+   "phonetic_uk": "[pri’zaid]",
+   "meaning": "vi.主持；主奏"
+  },
+  {
+   "word": "prestige",
+   "phonetic_us": "[pres’ti:ʒ]",
+   "phonetic_uk": "[pres’ti:ʒ]",
+   "meaning": "n.威望，威信，声望"
+  },
+  {
+   "word": "presumably",
+   "phonetic_us": "[pri’zju:mәbli]",
+   "phonetic_uk": "[pri’zju:mәbli]",
+   "meaning": "ad.推测起来，大概"
+  },
+  {
+   "word": "presume",
+   "phonetic_us": "[pri’zju:m]",
+   "phonetic_uk": "[pri’zju:m]",
+   "meaning": "vt.假定，假设，揣测"
+  },
+  {
+   "word": "pretext",
+   "phonetic_us": "[‘pri:tekst]",
+   "phonetic_uk": "[‘pri:tekst]",
+   "meaning": "n. 借口,托辞"
+  },
+  {
+   "word": "previously",
+   "phonetic_us": "['pri:vjəsli]",
+   "phonetic_uk": "['pri:vjəsli]",
+   "meaning": "adv.先前预先仓促地"
+  },
+  {
+   "word": "prey",
+   "phonetic_us": "[prei]",
+   "phonetic_uk": "[prei]",
+   "meaning": "vi.猎物 vi.捕获"
+  },
+  {
+   "word": "probe",
+   "phonetic_us": "[prәub]",
+   "phonetic_uk": "[prәub]",
+   "meaning": "n.探针 vt.用探针探查"
+  },
+  {
+   "word": "proceeding",
+   "phonetic_us": "[prә’si:diŋ]",
+   "phonetic_uk": "[prә’si:diŋ]",
+   "meaning": "n.程序，行动，事项"
+  },
+  {
+   "word": "profile",
+   "phonetic_us": "[‘prәufail]",
+   "phonetic_uk": "[‘prәufail]",
+   "meaning": "n. 侧面,轮廓,人物素描,传略"
+  },
+  {
+   "word": "prolong",
+   "phonetic_us": "[prә’lɔŋ]",
+   "phonetic_uk": "[prә’lɔŋ]",
+   "meaning": "vt.延长，拉长，拖延"
+  },
+  {
+   "word": "prone",
+   "phonetic_us": "[prәun]",
+   "phonetic_uk": "[prәun]",
+   "meaning": "a. 俯伏的,易于...的"
+  },
+  {
+   "word": "propaganda",
+   "phonetic_us": "[prɔpә’gændә]",
+   "phonetic_uk": "[prɔpә’gændә]",
+   "meaning": "n.宣传；宣传机构"
+  },
+  {
+   "word": "propagate",
+   "phonetic_us": "[‘prɔpәgeit]",
+   "phonetic_uk": "[‘prɔpәgeit]",
+   "meaning": "vt.繁殖；传播，普及"
+  },
+  {
+   "word": "propel",
+   "phonetic_us": "[prә’pel]",
+   "phonetic_uk": "[prә’pel]",
+   "meaning": "vt.推进，推动"
+  },
+  {
+   "word": "properly",
+   "phonetic_us": "['prɔpəli]",
+   "phonetic_uk": "['prɔpəli]",
+   "meaning": "adv.适当地彻底地当然地"
+  },
+  {
+   "word": "prophet",
+   "phonetic_us": "[‘prɔfit]",
+   "phonetic_uk": "[‘prɔfit]",
+   "meaning": "n.预言家，先知"
+  },
+  {
+   "word": "prosperity",
+   "phonetic_us": "[prɔs'periti]",
+   "phonetic_uk": "[prɔs'periti]",
+   "meaning": "n.繁荣昌盛兴旺"
+  },
+  {
+   "word": "prosperous",
+   "phonetic_us": "['prɔspərəs]",
+   "phonetic_uk": "['prɔspərəs]",
+   "meaning": "adj.繁荣的昌盛的兴旺的"
+  },
+  {
+   "word": "prototype",
+   "phonetic_us": "[‘prәutәtaip]",
+   "phonetic_uk": "[‘prәutәtaip]",
+   "meaning": "n.原型；典型，范例"
+  },
+  {
+   "word": "proximity",
+   "phonetic_us": "[prak’simәti]",
+   "phonetic_uk": "[prak’simәti]",
+   "meaning": "n. 接近,亲近"
+  },
+  {
+   "word": "pudding",
+   "phonetic_us": "['pudiŋ]",
+   "phonetic_uk": "['pudiŋ]",
+   "meaning": "n.布丁血肠(英)甜食"
+  },
+  {
+   "word": "puff",
+   "phonetic_us": "[pʌf]",
+   "phonetic_uk": "[pʌf]",
+   "meaning": "n.(一)喷(一)吹一阵喷烟粉扑泡夫vt.喷出喘息夸张膨胀vi.喷出膨胀骄傲adj.吹嘘的"
+  },
+  {
+   "word": "puppet",
+   "phonetic_us": "['pʌpit]",
+   "phonetic_uk": "['pʌpit]",
+   "meaning": "n.木偶玩偶傀儡"
+  },
+  {
+   "word": "purely",
+   "phonetic_us": "['pjuəli]",
+   "phonetic_uk": "['pjuəli]",
+   "meaning": "adv.纯粹地完全地清洁地贞淑地"
+  },
+  {
+   "word": "quart",
+   "phonetic_us": "[kwɔ:t]",
+   "phonetic_uk": "[kwɔ:t]",
+   "meaning": "n.夸脱(=2品脱)"
+  },
+  {
+   "word": "quartz",
+   "phonetic_us": "[kwɔ:ts]",
+   "phonetic_uk": "[kwɔ:ts]",
+   "meaning": "n.石英"
+  },
+  {
+   "word": "queer",
+   "phonetic_us": "[kwiə]",
+   "phonetic_uk": "[kwiə]",
+   "meaning": "adj.奇怪的古怪的不舒服的可疑的n.同性恋者"
+  },
+  {
+   "word": "quench",
+   "phonetic_us": "[kwentʃ]",
+   "phonetic_uk": "[kwentʃ]",
+   "meaning": "vt.熄灭，扑灭；压制"
+  },
+  {
+   "word": "quest",
+   "phonetic_us": "[kwest]",
+   "phonetic_uk": "[kwest]",
+   "meaning": "vt.寻找 vi.追求"
+  },
+  {
+   "word": "quicken",
+   "phonetic_us": "['kwikən]",
+   "phonetic_uk": "['kwikən]",
+   "meaning": "vt.使加快使...有生气鼓舞使(曲线)更弯使(斜坡)更陡vi.加快变快苏醒(孕妇) 进入胎动期变明亮变活跃"
+  },
+  {
+   "word": "quickly",
+   "phonetic_us": "['kwikli]",
+   "phonetic_uk": "['kwikli]",
+   "meaning": "adv.快迅速"
+  },
+  {
+   "word": "quilt",
+   "phonetic_us": "[kwilt]",
+   "phonetic_uk": "[kwilt]",
+   "meaning": "n.被(子)被状物vt.缝被缝制用垫料填塞vi.制作被子做缝制工作"
+  },
+  {
+   "word": "quiver",
+   "phonetic_us": "[‘kwivә]",
+   "phonetic_uk": "[‘kwivә]",
+   "meaning": "vi.(轻微地)颤动"
+  },
+  {
+   "word": "racket",
+   "phonetic_us": "[‘rækit]",
+   "phonetic_uk": "[‘rækit]",
+   "meaning": "n.球拍"
+  },
+  {
+   "word": "radiant",
+   "phonetic_us": "[‘reidjәnt]",
+   "phonetic_uk": "[‘reidjәnt]",
+   "meaning": "a.绚丽的；容光焕发的"
+  },
+  {
+   "word": "radiate",
+   "phonetic_us": "[‘reidieit]",
+   "phonetic_uk": "[‘reidieit]",
+   "meaning": "vi.发射光线；辐射"
+  },
+  {
+   "word": "radiation",
+   "phonetic_us": "[.reidi'eiʃən]",
+   "phonetic_uk": "[.reidi'eiʃən]",
+   "meaning": "n.放射发射辐射能"
+  },
+  {
+   "word": "radioactive",
+   "phonetic_us": "[.reidiəu'æktiv]",
+   "phonetic_uk": "[.reidiəu'æktiv]",
+   "meaning": "adj.放射性的"
+  },
+  {
+   "word": "radioactivity",
+   "phonetic_us": "[.reidiəuæk'tiviti]",
+   "phonetic_uk": "[.reidiəuæk'tiviti]",
+   "meaning": "n.放射性放射(现象)辐射"
+  },
+  {
+   "word": "radish",
+   "phonetic_us": "['rædiʃ]",
+   "phonetic_uk": "['rædiʃ]",
+   "meaning": "n.小萝卜"
+  },
+  {
+   "word": "radium",
+   "phonetic_us": "['reidiəm]",
+   "phonetic_uk": "['reidiəm]",
+   "meaning": "n.镭"
+  },
+  {
+   "word": "radius",
+   "phonetic_us": "['reidiəs]",
+   "phonetic_uk": "['reidiəs]",
+   "meaning": "n.半径桡骨半径范围辐射区"
+  },
+  {
+   "word": "rake",
+   "phonetic_us": "[reik]",
+   "phonetic_uk": "[reik]",
+   "meaning": "n.耙子集赌金工具向船尾的倾斜vi.耙用耙子搜索向船尾了望"
+  },
+  {
+   "word": "random",
+   "phonetic_us": "[‘rændәm]",
+   "phonetic_uk": "[‘rændәm]",
+   "meaning": "n.随机 a.随机的"
+  },
+  {
+   "word": "rapidly",
+   "phonetic_us": "['ræpidli]",
+   "phonetic_uk": "['ræpidli]",
+   "meaning": "adv.迅速地"
+  },
+  {
+   "word": "razor",
+   "phonetic_us": "['reizə]",
+   "phonetic_uk": "['reizə]",
+   "meaning": "n.剃刀"
+  },
+  {
+   "word": "recipe",
+   "phonetic_us": "[‘resipi]",
+   "phonetic_uk": "[‘resipi]",
+   "meaning": "n. 菜谱，烹饪法；处方"
+  },
+  {
+   "word": "reckless",
+   "phonetic_us": "[‘reklis]",
+   "phonetic_uk": "[‘reklis]",
+   "meaning": "a.粗心大意的；鲁莽的"
+  },
+  {
+   "word": "reclaim",
+   "phonetic_us": "[ri’kleim]",
+   "phonetic_uk": "[ri’kleim]",
+   "meaning": "vt.开垦，开拓；回收"
+  },
+  {
+   "word": "recollect",
+   "phonetic_us": "[.rekə'lekt]",
+   "phonetic_uk": "[.rekə'lekt]",
+   "meaning": "vt.回忆追忆想起回想忆起"
+  },
+  {
+   "word": "reconcile",
+   "phonetic_us": "[‘rekәnsail]",
+   "phonetic_uk": "[‘rekәnsail]",
+   "meaning": "vt.使和好；调停"
+  },
+  {
+   "word": "rectangular",
+   "phonetic_us": "[rek’tæŋgjulә]",
+   "phonetic_uk": "[rek’tæŋgjulә]",
+   "meaning": "a. 矩形的,成直角的"
+  },
+  {
+   "word": "rectify",
+   "phonetic_us": "[‘rektifai]",
+   "phonetic_uk": "[‘rektifai]",
+   "meaning": "vt.纠正；调整；精馏"
+  },
+  {
+   "word": "recur",
+   "phonetic_us": "[ri’kә:]",
+   "phonetic_uk": "[ri’kә:]",
+   "meaning": "vi. 复发,重现,再发生"
+  },
+  {
+   "word": "redundant",
+   "phonetic_us": "[ri’dΛndәnt]",
+   "phonetic_uk": "[ri’dΛndәnt]",
+   "meaning": "a. 多余的,过多的,冗长的"
+  },
+  {
+   "word": "reed",
+   "phonetic_us": "[ri:d]",
+   "phonetic_uk": "[ri:d]",
+   "meaning": "n.芦苇芦杆芦丛芦笛簧片(Reed)里德(姓氏)"
+  },
+  {
+   "word": "reel",
+   "phonetic_us": "[ri:l]",
+   "phonetic_uk": "[ri:l]",
+   "meaning": "n.卷轴卷筒线轴vi.蹒跚地走旋转骚乱退缩摇晃vt.卷卷... 轴上旋转"
+  },
+  {
+   "word": "reflexion",
+   "phonetic_us": "[ri'flekʃən]",
+   "phonetic_uk": "[ri'flekʃən]",
+   "meaning": "n.反射映象反映反射波折射考虑想法=reflection"
+  },
+  {
+   "word": "refuge",
+   "phonetic_us": "['refju:dʒ]",
+   "phonetic_uk": "['refju:dʒ]",
+   "meaning": "n.避难(处)庇护(所)庇护者v.庇护避难(所)"
+  },
+  {
+   "word": "refugee",
+   "phonetic_us": "[refju:’dʒi:]",
+   "phonetic_uk": "[refju:’dʒi:]",
+   "meaning": "n.难民，流亡者"
+  },
+  {
+   "word": "refute",
+   "phonetic_us": "[ri’fju:t]",
+   "phonetic_uk": "[ri’fju:t]",
+   "meaning": "vt.驳斥，反驳，驳倒"
+  },
+  {
+   "word": "regime",
+   "phonetic_us": "[rei’ʒi:m]",
+   "phonetic_uk": "[rei’ʒi:m]",
+   "meaning": "n.政体，政权；制度"
+  },
+  {
+   "word": "regularly",
+   "phonetic_us": "['regjuləli]",
+   "phonetic_uk": "['regjuləli]",
+   "meaning": "adv.有规律地定期地"
+  },
+  {
+   "word": "rehearsal",
+   "phonetic_us": "[ri'hə:sl]",
+   "phonetic_uk": "[ri'hə:sl]",
+   "meaning": "n.排练彩排排演练习"
+  },
+  {
+   "word": "reign",
+   "phonetic_us": "[rein]",
+   "phonetic_uk": "[rein]",
+   "meaning": "n.君主统治(时期)执政王朝支配vi.当政统治占优势支配盛行"
+  },
+  {
+   "word": "rein",
+   "phonetic_us": "[rein]",
+   "phonetic_uk": "[rein]",
+   "meaning": "n.缰绳统驭支配机会vi.驾驭控制vt.以缰绳控制统制"
+  },
+  {
+   "word": "rejoice",
+   "phonetic_us": "[ri’dʒɔis]",
+   "phonetic_uk": "[ri’dʒɔis]",
+   "meaning": "vi.欣喜，高兴"
+  },
+  {
+   "word": "relatively",
+   "phonetic_us": "['relətivli]",
+   "phonetic_uk": "['relətivli]",
+   "meaning": "adv.相对地比较地"
+  },
+  {
+   "word": "reliability",
+   "phonetic_us": "[ri.laiə'biliti]",
+   "phonetic_uk": "[ri.laiə'biliti]",
+   "meaning": "n.可靠性"
+  },
+  {
+   "word": "remains",
+   "phonetic_us": "[ri'meinz]",
+   "phonetic_uk": "[ri'meinz]",
+   "meaning": "n.残余(余物遗物化石)余额废墟"
+  },
+  {
+   "word": "remnant",
+   "phonetic_us": "[‘remnәnt]",
+   "phonetic_uk": "[‘remnәnt]",
+   "meaning": "n.残留部分，遗迹a.剩余,残余的"
+  },
+  {
+   "word": "renaissance",
+   "phonetic_us": "[rә’neisәns]",
+   "phonetic_uk": "[rә’neisәns]",
+   "meaning": "n. 复活,复兴,文艺复兴"
+  },
+  {
+   "word": "repel",
+   "phonetic_us": "[ri’pel]",
+   "phonetic_uk": "[ri’pel]",
+   "meaning": "vt.拒绝；使厌恶"
+  },
+  {
+   "word": "repent",
+   "phonetic_us": "[ri'pent]",
+   "phonetic_uk": "[ri'pent]",
+   "meaning": "vi.悔悟悔改后悔vt.后悔"
+  },
+  {
+   "word": "repertoire",
+   "phonetic_us": "[‘repәtwa:]",
+   "phonetic_uk": "[‘repәtwa:]",
+   "meaning": "n.全部,保留剧目,全部技能"
+  },
+  {
+   "word": "reproach",
+   "phonetic_us": "[ri'prəutʃ]",
+   "phonetic_uk": "[ri'prəutʃ]",
+   "meaning": "n.责备耻辱vt.责备申斥指责"
+  },
+  {
+   "word": "reservior",
+   "phonetic_us": "['rezəvwɑ:]",
+   "phonetic_uk": "['rezəvwɑ:]",
+   "meaning": "n.水库蓄水池积蓄储藏=reservoir"
+  },
+  {
+   "word": "resonance",
+   "phonetic_us": "[‘rɛznәns]",
+   "phonetic_uk": "[‘rɛznәns]",
+   "meaning": "n. 共鸣,回声,共振"
+  },
+  {
+   "word": "restless",
+   "phonetic_us": "['restlis]",
+   "phonetic_uk": "['restlis]",
+   "meaning": "adj.不安定的焦虑的静不下来的得不到休息的"
+  },
+  {
+   "word": "retort",
+   "phonetic_us": "[ri’tɔ:t]",
+   "phonetic_uk": "[ri’tɔ:t]",
+   "meaning": "vt.&vi.反击；反驳"
+  },
+  {
+   "word": "retrieve",
+   "phonetic_us": "[ri’tri:v]",
+   "phonetic_uk": "[ri’tri:v]",
+   "meaning": "vt. 取回,挽回, 检索"
+  },
+  {
+   "word": "retrospect",
+   "phonetic_us": "[‘retrәspekt]",
+   "phonetic_uk": "[‘retrәspekt]",
+   "meaning": "n. 回顾,追忆,回溯"
+  },
+  {
+   "word": "revenge",
+   "phonetic_us": "[ri’vendʒ]",
+   "phonetic_uk": "[ri’vendʒ]",
+   "meaning": "vt.替…报仇 n.报仇"
+  },
+  {
+   "word": "revive",
+   "phonetic_us": "[ri’vaiv]",
+   "phonetic_uk": "[ri’vaiv]",
+   "meaning": "vt.&vi.苏醒；复兴"
+  },
+  {
+   "word": "revolt",
+   "phonetic_us": "[ri'vəult]",
+   "phonetic_uk": "[ri'vəult]",
+   "meaning": "n.叛乱反抗造反反感vi.叛乱反抗造反起反感vt.使...恶心"
+  },
+  {
+   "word": "ridge",
+   "phonetic_us": "[ridʒ]",
+   "phonetic_uk": "[ridʒ]",
+   "meaning": "n.脊岭山脉垄"
+  },
+  {
+   "word": "rig",
+   "phonetic_us": "[rig]",
+   "phonetic_uk": "[rig]",
+   "meaning": "vt. 操纵,垄断 n. 钻井架,塔台"
+  },
+  {
+   "word": "rigid",
+   "phonetic_us": "['ridʒid]",
+   "phonetic_uk": "['ridʒid]",
+   "meaning": "adj.刚硬的僵硬的刻板的严格的"
+  },
+  {
+   "word": "rigorous",
+   "phonetic_us": "[‘rigәrәs]",
+   "phonetic_uk": "[‘rigәrәs]",
+   "meaning": "a.(性格等)严峻的"
+  },
+  {
+   "word": "rim",
+   "phonetic_us": "[rim]",
+   "phonetic_uk": "[rim]",
+   "meaning": "n.边；边缘，(眼镜)框"
+  },
+  {
+   "word": "ripple",
+   "phonetic_us": "[‘ripl]",
+   "phonetic_uk": "[‘ripl]",
+   "meaning": "n.涟漪，细浪，波纹"
+  },
+  {
+   "word": "ritual",
+   "phonetic_us": "[‘ritjuәl]",
+   "phonetic_uk": "[‘ritjuәl]",
+   "meaning": "n. 仪式 a. 仪式的,例行公事的"
+  },
+  {
+   "word": "robber",
+   "phonetic_us": "['rɔbə]",
+   "phonetic_uk": "['rɔbə]",
+   "meaning": "n.强盗盗贼"
+  },
+  {
+   "word": "robe",
+   "phonetic_us": "[rəub]",
+   "phonetic_uk": "[rəub]",
+   "meaning": "n.长袍长衣浴衣v.(使)穿上长袍等"
+  },
+  {
+   "word": "robust",
+   "phonetic_us": "[rәu’bΛst]",
+   "phonetic_uk": "[rәu’bΛst]",
+   "meaning": "a. 强健的,粗野的,坚定的"
+  },
+  {
+   "word": "Roman",
+   "phonetic_us": "[rɔmə]",
+   "phonetic_uk": "[rɔmə]",
+   "meaning": "n.古罗马人罗马天主教会罗马文字adj.罗马的罗马帝国的"
+  },
+  {
+   "word": "rot",
+   "phonetic_us": "[rɔt]",
+   "phonetic_uk": "[rɔt]",
+   "meaning": "vt.烂，腐坏 n.腐烂"
+  },
+  {
+   "word": "rotary",
+   "phonetic_us": "['rəutəri]",
+   "phonetic_uk": "['rəutəri]",
+   "meaning": "adj.旋转的转动的n.旋转式机器环形交叉路"
+  },
+  {
+   "word": "rotate",
+   "phonetic_us": "[rəu'teit]",
+   "phonetic_uk": "[rəu'teit]",
+   "meaning": "vi.旋转vt.使旋转轮流adj.车轮状的"
+  },
+  {
+   "word": "rotation",
+   "phonetic_us": "[rəu'teiʃən]",
+   "phonetic_uk": "[rəu'teiʃən]",
+   "meaning": "n.旋转转动循环"
+  },
+  {
+   "word": "rotten",
+   "phonetic_us": "['rɔtn]",
+   "phonetic_uk": "['rɔtn]",
+   "meaning": "adj.腐烂的腐朽的发臭的"
+  },
+  {
+   "word": "rupture",
+   "phonetic_us": "[‘rΛptʃә]",
+   "phonetic_uk": "[‘rΛptʃә]",
+   "meaning": "n. 破裂,决裂 vt.(使)破裂"
+  },
+  {
+   "word": "Russian",
+   "phonetic_us": "['rʌʃən]",
+   "phonetic_uk": "['rʌʃən]",
+   "meaning": "adj.俄国的俄罗斯的n.俄国人俄语"
+  },
+  {
+   "word": "rust",
+   "phonetic_us": "[rʌst]",
+   "phonetic_uk": "[rʌst]",
+   "meaning": "n.锈锈vi.生锈氧化变成红棕色vt.使...生锈损害"
+  },
+  {
+   "word": "rusty",
+   "phonetic_us": "['rʌsti]",
+   "phonetic_uk": "['rʌsti]",
+   "meaning": "adj.生锈的变迟钝的"
+  },
+  {
+   "word": "sacred",
+   "phonetic_us": "['seikrid]",
+   "phonetic_uk": "['seikrid]",
+   "meaning": "adj.上帝的神圣的受尊重的"
+  },
+  {
+   "word": "saddle",
+   "phonetic_us": "['sædl]",
+   "phonetic_uk": "['sædl]",
+   "meaning": "n.鞍子马鞍车座山脊拖具vt.装以马鞍使负担vi.装马鞍"
+  },
+  {
+   "word": "sadly",
+   "phonetic_us": "['sædli]",
+   "phonetic_uk": "['sædli]",
+   "meaning": "adv.悲痛地悲哀地悲惨地悲伤地"
+  },
+  {
+   "word": "safeguard",
+   "phonetic_us": "[‘seifga:d]",
+   "phonetic_uk": "[‘seifga:d]",
+   "meaning": "n.保护措施；护照"
+  },
+  {
+   "word": "safely",
+   "phonetic_us": "['seifli]",
+   "phonetic_uk": "['seifli]",
+   "meaning": "adv.安全地可靠地"
+  },
+  {
+   "word": "salute",
+   "phonetic_us": "[sə'lu:t]",
+   "phonetic_uk": "[sə'lu:t]",
+   "meaning": "n.招呼行礼vi.行礼致意问候"
+  },
+  {
+   "word": "sanction",
+   "phonetic_us": "[‘sæŋkʃәn]",
+   "phonetic_uk": "[‘sæŋkʃәn]",
+   "meaning": "n. 制裁，批准"
+  },
+  {
+   "word": "sandy",
+   "phonetic_us": "['sændi]",
+   "phonetic_uk": "['sændi]",
+   "meaning": "adj.沙的含沙的沙地的多沙的沙色的不稳固的"
+  },
+  {
+   "word": "saturate",
+   "phonetic_us": "[‘sætʃәreit]",
+   "phonetic_uk": "[‘sætʃәreit]",
+   "meaning": "vt. 使浸透,使充满,使饱和"
+  },
+  {
+   "word": "saucer",
+   "phonetic_us": "['sɔ:sə]",
+   "phonetic_uk": "['sɔ:sə]",
+   "meaning": "n.茶托浅碟"
+  },
+  {
+   "word": "savage",
+   "phonetic_us": "[‘sævidʒ]",
+   "phonetic_uk": "[‘sævidʒ]",
+   "meaning": "a.未开发的,野蛮,残暴的 n.野蛮人"
+  },
+  {
+   "word": "saw",
+   "phonetic_us": "[sɔ:]",
+   "phonetic_uk": "[sɔ:]",
+   "meaning": "n.锯子vt.锯锯开用锯子锯vbl.看见(see的过去式)"
+  },
+  {
+   "word": "scared",
+   "phonetic_us": "[skɛәd]",
+   "phonetic_uk": "[skɛәd]",
+   "meaning": "adj. 受惊吓的"
+  },
+  {
+   "word": "scarf",
+   "phonetic_us": "[skɑ:f]",
+   "phonetic_uk": "[skɑ:f]",
+   "meaning": "n.围巾头巾领带"
+  },
+  {
+   "word": "sceptical",
+   "phonetic_us": "[‘skeptikәl]",
+   "phonetic_uk": "[‘skeptikәl]",
+   "meaning": "a. 怀疑的"
+  },
+  {
+   "word": "scorn",
+   "phonetic_us": "[skɔ:n]",
+   "phonetic_uk": "[skɔ:n]",
+   "meaning": "n.轻蔑；嘲笑 vt.轻蔑"
+  },
+  {
+   "word": "scrap",
+   "phonetic_us": "[skræp]",
+   "phonetic_uk": "[skræp]",
+   "meaning": "n.碎片；废料 vt.废弃"
+  },
+  {
+   "word": "scrape",
+   "phonetic_us": "[skreip]",
+   "phonetic_uk": "[skreip]",
+   "meaning": "vt. &vi. &n.刮擦刮擦声"
+  },
+  {
+   "word": "scrutiny",
+   "phonetic_us": "[‘skrutni]",
+   "phonetic_uk": "[‘skrutni]",
+   "meaning": "n. 细看,仔细检查,监视"
+  },
+  {
+   "word": "sculpture",
+   "phonetic_us": "[‘skΛlptʃә]",
+   "phonetic_uk": "[‘skΛlptʃә]",
+   "meaning": "n. 雕刻,雕塑,雕刻(术)"
+  },
+  {
+   "word": "seam",
+   "phonetic_us": "[si:m]",
+   "phonetic_uk": "[si:m]",
+   "meaning": "n.缝口；接缝；骨缝"
+  },
+  {
+   "word": "seaman",
+   "phonetic_us": "['si:mən]",
+   "phonetic_uk": "['si:mən]",
+   "meaning": "n.海员水手水兵"
+  },
+  {
+   "word": "seaport",
+   "phonetic_us": "['si:pɔ:t]",
+   "phonetic_uk": "['si:pɔ:t]",
+   "meaning": "n.海港港市"
+  },
+  {
+   "word": "secondly",
+   "phonetic_us": "['sekəndli]",
+   "phonetic_uk": "['sekəndli]",
+   "meaning": "adv.第二(点)其次"
+  },
+  {
+   "word": "segregate",
+   "phonetic_us": "[‘segrigeit]",
+   "phonetic_uk": "[‘segrigeit]",
+   "meaning": "a.分离的,被隔离的vt.使分离,使隔离"
+  },
+  {
+   "word": "seller",
+   "phonetic_us": "['selə]",
+   "phonetic_uk": "['selə]",
+   "meaning": "n.卖者售货者行销货畅销品"
+  },
+  {
+   "word": "semiconductor",
+   "phonetic_us": "[.semikən'dʌktə]",
+   "phonetic_uk": "[.semikən'dʌktə]",
+   "meaning": "n.半导体"
+  },
+  {
+   "word": "sensation",
+   "phonetic_us": "[sen’seiʃәn]",
+   "phonetic_uk": "[sen’seiʃәn]",
+   "meaning": "n.感觉，知觉；轰动"
+  },
+  {
+   "word": "sentiment",
+   "phonetic_us": "[‘sentimәnt]",
+   "phonetic_uk": "[‘sentimәnt]",
+   "meaning": "n.感情；情操；情绪"
+  },
+  {
+   "word": "separately",
+   "phonetic_us": "['sepəritli]",
+   "phonetic_uk": "['sepəritli]",
+   "meaning": "adv.分离地分别地个别地独立地"
+  },
+  {
+   "word": "seriously",
+   "phonetic_us": "['siriəsli]",
+   "phonetic_uk": "['siriəsli]",
+   "meaning": "adv.严肃地认真地严重地"
+  },
+  {
+   "word": "seventh",
+   "phonetic_us": "['sevnθ]",
+   "phonetic_uk": "['sevnθ]",
+   "meaning": "num.第七七分之一n.第七七分之一adj.第七的adv.第七"
+  },
+  {
+   "word": "severely",
+   "phonetic_us": "[sə'virli]",
+   "phonetic_uk": "[sə'virli]",
+   "meaning": "adv.严厉地严格地严重地(艰难地紧凑地纯朴地)"
+  },
+  {
+   "word": "shabby",
+   "phonetic_us": "[‘ʃæbi]",
+   "phonetic_uk": "[‘ʃæbi]",
+   "meaning": "a.褴褛的；破旧的"
+  },
+  {
+   "word": "shaft",
+   "phonetic_us": "[ʃa:ft]",
+   "phonetic_uk": "[ʃa:ft]",
+   "meaning": "n.(工具的)柄，杆状物"
+  },
+  {
+   "word": "shampoo",
+   "phonetic_us": "[ʃæm'pu:]",
+   "phonetic_uk": "[ʃæm'pu:]",
+   "meaning": "vt.用洗发剂洗洗(头发地毯等)n.洗头洗发剂洗涤剂"
+  },
+  {
+   "word": "sharply",
+   "phonetic_us": "['ʃɑ:pli]",
+   "phonetic_uk": "['ʃɑ:pli]",
+   "meaning": "adv.锐利地敏锐地严厉地厉害地轮廓清晰、线条分明地"
+  },
+  {
+   "word": "shatter",
+   "phonetic_us": "[‘ʃætә]",
+   "phonetic_uk": "[‘ʃætә]",
+   "meaning": "vt.粉碎，破碎；毁坏"
+  },
+  {
+   "word": "shear",
+   "phonetic_us": "[ʃiə]",
+   "phonetic_uk": "[ʃiə]",
+   "meaning": "vt.剪剪掉剥夺割vi.剪修剪切割剥夺穿越n.修剪剪下的东西羊的一岁"
+  },
+  {
+   "word": "shepherd",
+   "phonetic_us": "['ʃepəd]",
+   "phonetic_uk": "['ʃepəd]",
+   "meaning": "n.牧羊人羊倌牧师指导者v.看守领导指导"
+  },
+  {
+   "word": "shield",
+   "phonetic_us": "['ʃi:ld]",
+   "phonetic_uk": "['ʃi:ld]",
+   "meaning": "n.盾盾状物防护物vt.保护遮蔽"
+  },
+  {
+   "word": "shilling",
+   "phonetic_us": "['ʃiliŋ]",
+   "phonetic_uk": "['ʃiliŋ]",
+   "meaning": "n.先令(货币单位)"
+  },
+  {
+   "word": "shopkeeper",
+   "phonetic_us": "['ʃɔp.ki:pə]",
+   "phonetic_uk": "['ʃɔp.ki:pə]",
+   "meaning": "n.店主零售商人"
+  },
+  {
+   "word": "shrewd",
+   "phonetic_us": "[ʃru:d]",
+   "phonetic_uk": "[ʃru:d]",
+   "meaning": "a. 精明的,敏锐的,机灵的"
+  },
+  {
+   "word": "shriek",
+   "phonetic_us": "[ʃri:k]",
+   "phonetic_uk": "[ʃri:k]",
+   "meaning": "vi.尖声喊叫n.尖叫声"
+  },
+  {
+   "word": "shutter",
+   "phonetic_us": "[‘ʃΛtә]",
+   "phonetic_uk": "[‘ʃΛtә]",
+   "meaning": "n.百叶窗；(相机)快门"
+  },
+  {
+   "word": "sickness",
+   "phonetic_us": "['siknis]",
+   "phonetic_uk": "['siknis]",
+   "meaning": "n.疾病"
+  },
+  {
+   "word": "signify",
+   "phonetic_us": "[‘signifai]",
+   "phonetic_uk": "[‘signifai]",
+   "meaning": "vt.表示，意味着"
+  },
+  {
+   "word": "silly",
+   "phonetic_us": "['sili]",
+   "phonetic_uk": "['sili]",
+   "meaning": "adj.傻的愚蠢的淳朴的晕的"
+  },
+  {
+   "word": "similarly",
+   "phonetic_us": "['similəli]",
+   "phonetic_uk": "['similəli]",
+   "meaning": "adv.类似地相似地"
+  },
+  {
+   "word": "simulate",
+   "phonetic_us": "[‘simjuleit]",
+   "phonetic_uk": "[‘simjuleit]",
+   "meaning": "vt. 模拟,假装,模仿"
+  },
+  {
+   "word": "simultaneous",
+   "phonetic_us": "[simәl’teinjәs]",
+   "phonetic_uk": "[simәl’teinjәs]",
+   "meaning": "a.同时的，同时存在的"
+  },
+  {
+   "word": "situated",
+   "phonetic_us": "[‘sitjueitid]",
+   "phonetic_uk": "[‘sitjueitid]",
+   "meaning": "a.位于…的"
+  },
+  {
+   "word": "sixth",
+   "phonetic_us": "[siksθ]",
+   "phonetic_uk": "[siksθ]",
+   "meaning": "num.第六六分之一n.六分之一六度音adj.第六的"
+  },
+  {
+   "word": "skeptical",
+   "phonetic_us": "[‘skeptikl]",
+   "phonetic_uk": "[‘skeptikl]",
+   "meaning": "a. 怀疑的,多疑的"
+  },
+  {
+   "word": "skim",
+   "phonetic_us": "[skim]",
+   "phonetic_uk": "[skim]",
+   "meaning": "vt.掠过擦过滑过略读撇去浮沫vi.掠过覆盖了一层浮沫侵吞钱财n.一层浮沫略读脱脂物adj.撇去浮沫的由脱脂乳做的"
+  },
+  {
+   "word": "slack",
+   "phonetic_us": "[slæk]",
+   "phonetic_uk": "[slæk]",
+   "meaning": "a.松弛的; 萧条的;懈怠的；vt.使松弛"
+  },
+  {
+   "word": "slam",
+   "phonetic_us": "[slæm]",
+   "phonetic_uk": "[slæm]",
+   "meaning": "vt.使劲关砰地放下猛然关上砰地关上猛烈抨击vi.砰地关上猛攻猛烈抨击n.砰然声猛然猛烈的抨击"
+  },
+  {
+   "word": "slaughter",
+   "phonetic_us": "[‘slɔ:tә]",
+   "phonetic_uk": "[‘slɔ:tә]",
+   "meaning": "vt.&n.屠杀，屠宰"
+  },
+  {
+   "word": "slit",
+   "phonetic_us": "[slit]",
+   "phonetic_uk": "[slit]",
+   "meaning": "n.裂缝投币口vt.切开纵切撕开扯裂"
+  },
+  {
+   "word": "slot",
+   "phonetic_us": "[slɔt]",
+   "phonetic_uk": "[slɔt]",
+   "meaning": "n. 缝,狭槽,位置,职位"
+  },
+  {
+   "word": "slowly",
+   "phonetic_us": "['sləuli]",
+   "phonetic_uk": "['sləuli]",
+   "meaning": "adv.慢慢地"
+  },
+  {
+   "word": "slum",
+   "phonetic_us": "[slʌm]",
+   "phonetic_uk": "[slʌm]",
+   "meaning": "n.贫民窟贫民区vi.访问贫民区"
+  },
+  {
+   "word": "sly",
+   "phonetic_us": "[slai]",
+   "phonetic_uk": "[slai]",
+   "meaning": "adj.狡猾的躲躲闪闪的诡密的偷偷摸摸的"
+  },
+  {
+   "word": "smoothly",
+   "phonetic_us": "[smu:ðli]",
+   "phonetic_uk": "[smu:ðli]",
+   "meaning": "adv.光滑地平滑地平稳地流畅地"
+  },
+  {
+   "word": "smuggle",
+   "phonetic_us": "[‘smΛgl]",
+   "phonetic_uk": "[‘smΛgl]",
+   "meaning": "vt.私运 vi.走私"
+  },
+  {
+   "word": "snap",
+   "phonetic_us": "[snæp]",
+   "phonetic_uk": "[snæp]",
+   "meaning": "vt.猛咬，突然折断"
+  },
+  {
+   "word": "snatch",
+   "phonetic_us": "[snætʃ]",
+   "phonetic_uk": "[snætʃ]",
+   "meaning": "n. 抢夺,攫取,片段 vt. 夺取,攫取"
+  },
+  {
+   "word": "snowstorm",
+   "phonetic_us": "['snəustɔ:m]",
+   "phonetic_uk": "['snəustɔ:m]",
+   "meaning": "n.雪暴暴风雪"
+  },
+  {
+   "word": "sob",
+   "phonetic_us": "[sɔb]",
+   "phonetic_uk": "[sɔb]",
+   "meaning": "vi.啜泣呜咽n.空间轨道的轰炸机呜咽哭泣"
+  },
+  {
+   "word": "sober",
+   "phonetic_us": "['səubə]",
+   "phonetic_uk": "['səubə]",
+   "meaning": "adj.清醒的适度的沉着冷静的稳重的颜色暗淡的vt.使清醒使沉着vi.清醒冷静下来"
+  },
+  {
+   "word": "softly",
+   "phonetic_us": "['sɔftli]",
+   "phonetic_uk": "['sɔftli]",
+   "meaning": "adv.柔软地温柔地柔和地静静地"
+  },
+  {
+   "word": "solidarity",
+   "phonetic_us": "[sɔli’dæriti]",
+   "phonetic_uk": "[sɔli’dæriti]",
+   "meaning": "n.团结；休戚相关"
+  },
+  {
+   "word": "solitary",
+   "phonetic_us": "[‘sɔlitәri]",
+   "phonetic_uk": "[‘sɔlitәri]",
+   "meaning": "n. 独居者 a. 孤独的,独居的"
+  },
+  {
+   "word": "solo",
+   "phonetic_us": "[‘sәulәu]",
+   "phonetic_uk": "[‘sәulәu]",
+   "meaning": "n.独唱，独奏；独唱曲"
+  },
+  {
+   "word": "sovereign",
+   "phonetic_us": "[‘sɔvrin]",
+   "phonetic_uk": "[‘sɔvrin]",
+   "meaning": "n.君主 a.统治的"
+  },
+  {
+   "word": "Soviet",
+   "phonetic_us": "['səʊviət, 'sɔviət]",
+   "phonetic_uk": "['səʊviət, 'sɔviət]",
+   "meaning": "n.苏维埃adj.苏维埃的苏联的"
+  },
+  {
+   "word": "Spanish",
+   "phonetic_us": "['spæniʃ]",
+   "phonetic_uk": "['spæniʃ]",
+   "meaning": "adj.西班牙的西班牙人的西班牙语的n.西班牙人西班牙语"
+  },
+  {
+   "word": "sparrow",
+   "phonetic_us": "['spærəu]",
+   "phonetic_uk": "['spærəu]",
+   "meaning": "n.麻雀"
+  },
+  {
+   "word": "spear",
+   "phonetic_us": "[spiə]",
+   "phonetic_uk": "[spiə]",
+   "meaning": "n.矛(正负电子对撞机)枪vt用矛刺"
+  },
+  {
+   "word": "speciality",
+   "phonetic_us": "[speʃi’æliti]",
+   "phonetic_uk": "[speʃi’æliti]",
+   "meaning": "n.专业，特长；特产"
+  },
+  {
+   "word": "specially",
+   "phonetic_us": "['speʃəli]",
+   "phonetic_uk": "['speʃəli]",
+   "meaning": "adv.专门地特别地"
+  },
+  {
+   "word": "spectacle",
+   "phonetic_us": "[‘spektәkl]",
+   "phonetic_uk": "[‘spektәkl]",
+   "meaning": "n.场面；景象，奇观"
+  },
+  {
+   "word": "spectacular",
+   "phonetic_us": "[spek’tækjulә]",
+   "phonetic_uk": "[spek’tækjulә]",
+   "meaning": "a. 公开展示的,惊人的 n. 展览物"
+  },
+  {
+   "word": "spectator",
+   "phonetic_us": "[spek’teitә]",
+   "phonetic_uk": "[spek’teitә]",
+   "meaning": "n.参观者，观众"
+  },
+  {
+   "word": "spectrum",
+   "phonetic_us": "[‘spektrәm]",
+   "phonetic_uk": "[‘spektrәm]",
+   "meaning": "n.系列，范围；波谱"
+  },
+  {
+   "word": "spider",
+   "phonetic_us": "['spaidə]",
+   "phonetic_uk": "['spaidə]",
+   "meaning": "n.蜘蛛"
+  },
+  {
+   "word": "spiral",
+   "phonetic_us": "[‘spaiәrәl]",
+   "phonetic_uk": "[‘spaiәrәl]",
+   "meaning": "a.螺旋(形)的，盘旋的"
+  },
+  {
+   "word": "sponge",
+   "phonetic_us": "[spʌndʒ]",
+   "phonetic_uk": "[spʌndʒ]",
+   "meaning": "n.海绵海绵状的东西vt.用海绵擦拭吸收掉抹掉"
+  },
+  {
+   "word": "springtime",
+   "phonetic_us": "['spriŋtaim]",
+   "phonetic_uk": "['spriŋtaim]",
+   "meaning": "n.春季春天青春期初期"
+  },
+  {
+   "word": "sprinkle",
+   "phonetic_us": "['spriŋkl]",
+   "phonetic_uk": "['spriŋkl]",
+   "meaning": "n.洒撒散置小雨"
+  },
+  {
+   "word": "squirrel",
+   "phonetic_us": "['skwirəl]",
+   "phonetic_uk": "['skwirəl]",
+   "meaning": "n.松鼠松鼠皮毛vt.储存"
+  },
+  {
+   "word": "stab",
+   "phonetic_us": "[stæb]",
+   "phonetic_uk": "[stæb]",
+   "meaning": "vt. &vi.刺戳刺伤n.刺戳刺痛尝试突然的一阵"
+  },
+  {
+   "word": "stagger",
+   "phonetic_us": "[‘stægә]",
+   "phonetic_uk": "[‘stægә]",
+   "meaning": "vi.蹒跚 vt.使摇晃"
+  },
+  {
+   "word": "stall",
+   "phonetic_us": "[stɔ:l]",
+   "phonetic_uk": "[stɔ:l]",
+   "meaning": "n.货摊，书摊；厩"
+  },
+  {
+   "word": "static",
+   "phonetic_us": "['stætik]",
+   "phonetic_uk": "['stætik]",
+   "meaning": "adj.静的静态的静力的静止的静电的n.静电静电干扰(猛烈的)反对或抨击"
+  },
+  {
+   "word": "statistics",
+   "phonetic_us": "[stә’tistiks]",
+   "phonetic_uk": "[stә’tistiks]",
+   "meaning": "n.统计，统计数字"
+  },
+  {
+   "word": "stereo",
+   "phonetic_us": "[‘stiәriәu]",
+   "phonetic_uk": "[‘stiәriәu]",
+   "meaning": "n.立体声 a.立体声的"
+  },
+  {
+   "word": "stereotype",
+   "phonetic_us": "[stiәriәtaip]",
+   "phonetic_uk": "[stiәriәtaip]",
+   "meaning": "n.陈腔滥调,老套"
+  },
+  {
+   "word": "stern",
+   "phonetic_us": "[stə:n]",
+   "phonetic_uk": "[stə:n]",
+   "meaning": "adj.严厉的坚定的坚决的苛刻的n.尾部船尾"
+  },
+  {
+   "word": "steward",
+   "phonetic_us": "['stju:əd]",
+   "phonetic_uk": "['stju:əd]",
+   "meaning": "n.乘务员服务员v.做乘务员管理"
+  },
+  {
+   "word": "stewardess",
+   "phonetic_us": "['stju:ədis]",
+   "phonetic_uk": "['stju:ədis]",
+   "meaning": "n.空中小姐女乘务员女管家"
+  },
+  {
+   "word": "stitch",
+   "phonetic_us": "[stitʃ]",
+   "phonetic_uk": "[stitʃ]",
+   "meaning": "n.一针针脚疼痛碎布条vt.缝缝合"
+  },
+  {
+   "word": "stoop",
+   "phonetic_us": "[stu:p]",
+   "phonetic_uk": "[stu:p]",
+   "meaning": "vi.俯身弯下弯下上身屈服n.弯腰佝偻屈服"
+  },
+  {
+   "word": "strawberry",
+   "phonetic_us": "['strɔ:bəri]",
+   "phonetic_uk": "['strɔ:bəri]",
+   "meaning": "n.草莓"
+  },
+  {
+   "word": "streamline",
+   "phonetic_us": "[stri:mlain]",
+   "phonetic_uk": "[stri:mlain]",
+   "meaning": "n.流线；流线型"
+  },
+  {
+   "word": "strictly",
+   "phonetic_us": "['striktli]",
+   "phonetic_uk": "['striktli]",
+   "meaning": "adv.严格地严谨地"
+  },
+  {
+   "word": "strongly",
+   "phonetic_us": "['strɔŋli]",
+   "phonetic_uk": "['strɔŋli]",
+   "meaning": "adv.强壮地强烈地强有力地坚固地坚强地激烈地"
+  },
+  {
+   "word": "stubborn",
+   "phonetic_us": "[‘stΛbәn]",
+   "phonetic_uk": "[‘stΛbәn]",
+   "meaning": "a.顽固的；顽强的"
+  },
+  {
+   "word": "stumble",
+   "phonetic_us": "['stʌmbl]",
+   "phonetic_uk": "['stʌmbl]",
+   "meaning": "vi.绊倒犯错失策踌躇无意中发现vt.绊倒困惑n.绊倒失策"
+  },
+  {
+   "word": "sturdy",
+   "phonetic_us": "[‘stә:di]",
+   "phonetic_uk": "[‘stә:di]",
+   "meaning": "a.坚定的；牢固的"
+  },
+  {
+   "word": "submarine",
+   "phonetic_us": "['sʌbməri:n]",
+   "phonetic_uk": "['sʌbməri:n]",
+   "meaning": "adj.水下的海底的n.潜水艇vt.用潜艇袭击vi.滑入...底下"
+  },
+  {
+   "word": "submerge",
+   "phonetic_us": "[səb'mə:dʒ]",
+   "phonetic_uk": "[səb'mə:dʒ]",
+   "meaning": "vt.使浸没潜入水中覆盖vi.潜入水中浸没"
+  },
+  {
+   "word": "subordinate",
+   "phonetic_us": "[sә’bɔ:dәnit]",
+   "phonetic_uk": "[sә’bɔ:dәnit]",
+   "meaning": "a.下级的，辅助的"
+  },
+  {
+   "word": "subscribe",
+   "phonetic_us": "[sәb’skraib]",
+   "phonetic_uk": "[sәb’skraib]",
+   "meaning": "vi.订购，认购；预订"
+  },
+  {
+   "word": "subsidiary",
+   "phonetic_us": "[sәb’sidjәri]",
+   "phonetic_uk": "[sәb’sidjәri]",
+   "meaning": "a.辅助的，补充的"
+  },
+  {
+   "word": "subsidy",
+   "phonetic_us": "[‘sΛbsidi]",
+   "phonetic_uk": "[‘sΛbsidi]",
+   "meaning": "n. 补助金,津贴"
+  },
+  {
+   "word": "subtle",
+   "phonetic_us": "[‘sΛbtl]",
+   "phonetic_uk": "[‘sΛbtl]",
+   "meaning": "a.微妙的；精巧的"
+  },
+  {
+   "word": "successfully",
+   "phonetic_us": "[sək'sesfəli]",
+   "phonetic_uk": "[sək'sesfəli]",
+   "meaning": "advS.成功地"
+  },
+  {
+   "word": "sue",
+   "phonetic_us": "[sju:]",
+   "phonetic_uk": "[sju:]",
+   "meaning": "vt. 控告,请愿"
+  },
+  {
+   "word": "suffice",
+   "phonetic_us": "[sә’fais]",
+   "phonetic_uk": "[sә’fais]",
+   "meaning": "vi.足够；有能力"
+  },
+  {
+   "word": "sufficiently",
+   "phonetic_us": "[sə'fiʃəntli]",
+   "phonetic_uk": "[sə'fiʃəntli]",
+   "meaning": "adv.足够地充分地"
+  },
+  {
+   "word": "suicide",
+   "phonetic_us": "[‘sjuisaid]",
+   "phonetic_uk": "[‘sjuisaid]",
+   "meaning": "n.&vi.&vt.自杀"
+  },
+  {
+   "word": "sulphur",
+   "phonetic_us": "['sʌlfə]",
+   "phonetic_uk": "['sʌlfə]",
+   "meaning": "n.硫(磺)硫黄"
+  },
+  {
+   "word": "summon",
+   "phonetic_us": "[‘sΛmәn]",
+   "phonetic_uk": "[‘sΛmәn]",
+   "meaning": "vt.召唤；鼓起(勇气)"
+  },
+  {
+   "word": "supersonic",
+   "phonetic_us": "[‘sju:pә’sɔnik]",
+   "phonetic_uk": "[‘sju:pә’sɔnik]",
+   "meaning": "a.超声的，超声速的"
+  },
+  {
+   "word": "suppress",
+   "phonetic_us": "[sә’pres]",
+   "phonetic_uk": "[sә’pres]",
+   "meaning": "vt.镇压；抑制；隐瞒"
+  },
+  {
+   "word": "surely",
+   "phonetic_us": "['ʃuəli]",
+   "phonetic_uk": "['ʃuəli]",
+   "meaning": "adv.确实稳当地安全地"
+  },
+  {
+   "word": "surpass",
+   "phonetic_us": "[sә:’pa:s]",
+   "phonetic_uk": "[sә:’pa:s]",
+   "meaning": "vt.超过，超越，胜过"
+  },
+  {
+   "word": "surprising",
+   "phonetic_us": "[sə'praiziŋ]",
+   "phonetic_uk": "[sə'praiziŋ]",
+   "meaning": "adj.惊人的出人意外的令人惊讶的动词surprise的现在分词"
+  },
+  {
+   "word": "surprisingly",
+   "phonetic_us": "[sə'praiziŋli]",
+   "phonetic_uk": "[sə'praiziŋli]",
+   "meaning": "adv.惊人地(意外地)"
+  },
+  {
+   "word": "susceptible",
+   "phonetic_us": "[sә’septәbl]",
+   "phonetic_uk": "[sә’septәbl]",
+   "meaning": "a. 易受影响的,易感动的"
+  },
+  {
+   "word": "swamp",
+   "phonetic_us": "[swɔmp]",
+   "phonetic_uk": "[swɔmp]",
+   "meaning": "n.沼泽沼泽地湿地v.淹没陷于沼泽"
+  },
+  {
+   "word": "swan",
+   "phonetic_us": "[swɔn]",
+   "phonetic_uk": "[swɔn]",
+   "meaning": "n.天鹅vi.闲荡游荡"
+  },
+  {
+   "word": "swarm",
+   "phonetic_us": "[swɔ:m]",
+   "phonetic_uk": "[swɔ:m]",
+   "meaning": "n.一大群蜂窝vi.密集云集充满"
+  },
+  {
+   "word": "Swiss",
+   "phonetic_us": "[swis]",
+   "phonetic_uk": "[swis]",
+   "meaning": "adj.瑞士的n.瑞士人"
+  },
+  {
+   "word": "symmetry",
+   "phonetic_us": "[‘simitri]",
+   "phonetic_uk": "[‘simitri]",
+   "meaning": "n.对称(性)，匀称"
+  },
+  {
+   "word": "symphony",
+   "phonetic_us": "[‘simfәni]",
+   "phonetic_uk": "[‘simfәni]",
+   "meaning": "n.交响乐；交响乐团"
+  },
+  {
+   "word": "symposium",
+   "phonetic_us": "[sim’pәuzjәm]",
+   "phonetic_uk": "[sim’pәuzjәm]",
+   "meaning": "n.酒会；座谈会"
+  },
+  {
+   "word": "synthesis",
+   "phonetic_us": "[‘sinθisis]",
+   "phonetic_uk": "[‘sinθisis]",
+   "meaning": "n.合成；综合，综合物"
+  },
+  {
+   "word": "synthetic",
+   "phonetic_us": "[sin'θetik]",
+   "phonetic_uk": "[sin'θetik]",
+   "meaning": "adj.综合的合成的人造的n.人工制品"
+  },
+  {
+   "word": "systematic(al)",
+   "phonetic_us": "[.sisti'mætik(l)]",
+   "phonetic_uk": "[.sisti'mætik(l)]",
+   "meaning": "adj.有系统的有条理的有计划的分类的体系的"
+  },
+  {
+   "word": "tactics",
+   "phonetic_us": "[‘tæktiks]",
+   "phonetic_uk": "[‘tæktiks]",
+   "meaning": "n.策略；战术，兵法"
+  },
+  {
+   "word": "tan",
+   "phonetic_us": "[tæn]",
+   "phonetic_uk": "[tæn]",
+   "meaning": "n.棕褐色黝黑adj.棕黄色的棕褐色的v.晒黑鞣(革)使晒成棕褐色"
+  },
+  {
+   "word": "tangle",
+   "phonetic_us": "[‘tæŋgl]",
+   "phonetic_uk": "[‘tæŋgl]",
+   "meaning": "vt.使缠结，使纠缠"
+  },
+  {
+   "word": "tar",
+   "phonetic_us": "[ta:]",
+   "phonetic_uk": "[ta:]",
+   "meaning": "n.柏油，焦油"
+  },
+  {
+   "word": "tariff",
+   "phonetic_us": "[‘tærif]",
+   "phonetic_uk": "[‘tærif]",
+   "meaning": "n.关税,价格表,收费表 vt. 课以关税"
+  },
+  {
+   "word": "tease",
+   "phonetic_us": "[ti:z]",
+   "phonetic_uk": "[ti:z]",
+   "meaning": "vt.逗乐，戏弄；强求"
+  },
+  {
+   "word": "telegram",
+   "phonetic_us": "['teligræm]",
+   "phonetic_uk": "['teligræm]",
+   "meaning": "n.电报vt.向...发电报"
+  },
+  {
+   "word": "telegraph",
+   "phonetic_us": "['teligrɑ:f]",
+   "phonetic_uk": "['teligrɑ:f]",
+   "meaning": "n.电报机电报vt.打电报显示"
+  },
+  {
+   "word": "temperament",
+   "phonetic_us": "[‘tempәrәmәnt]",
+   "phonetic_uk": "[‘tempәrәmәnt]",
+   "meaning": "n. 气质,性质,性情"
+  },
+  {
+   "word": "tempo",
+   "phonetic_us": "[‘tempәu]",
+   "phonetic_uk": "[‘tempәu]",
+   "meaning": "n. 拍子,速率,节奏"
+  },
+  {
+   "word": "tempt",
+   "phonetic_us": "[tempt]",
+   "phonetic_uk": "[tempt]",
+   "meaning": "vt.引诱诱惑吸引勾引"
+  },
+  {
+   "word": "temptation",
+   "phonetic_us": "[temp'teiʃən]",
+   "phonetic_uk": "[temp'teiʃən]",
+   "meaning": "n.诱惑引诱"
+  },
+  {
+   "word": "tenant",
+   "phonetic_us": "['tenənt]",
+   "phonetic_uk": "['tenənt]",
+   "meaning": "n.承担人房客佃户占用者vt.租借租赁"
+  },
+  {
+   "word": "tentative",
+   "phonetic_us": "[‘tentәtiv]",
+   "phonetic_uk": "[‘tentәtiv]",
+   "meaning": "n.试验,假设a.试验性,暂时的"
+  },
+  {
+   "word": "tenth",
+   "phonetic_us": "[tenθ]",
+   "phonetic_uk": "[tenθ]",
+   "meaning": "num.第十十分之一n.第十十分之一"
+  },
+  {
+   "word": "terminate",
+   "phonetic_us": "[‘tә:mineit]",
+   "phonetic_uk": "[‘tә:mineit]",
+   "meaning": "vt.&vi.停止，终止"
+  },
+  {
+   "word": "terrace",
+   "phonetic_us": "[‘terәs]",
+   "phonetic_uk": "[‘terәs]",
+   "meaning": "n.平台，阳台，露台"
+  },
+  {
+   "word": "terrain",
+   "phonetic_us": "[‘terein]",
+   "phonetic_uk": "[‘terein]",
+   "meaning": "n. 地带,地域,范围,领域"
+  },
+  {
+   "word": "testify",
+   "phonetic_us": "[‘testifai]",
+   "phonetic_uk": "[‘testifai]",
+   "meaning": "v.证明，证实，作证"
+  },
+  {
+   "word": "testimony",
+   "phonetic_us": "[‘testimәni]",
+   "phonetic_uk": "[‘testimәni]",
+   "meaning": "n. 证言,证据,声明"
+  },
+  {
+   "word": "texture",
+   "phonetic_us": "[‘tekstʃә]",
+   "phonetic_uk": "[‘tekstʃә]",
+   "meaning": "n. 质地，纹理"
+  },
+  {
+   "word": "thereafter",
+   "phonetic_us": "[ðɛә’ra:ftә]",
+   "phonetic_uk": "[ðɛә’ra:ftә]",
+   "meaning": "ad.此后，以后"
+  },
+  {
+   "word": "thermal",
+   "phonetic_us": "[‘ðә:mәl]",
+   "phonetic_uk": "[‘ðә:mәl]",
+   "meaning": "a.热的；温泉的"
+  },
+  {
+   "word": "thickness",
+   "phonetic_us": "['θiknis]",
+   "phonetic_uk": "['θiknis]",
+   "meaning": "n.厚(度)密(度)一层含混不清"
+  },
+  {
+   "word": "thirdly",
+   "phonetic_us": "['θə:dli]",
+   "phonetic_uk": "['θə:dli]",
+   "meaning": "adv.第三"
+  },
+  {
+   "word": "thorn",
+   "phonetic_us": "[θɔ:n]",
+   "phonetic_uk": "[θɔ:n]",
+   "meaning": "n.刺，棘；荆棘；蒺藜"
+  },
+  {
+   "word": "threshold",
+   "phonetic_us": "[‘θreʃhәuld]",
+   "phonetic_uk": "[‘θreʃhәuld]",
+   "meaning": "n.门槛；入门，开端"
+  },
+  {
+   "word": "thrill",
+   "phonetic_us": "[θril]",
+   "phonetic_uk": "[θril]",
+   "meaning": "n.一阵激动震颤激动v.(使)震颤兴奋激动"
+  },
+  {
+   "word": "throne",
+   "phonetic_us": "[θrəun]",
+   "phonetic_uk": "[θrəun]",
+   "meaning": "n.宝座御座王位君主"
+  },
+  {
+   "word": "throng",
+   "phonetic_us": "[θrɔ:ŋ]",
+   "phonetic_uk": "[θrɔ:ŋ]",
+   "meaning": "n.群人群群众一大群大量vt.挤满群集挤压adj.拥挤的忙的"
+  },
+  {
+   "word": "tile",
+   "phonetic_us": "[tail]",
+   "phonetic_uk": "[tail]",
+   "meaning": "n.瓦片，瓷砖；贴砖"
+  },
+  {
+   "word": "tilt",
+   "phonetic_us": "[tilt]",
+   "phonetic_uk": "[tilt]",
+   "meaning": "vt.&vi.(使)倾斜"
+  },
+  {
+   "word": "timetable",
+   "phonetic_us": "['taim.teibl]",
+   "phonetic_uk": "['taim.teibl]",
+   "meaning": "n.时间表时刻表课程表"
+  },
+  {
+   "word": "timid",
+   "phonetic_us": "[‘timid]",
+   "phonetic_uk": "[‘timid]",
+   "meaning": "a.胆怯的；羞怯的"
+  },
+  {
+   "word": "tomb",
+   "phonetic_us": "[tu:m]",
+   "phonetic_uk": "[tu:m]",
+   "meaning": "n.坟冢vt.埋葬"
+  },
+  {
+   "word": "torrent",
+   "phonetic_us": "['tɔrənt]",
+   "phonetic_uk": "['tɔrənt]",
+   "meaning": "n.奔流激流洪流山洪adj.奔流的汹涌的"
+  },
+  {
+   "word": "tortoise",
+   "phonetic_us": "['tɔ:təs]",
+   "phonetic_uk": "['tɔ:təs]",
+   "meaning": "n.龟乌龟"
+  },
+  {
+   "word": "tow",
+   "phonetic_us": "[tәu]",
+   "phonetic_uk": "[tәu]",
+   "meaning": "vt.&n.拖引，牵引"
+  },
+  {
+   "word": "tract",
+   "phonetic_us": "[‘trækt]",
+   "phonetic_uk": "[‘trækt]",
+   "meaning": "n.传单,小册子,大片(土地或森林)"
+  },
+  {
+   "word": "trait",
+   "phonetic_us": "[treit]",
+   "phonetic_uk": "[treit]",
+   "meaning": "n. 显著特点，特性"
+  },
+  {
+   "word": "traitor",
+   "phonetic_us": "['treitə]",
+   "phonetic_uk": "['treitə]",
+   "meaning": "n.叛徒卖国贼出卖朋友者"
+  },
+  {
+   "word": "tramp",
+   "phonetic_us": "[træmp]",
+   "phonetic_uk": "[træmp]",
+   "meaning": "n.流浪者游民重步声v.践踏重步行走"
+  },
+  {
+   "word": "transcend",
+   "phonetic_us": "[træn’send]",
+   "phonetic_uk": "[træn’send]",
+   "meaning": "vt. 超越,胜过"
+  },
+  {
+   "word": "transformer",
+   "phonetic_us": "[træns'fɔ:mə]",
+   "phonetic_uk": "[træns'fɔ:mə]",
+   "meaning": "n.变压器转换器"
+  },
+  {
+   "word": "transient",
+   "phonetic_us": "[‘trænziәnt]",
+   "phonetic_uk": "[‘trænziәnt]",
+   "meaning": "a.短暂的,转瞬即逝的,临时的,暂住的"
+  },
+  {
+   "word": "transistor",
+   "phonetic_us": "[træn'zistə]",
+   "phonetic_uk": "[træn'zistə]",
+   "meaning": "n.晶体管晶体管收音机"
+  },
+  {
+   "word": "transition",
+   "phonetic_us": "[træn’siʃәn]",
+   "phonetic_uk": "[træn’siʃәn]",
+   "meaning": "n.转变，变迁；过渡"
+  },
+  {
+   "word": "traverse",
+   "phonetic_us": "[‘trævә:s]",
+   "phonetic_uk": "[‘trævә:s]",
+   "meaning": "vt.横越，横切，横断"
+  },
+  {
+   "word": "treason",
+   "phonetic_us": "['tri:zn]",
+   "phonetic_uk": "['tri:zn]",
+   "meaning": "n.谋反通敌叛国罪叛逆背叛"
+  },
+  {
+   "word": "trench",
+   "phonetic_us": "[trentʃ]",
+   "phonetic_uk": "[trentʃ]",
+   "meaning": "n.深沟；壕沟，战壕"
+  },
+  {
+   "word": "tribe",
+   "phonetic_us": "[traib]",
+   "phonetic_uk": "[traib]",
+   "meaning": "n.部落，宗族"
+  },
+  {
+   "word": "tribute",
+   "phonetic_us": "[‘tribju:t]",
+   "phonetic_uk": "[‘tribju:t]",
+   "meaning": "n.贡物；献礼，贡献"
+  },
+  {
+   "word": "trim",
+   "phonetic_us": "[trim]",
+   "phonetic_uk": "[trim]",
+   "meaning": "adj.整齐的匀称的vt.使整齐使整洁修除削剪装备痛打击败n.整齐装饰修剪下来的部分"
+  },
+  {
+   "word": "trivial",
+   "phonetic_us": "[‘triviәl]",
+   "phonetic_uk": "[‘triviәl]",
+   "meaning": "a.琐碎的；平常的"
+  },
+  {
+   "word": "tropical",
+   "phonetic_us": "['trɔpikəl]",
+   "phonetic_uk": "['trɔpikəl]",
+   "meaning": "adj.热带的炎热的热带植物的"
+  },
+  {
+   "word": "trumpet",
+   "phonetic_us": "['trʌmpit]",
+   "phonetic_uk": "['trʌmpit]",
+   "meaning": "n.喇叭小号喇叭声喇叭手vt.宣扬鼓吹吹嘘vi.吹喇叭发出喇叭似的声音"
+  },
+  {
+   "word": "tub",
+   "phonetic_us": "[tʌb]",
+   "phonetic_uk": "[tʌb]",
+   "meaning": "n.桶盆浴缸浴盆v.装入桶洗澡"
+  },
+  {
+   "word": "tuck",
+   "phonetic_us": "[tʌk]",
+   "phonetic_uk": "[tʌk]",
+   "meaning": "vt.折短卷起塞打摺挤进畅饮vi.缝褶裥缩拢畅饮n.缝摺船尾突出部下方食品鼓声"
+  },
+  {
+   "word": "tug",
+   "phonetic_us": "[tΛg]",
+   "phonetic_uk": "[tΛg]",
+   "meaning": "vi.用力拖 n.猛拉，拖"
+  },
+  {
+   "word": "tumble",
+   "phonetic_us": "['tʌmbl]",
+   "phonetic_uk": "['tʌmbl]",
+   "meaning": "vi.摔倒跌倒打滚下跌倒塌翻跟斗偶然发现理解vt.使摔倒使混乱翻滚n.跌倒混乱"
+  },
+  {
+   "word": "turbine",
+   "phonetic_us": "['tə:bin]",
+   "phonetic_uk": "['tə:bin]",
+   "meaning": "n.叶轮机汽轮机涡轮"
+  },
+  {
+   "word": "turbulent",
+   "phonetic_us": "['tə:bjulənt]",
+   "phonetic_uk": "['tə:bjulənt]",
+   "meaning": "adj.骚动的骚乱的狂暴的动荡的汹涌的"
+  },
+  {
+   "word": "turning",
+   "phonetic_us": "['tə:niŋ]",
+   "phonetic_uk": "['tə:niŋ]",
+   "meaning": "n.旋转回转转向变向转弯处"
+  },
+  {
+   "word": "turnip",
+   "phonetic_us": "['tə:nip]",
+   "phonetic_uk": "['tə:nip]",
+   "meaning": "n.萝卜芜菁大头菜<俚>大怀表"
+  },
+  {
+   "word": "turnover",
+   "phonetic_us": "[‘tә:nouvә]",
+   "phonetic_uk": "[‘tә:nouvә]",
+   "meaning": "n. 人员调整，营业额，成交量"
+  },
+  {
+   "word": "twinkle",
+   "phonetic_us": "['twiŋkl]",
+   "phonetic_uk": "['twiŋkl]",
+   "meaning": "vi.闪烁闪耀使...闪耀眨眼迅速移动n.闪烁闪耀眨眼瞬息"
+  },
+  {
+   "word": "typhoon",
+   "phonetic_us": "[tai'fu:n]",
+   "phonetic_uk": "[tai'fu:n]",
+   "meaning": "n.台风"
+  },
+  {
+   "word": "ultraviolet",
+   "phonetic_us": "[‘Λltrә’vaiәlit]",
+   "phonetic_uk": "[‘Λltrә’vaiәlit]",
+   "meaning": "a.紫外的n.紫外线辐射"
+  },
+  {
+   "word": "unable",
+   "phonetic_us": "[ʌn'eibl]",
+   "phonetic_uk": "[ʌn'eibl]",
+   "meaning": "adj.不能的不会的"
+  },
+  {
+   "word": "unanimous",
+   "phonetic_us": "[ju(:)’nænimәs]",
+   "phonetic_uk": "[ju(:)’nænimәs]",
+   "meaning": "a.(全体)一致的"
+  },
+  {
+   "word": "unbearable",
+   "phonetic_us": "['ʌn'bɛərəbl]",
+   "phonetic_uk": "['ʌn'bɛərəbl]",
+   "meaning": "adj.难堪的忍受不了的"
+  },
+  {
+   "word": "uncomfortable",
+   "phonetic_us": "[ʌn'kʌmftəbl]",
+   "phonetic_uk": "[ʌn'kʌmftəbl]",
+   "meaning": "adj.不舒服的不自在的"
+  },
+  {
+   "word": "unconscious",
+   "phonetic_us": "[ʌn'kɔnʃəs]",
+   "phonetic_uk": "[ʌn'kɔnʃəs]",
+   "meaning": "adj.不省人事的失去知觉的"
+  },
+  {
+   "word": "underlying",
+   "phonetic_us": "[Λndә’laiiŋ]",
+   "phonetic_uk": "[Λndә’laiiŋ]",
+   "meaning": "a. 在下的,含蓄的,潜在的"
+  },
+  {
+   "word": "unexpected",
+   "phonetic_us": "['ʌnik'spektid]",
+   "phonetic_uk": "['ʌnik'spektid]",
+   "meaning": "adj.想不到的意外的"
+  },
+  {
+   "word": "unfair",
+   "phonetic_us": "[ʌn'fɛə]",
+   "phonetic_uk": "[ʌn'fɛə]",
+   "meaning": "adj.不公平的不公正的(商业上)不正当的"
+  },
+  {
+   "word": "unfold",
+   "phonetic_us": "[Λn’fәuld]",
+   "phonetic_uk": "[Λn’fәuld]",
+   "meaning": "vt.展开 vi.呈现"
+  },
+  {
+   "word": "unfortunate",
+   "phonetic_us": "[ʌn'fɔ:tʃənit]",
+   "phonetic_uk": "[ʌn'fɔ:tʃənit]",
+   "meaning": "adj.不幸的可取的令人遗憾的不成功的n.不幸的人"
+  },
+  {
+   "word": "unfortunately",
+   "phonetic_us": "[ʌn'fɔ:tʃənitli]",
+   "phonetic_uk": "[ʌn'fɔ:tʃənitli]",
+   "meaning": "adv.不幸地"
+  },
+  {
+   "word": "unhappy",
+   "phonetic_us": "[ʌn'hæpi]",
+   "phonetic_uk": "[ʌn'hæpi]",
+   "meaning": "adj.不幸福的不快乐的"
+  },
+  {
+   "word": "unify",
+   "phonetic_us": "[‘ju:nifai]",
+   "phonetic_uk": "[‘ju:nifai]",
+   "meaning": "vt. 统一,使成一体"
+  },
+  {
+   "word": "unjust",
+   "phonetic_us": "['ʌn'dʒʌst]",
+   "phonetic_uk": "['ʌn'dʒʌst]",
+   "meaning": "adj.非正义的不公平的"
+  },
+  {
+   "word": "unkind",
+   "phonetic_us": "[ʌn'kaind]",
+   "phonetic_uk": "[ʌn'kaind]",
+   "meaning": "adj.不仁慈的不和善的无情的不厚道的"
+  },
+  {
+   "word": "unknown",
+   "phonetic_us": "['ʌn'nəun]",
+   "phonetic_uk": "['ʌn'nəun]",
+   "meaning": "adj.不知道的未知的不出名的"
+  },
+  {
+   "word": "unlike",
+   "phonetic_us": "['ʌn'laik]",
+   "phonetic_uk": "['ʌn'laik]",
+   "meaning": "adj.不同的不相似的prep.不象...和...不同"
+  },
+  {
+   "word": "unlikely",
+   "phonetic_us": "[ʌn'laikli]",
+   "phonetic_uk": "[ʌn'laikli]",
+   "meaning": "adj.未必的未必可能的"
+  },
+  {
+   "word": "unload",
+   "phonetic_us": "['ʌn'ləud]",
+   "phonetic_uk": "['ʌn'ləud]",
+   "meaning": "vt.卸(货)卸下摆脱...之负担(大量)倾销vi.卸货摆脱负担退出(弹药胶片等)"
+  },
+  {
+   "word": "unlucky",
+   "phonetic_us": "[ʌn'lʌki]",
+   "phonetic_uk": "[ʌn'lʌki]",
+   "meaning": "adj.不幸的不吉的倒霉的"
+  },
+  {
+   "word": "unnecessary",
+   "phonetic_us": "[ʌn'nesisəri]",
+   "phonetic_uk": "[ʌn'nesisəri]",
+   "meaning": "adj.不必要的多余的"
+  },
+  {
+   "word": "unpleasant",
+   "phonetic_us": "[ʌn'pleznt]",
+   "phonetic_uk": "[ʌn'pleznt]",
+   "meaning": "adj.令人不快的讨厌的"
+  },
+  {
+   "word": "unsatisfactory",
+   "phonetic_us": "['ʌn.sætisfæktəri]",
+   "phonetic_uk": "['ʌn.sætisfæktəri]",
+   "meaning": "adj.不能令人满意的"
+  },
+  {
+   "word": "unstable",
+   "phonetic_us": "['ʌn'steibl]",
+   "phonetic_uk": "['ʌn'steibl]",
+   "meaning": "adj.不稳固的不稳定的易变的"
+  },
+  {
+   "word": "unsuitable",
+   "phonetic_us": "['ʌn'sju:təbl]",
+   "phonetic_uk": "['ʌn'sju:təbl]",
+   "meaning": "adj.不合适的不适宜的"
+  },
+  {
+   "word": "unusual",
+   "phonetic_us": "[ʌn'ju:ʒuəl]",
+   "phonetic_uk": "[ʌn'ju:ʒuəl]",
+   "meaning": "adj.不平常的独特的异常的"
+  },
+  {
+   "word": "unusually",
+   "phonetic_us": "[ʌn'ju:ʒuəli]",
+   "phonetic_uk": "[ʌn'ju:ʒuəli]",
+   "meaning": "adj.不平常地非常异乎寻常地显著地"
+  },
+  {
+   "word": "unwilling",
+   "phonetic_us": "['ʌn'wiliŋ]",
+   "phonetic_uk": "['ʌn'wiliŋ]",
+   "meaning": "adj.不愿意的"
+  },
+  {
+   "word": "uphold",
+   "phonetic_us": "[Λp’hәuld]",
+   "phonetic_uk": "[Λp’hәuld]",
+   "meaning": "vt.举起；支撑；赞成"
+  },
+  {
+   "word": "upside-down",
+   "phonetic_us": "['ʌpsaid'daun]",
+   "phonetic_uk": "['ʌpsaid'daun]",
+   "meaning": "adj.颠倒的乱七八糟的"
+  },
+  {
+   "word": "valve",
+   "phonetic_us": "[vælv]",
+   "phonetic_uk": "[vælv]",
+   "meaning": "n.阀，阀门；电子管"
+  },
+  {
+   "word": "variety",
+   "phonetic_us": "[və'raiəti]",
+   "phonetic_uk": "[və'raiəti]",
+   "meaning": "n.多样化种类变种杂耍"
+  },
+  {
+   "word": "vary",
+   "phonetic_us": "['vɛəri]",
+   "phonetic_uk": "['vɛəri]",
+   "meaning": "vt.改变变化使多样化"
+  },
+  {
+   "word": "vase",
+   "phonetic_us": "[veis]",
+   "phonetic_uk": "[veis]",
+   "meaning": "n.瓶花瓶"
+  },
+  {
+   "word": "vegetation",
+   "phonetic_us": "[vedʒi’teiʃәn]",
+   "phonetic_uk": "[vedʒi’teiʃәn]",
+   "meaning": "n. 植物,草木"
+  },
+  {
+   "word": "vein",
+   "phonetic_us": "[vein]",
+   "phonetic_uk": "[vein]",
+   "meaning": "n.静脉，血管，矿脉"
+  },
+  {
+   "word": "velocity",
+   "phonetic_us": "[vi'lɔsiti]",
+   "phonetic_uk": "[vi'lɔsiti]",
+   "meaning": "n.速度速率迅速"
+  },
+  {
+   "word": "velvet",
+   "phonetic_us": "['velvit]",
+   "phonetic_uk": "['velvit]",
+   "meaning": "n.丝绒天鹅绒adj.天鹅绒的"
+  },
+  {
+   "word": "vent",
+   "phonetic_us": "[vent]",
+   "phonetic_uk": "[vent]",
+   "meaning": "n. 排放口,通风口 vt. 发泄,表达"
+  },
+  {
+   "word": "ventilate",
+   "phonetic_us": "[‘ventileit]",
+   "phonetic_uk": "[‘ventileit]",
+   "meaning": "vt.使通风，使换气"
+  },
+  {
+   "word": "verdict",
+   "phonetic_us": "[‘vә:dikt]",
+   "phonetic_uk": "[‘vә:dikt]",
+   "meaning": "n. 裁决,结论,定论,判断"
+  },
+  {
+   "word": "verge",
+   "phonetic_us": "[vә:dʒ]",
+   "phonetic_uk": "[vә:dʒ]",
+   "meaning": "n.边缘，边界，界限"
+  },
+  {
+   "word": "versatile",
+   "phonetic_us": "[‘vә:sәtail]",
+   "phonetic_uk": "[‘vә:sәtail]",
+   "meaning": "a.多方面的；通用的"
+  },
+  {
+   "word": "verse",
+   "phonetic_us": "[vә:s]",
+   "phonetic_uk": "[vә:s]",
+   "meaning": "n.诗，韵文；诗行"
+  },
+  {
+   "word": "vest",
+   "phonetic_us": "[vest]",
+   "phonetic_uk": "[vest]",
+   "meaning": "n.汗衫背心马甲内衣vt.授予给予使穿衣vi.(权力、财产等)归于穿衣服"
+  },
+  {
+   "word": "vex",
+   "phonetic_us": "[veks]",
+   "phonetic_uk": "[veks]",
+   "meaning": "vt.使烦恼使恼火恼怒"
+  },
+  {
+   "word": "vibrate",
+   "phonetic_us": "['vaibreit]",
+   "phonetic_uk": "['vaibreit]",
+   "meaning": "vt.使颤动(使)振动(使)摇摆vi.颤动回响"
+  },
+  {
+   "word": "vibration",
+   "phonetic_us": "[vai'breiʃən]",
+   "phonetic_uk": "[vai'breiʃən]",
+   "meaning": "n.颤动振动摆动"
+  },
+  {
+   "word": "vice",
+   "phonetic_us": "[vais]",
+   "phonetic_uk": "[vais]",
+   "meaning": "n.罪恶恶习缺点邪恶老虎钳adj.副的代理的prep.代替"
+  },
+  {
+   "word": "vicinity",
+   "phonetic_us": "[vi’siniti]",
+   "phonetic_uk": "[vi’siniti]",
+   "meaning": "n.邻近；附近地区"
+  },
+  {
+   "word": "vicious",
+   "phonetic_us": "[‘viʃәs]",
+   "phonetic_uk": "[‘viʃәs]",
+   "meaning": "a.邪恶的；恶性的"
+  },
+  {
+   "word": "vine",
+   "phonetic_us": "[vain]",
+   "phonetic_uk": "[vain]",
+   "meaning": "n.葡萄树攀爬植物藤蔓"
+  },
+  {
+   "word": "violet",
+   "phonetic_us": "['vaiəlit]",
+   "phonetic_uk": "['vaiəlit]",
+   "meaning": "n.紫罗兰紫色adj.紫色的"
+  },
+  {
+   "word": "virgin",
+   "phonetic_us": "[‘vә:dʒin]",
+   "phonetic_uk": "[‘vә:dʒin]",
+   "meaning": "n.处女 a.处女的"
+  },
+  {
+   "word": "vocal",
+   "phonetic_us": "[‘vәukәl]",
+   "phonetic_uk": "[‘vәukәl]",
+   "meaning": "a. 直言不讳的，嗓音的,有声的"
+  },
+  {
+   "word": "void",
+   "phonetic_us": "[vɔid]",
+   "phonetic_uk": "[vɔid]",
+   "meaning": "a.空的；无效的"
+  },
+  {
+   "word": "vulgar",
+   "phonetic_us": "[‘vΛlgә]",
+   "phonetic_uk": "[‘vΛlgә]",
+   "meaning": "a.粗俗的，庸俗的"
+  },
+  {
+   "word": "warrant",
+   "phonetic_us": "[‘wɔrәnt]",
+   "phonetic_uk": "[‘wɔrәnt]",
+   "meaning": "n. 正当理由, 委任状，许可证"
+  },
+  {
+   "word": "waterfall",
+   "phonetic_us": "['wɔ:təfɔ:l]",
+   "phonetic_uk": "['wɔ:təfɔ:l]",
+   "meaning": "n.瀑布"
+  },
+  {
+   "word": "watt",
+   "phonetic_us": "[wɔt]",
+   "phonetic_uk": "[wɔt]",
+   "meaning": "n.瓦(特)"
+  },
+  {
+   "word": "wavelength",
+   "phonetic_us": "['weiv.leŋθ]",
+   "phonetic_uk": "['weiv.leŋθ]",
+   "meaning": "n.波长波段"
+  },
+  {
+   "word": "weary",
+   "phonetic_us": "[ˈwɪəri]",
+   "phonetic_uk": "[ˈwɪəri]",
+   "meaning": "a.疲倦的vt.使疲乏"
+  },
+  {
+   "word": "wedge",
+   "phonetic_us": "[wedʒ]",
+   "phonetic_uk": "[wedʒ]",
+   "meaning": "n.楔 vt.楔入；挤入"
+  },
+  {
+   "word": "weld",
+   "phonetic_us": "[weld]",
+   "phonetic_uk": "[weld]",
+   "meaning": "vt.焊接熔接使结合n.焊接焊缝"
+  },
+  {
+   "word": "westward",
+   "phonetic_us": "['westwəd]",
+   "phonetic_uk": "['westwəd]",
+   "meaning": "adj.向西的西方的adv.向西n.西方西部"
+  },
+  {
+   "word": "whereby",
+   "phonetic_us": "[wɛә’bai]",
+   "phonetic_uk": "[wɛә’bai]",
+   "meaning": "ad.靠什么；靠那个"
+  },
+  {
+   "word": "whirl",
+   "phonetic_us": "[wә:l]",
+   "phonetic_uk": "[wә:l]",
+   "meaning": "vt.使回旋 vi.&n.回旋"
+  },
+  {
+   "word": "whitewash",
+   "phonetic_us": "['waitwɔʃ]",
+   "phonetic_uk": "['waitwɔʃ]",
+   "meaning": "vt.粉刷涂白用白色涂料粉刷掩盖或粉饰n.白色涂料粉饰"
+  },
+  {
+   "word": "wicked",
+   "phonetic_us": "['wikid]",
+   "phonetic_uk": "['wikid]",
+   "meaning": "adj.坏的令人厌恶的邪恶的缺德的adv.极端地非常地vt.吸收"
+  },
+  {
+   "word": "widely",
+   "phonetic_us": "['waidli]",
+   "phonetic_uk": "['waidli]",
+   "meaning": "adv.广广泛地adj.广泛的"
+  },
+  {
+   "word": "withhold",
+   "phonetic_us": "[wið’hәuld]",
+   "phonetic_uk": "[wið’hәuld]",
+   "meaning": "vt. 拒绝，不给，使停止，阻挡"
+  },
+  {
+   "word": "workman",
+   "phonetic_us": "['wə:kmən]",
+   "phonetic_uk": "['wə:kmən]",
+   "meaning": "n.工人劳动者工匠技工"
+  },
+  {
+   "word": "world-wide",
+   "phonetic_us": "['wə:ld'waild]",
+   "phonetic_uk": "['wə:ld'waild]",
+   "meaning": "adj.遍及全球的世界范围的"
+  },
+  {
+   "word": "wreath",
+   "phonetic_us": "[ri:θ]",
+   "phonetic_uk": "[ri:θ]",
+   "meaning": "n.花环花圈花冠"
+  },
+  {
+   "word": "wrench",
+   "phonetic_us": "[rentʃ]",
+   "phonetic_uk": "[rentʃ]",
+   "meaning": "vt.拧，扭伤 n.拧"
+  },
+  {
+   "word": "wretched",
+   "phonetic_us": "[‘retʃid]",
+   "phonetic_uk": "[‘retʃid]",
+   "meaning": "a.不幸的；卑鄙的"
+  },
+  {
+   "word": "yacht",
+   "phonetic_us": "[jɔt]",
+   "phonetic_uk": "[jɔt]",
+   "meaning": "n.游艇，快艇"
+  },
+  {
+   "word": "yawn",
+   "phonetic_us": "[jɔ:n]",
+   "phonetic_uk": "[jɔ:n]",
+   "meaning": "vi.打呵欠n.呵欠"
+  },
+  {
+   "word": "yoke",
+   "phonetic_us": "[jәuk]",
+   "phonetic_uk": "[jәuk]",
+   "meaning": "n.轭，牛轭；枷锁"
+  },
+  {
+   "word": "zeal",
+   "phonetic_us": "[zi:l]",
+   "phonetic_uk": "[zi:l]",
+   "meaning": "n.热心热情热忱"
+  },
+  {
+   "word": "zealous",
+   "phonetic_us": "['zeləs]",
+   "phonetic_uk": "['zeləs]",
+   "meaning": "adj.热心的热情的狂热的热衷的"
+  },
+  {
+   "word": "zebra",
+   "phonetic_us": "['zi:brə]",
+   "phonetic_uk": "['zi:brə]",
+   "meaning": "n.斑马斑马线"
+  },
+  {
+   "word": "zinc",
+   "phonetic_us": "[ziŋk]",
+   "phonetic_uk": "[ziŋk]",
+   "meaning": "n.锌"
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "背单词工作台",
+  "short_name": "背单词",
+  "description": "手机背单词：8 级词库 + 记忆曲线 + 听写 + 云同步",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f7fb",
+  "theme_color": "#4c6ef5",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

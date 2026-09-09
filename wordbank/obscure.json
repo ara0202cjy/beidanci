@@ -1,0 +1,1412 @@
+{
+  "address": {
+    "word": "address",
+    "common": "地址",
+    "rare": "v. 处理；对付；发表（演说）",
+    "en": "The government must address the problem of air pollution.",
+    "zh": "政府必须着手处理空气污染问题。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "present": {
+    "word": "present",
+    "common": "礼物；现在的",
+    "rare": "v. 呈现；颁发；赠送",
+    "en": "The report presents a clear picture of the current market.",
+    "zh": "这份报告清晰地呈现了当前市场的状况。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "treasure": {
+    "word": "treasure",
+    "common": "财富；财宝",
+    "rare": "v. 珍爱；珍视",
+    "en": "I will always treasure the days we spent together.",
+    "zh": "我会永远珍视我们共度的那些日子。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "still": {
+    "word": "still",
+    "common": "仍然；还",
+    "rare": "adj. 静止的；寂静的",
+    "en": "The lake was still under the moonlight.",
+    "zh": "月光下湖面一片寂静。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "break": {
+    "word": "break",
+    "common": "打破；打碎",
+    "rare": "n. 休息；间歇",
+    "en": "Let's have a ten-minute break.",
+    "zh": "我们休息十分钟吧。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "capital": {
+    "word": "capital",
+    "common": "首都",
+    "rare": "n. 大写字母；资本",
+    "en": "Please write the first letter in capitals.",
+    "zh": "请把首字母用大写。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "count": {
+    "word": "count",
+    "common": "数数；计算",
+    "rare": "v. 有价值；重要",
+    "en": "Every vote counts in this election.",
+    "zh": "在这次选举中每一票都很重要。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "cover": {
+    "word": "cover",
+    "common": "盖子；覆盖",
+    "rare": "v. 报道（新闻）；够付",
+    "en": "The reporter covered the international conference.",
+    "zh": "记者报道了这次国际会议。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "cross": {
+    "word": "cross",
+    "common": "穿过；十字",
+    "rare": "adj. 生气的；易怒的",
+    "en": "Don't be cross with me—I was only joking.",
+    "zh": "别生我的气，我不过是开个玩笑。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "date": {
+    "word": "date",
+    "common": "日期",
+    "rare": "n. 枣；v. 约会",
+    "en": "She went to the party on a date with her classmate.",
+    "zh": "她和同学约会后去了派对。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "dear": {
+    "word": "dear",
+    "common": "亲爱的",
+    "rare": "adj. 昂贵的",
+    "en": "The shoes were too dear, so I didn't buy them.",
+    "zh": "那双鞋太贵了，所以我没有买。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "desert": {
+    "word": "desert",
+    "common": "沙漠",
+    "rare": "v. 抛弃；舍弃",
+    "en": "He deserted his family and went abroad.",
+    "zh": "他抛下家人去了国外。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "develop": {
+    "word": "develop",
+    "common": "发展；开发",
+    "rare": "v. 冲洗（照片）",
+    "en": "I need to develop this roll of film.",
+    "zh": "我需要把这卷胶卷冲洗出来。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "earth": {
+    "word": "earth",
+    "common": "地球",
+    "rare": "n. 泥土；大地",
+    "en": "The pipe was buried deep in the earth.",
+    "zh": "管子深埋在泥土里。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "enter": {
+    "word": "enter",
+    "common": "进入",
+    "rare": "v. 报名；参加（比赛等）",
+    "en": "She entered the singing competition last year.",
+    "zh": "她去年参加了歌唱比赛。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "even": {
+    "word": "even",
+    "common": "甚至；即使",
+    "rare": "adj. 均匀的；平的；相等的",
+    "en": "The two sides came to an even score.",
+    "zh": "双方打成了平局。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "express": {
+    "word": "express",
+    "common": "表达",
+    "rare": "n. 快递；adj. 特快的",
+    "en": "I sent the documents by express.",
+    "zh": "我用快递寄了这些文件。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "fail": {
+    "word": "fail",
+    "common": "失败",
+    "rare": "v. 未能（做成某事）",
+    "en": "He failed to catch the last bus.",
+    "zh": "他没能赶上末班车。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "fall": {
+    "word": "fall",
+    "common": "落下；跌倒",
+    "rare": "n. 秋天（=autumn）",
+    "en": "The leaves turn yellow in the fall.",
+    "zh": "秋天树叶变黄。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "fancy": {
+    "word": "fancy",
+    "common": "幻想的；精致的",
+    "rare": "v. 喜欢；想要",
+    "en": "I fancy a cup of coffee right now.",
+    "zh": "我现在想喝杯咖啡。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "flat": {
+    "word": "flat",
+    "common": "平坦的",
+    "rare": "n. 公寓（=apartment）",
+    "en": "They rented a small flat near the school.",
+    "zh": "他们在学校附近租了一间小公寓。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "free": {
+    "word": "free",
+    "common": "自由的",
+    "rare": "adj. 空闲的；免费的",
+    "en": "Are you free this weekend? The show is free.",
+    "zh": "你这周末有空吗？演出是免费的。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "ground": {
+    "word": "ground",
+    "common": "地面",
+    "rare": "n. 理由；根据",
+    "en": "He left on the grounds of poor health.",
+    "zh": "他以身体不好为由离开了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "grow": {
+    "word": "grow",
+    "common": "生长；种植",
+    "rare": "v. 变得；逐渐",
+    "en": "It grew dark before we got home.",
+    "zh": "我们到家前天已经黑了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "hold": {
+    "word": "hold",
+    "common": "拿着；握住",
+    "rare": "v. 容纳；举行；持有",
+    "en": "The hall can hold three hundred people.",
+    "zh": "这个大厅能容纳三百人。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "host": {
+    "word": "host",
+    "common": "主人",
+    "rare": "v. 主持；主办",
+    "en": "Our school will host the sports meeting.",
+    "zh": "我们学校将主办这次运动会。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "industry": {
+    "word": "industry",
+    "common": "工业",
+    "rare": "n. 勤奋；勤勉",
+    "en": "His success came from industry and courage.",
+    "zh": "他的成功源于勤奋和勇气。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "interest": {
+    "word": "interest",
+    "common": "兴趣",
+    "rare": "n. 利息",
+    "en": "You must pay the loan with interest.",
+    "zh": "你必须连本带利偿还这笔贷款。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "introduce": {
+    "word": "introduce",
+    "common": "介绍",
+    "rare": "v. 引进；推行",
+    "en": "The school introduced a new teaching method.",
+    "zh": "学校引进了一种新的教学方法。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "invite": {
+    "word": "invite",
+    "common": "邀请",
+    "rare": "v. 招致；引起（麻烦等）",
+    "en": "Such carelessness invited disaster.",
+    "zh": "这种粗心招致了灾祸。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "just": {
+    "word": "just",
+    "common": "仅仅；刚才",
+    "rare": "adj. 公正的；正当的",
+    "en": "We made a just decision.",
+    "zh": "我们作出了公正的决定。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "kill": {
+    "word": "kill",
+    "common": "杀死",
+    "rare": "v. 消磨（时间）",
+    "en": "We played cards to kill time.",
+    "zh": "我们打牌来消磨时间。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "last": {
+    "word": "last",
+    "common": "最后的",
+    "rare": "v. 持续；延续",
+    "en": "The meeting lasted two hours.",
+    "zh": "会议持续了两小时。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "leave": {
+    "word": "leave",
+    "common": "离开",
+    "rare": "v. 留下；遗忘",
+    "en": "I left my umbrella on the bus.",
+    "zh": "我把雨伞落在公交车上了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "lie": {
+    "word": "lie",
+    "common": "躺；撒谎",
+    "rare": "v. 位于；处于",
+    "en": "The town lies at the foot of the mountain.",
+    "zh": "小镇位于山脚下。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "lift": {
+    "word": "lift",
+    "common": "举起",
+    "rare": "n. 电梯（=elevator）",
+    "en": "He took the lift to the tenth floor.",
+    "zh": "他乘电梯到了十楼。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "mad": {
+    "word": "mad",
+    "common": "疯狂的",
+    "rare": "adj. 生气的；恼火的",
+    "en": "She got mad at her brother for breaking the cup.",
+    "zh": "她因弟弟打碎杯子而生气。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "match": {
+    "word": "match",
+    "common": "比赛",
+    "rare": "v. 匹配；与…相配；n. 对手",
+    "en": "Your tie doesn't match your shirt.",
+    "zh": "你的领带和衬衫不配。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "mean": {
+    "word": "mean",
+    "common": "意思是",
+    "rare": "adj. 吝啬的；刻薄的",
+    "en": "Don't be so mean to your little sister.",
+    "zh": "别对你妹妹这么刻薄。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "miss": {
+    "word": "miss",
+    "common": "想念；错过",
+    "rare": "n. 小姐（称呼）",
+    "en": "Excuse me, Miss Li will see you now.",
+    "zh": "打扰一下，李小姐现在要见您。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "monitor": {
+    "word": "monitor",
+    "common": "显示器",
+    "rare": "n. 班长；v. 监控",
+    "en": "He was elected monitor of our class.",
+    "zh": "他被选为我们班的班长。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "narrow": {
+    "word": "narrow",
+    "common": "狭窄的",
+    "rare": "v. 缩小；变窄",
+    "en": "The gap between them narrowed over time.",
+    "zh": "随着时间的推移，他们之间的差距缩小了。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "novel": {
+    "word": "novel",
+    "common": "小说",
+    "rare": "adj. 新颖的；新奇的",
+    "en": "It's a novel idea worth trying.",
+    "zh": "这是个值得尝试的新奇想法。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "observe": {
+    "word": "observe",
+    "common": "观察",
+    "rare": "v. 遵守（法律、习俗）",
+    "en": "We should observe the school rules.",
+    "zh": "我们应遵守校规。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "operate": {
+    "word": "operate",
+    "common": "操作；运转",
+    "rare": "v. 动手术",
+    "en": "The doctor operated on the patient at once.",
+    "zh": "医生立刻为病人做了手术。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "order": {
+    "word": "order",
+    "common": "命令；顺序",
+    "rare": "n. 订单；v. 点（餐）",
+    "en": "He ordered a pizza for lunch.",
+    "zh": "他午餐点了一份披萨。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "pack": {
+    "word": "pack",
+    "common": "包裹",
+    "rare": "v. 挤满；塞满",
+    "en": "The stadium was packed with fans.",
+    "zh": "体育场挤满了球迷。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "part": {
+    "word": "part",
+    "common": "部分",
+    "rare": "v. 离开；分手",
+    "en": "They parted at the school gate.",
+    "zh": "他们在校门口分了手。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "particular": {
+    "word": "particular",
+    "common": "特别的",
+    "rare": "adj. 挑剔的；讲究的",
+    "en": "She is very particular about her food.",
+    "zh": "她对食物很挑剔。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "pass": {
+    "word": "pass",
+    "common": "通过；经过",
+    "rare": "v. 传递；度过",
+    "en": "Please pass me the salt.",
+    "zh": "请把盐递给我。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "patient": {
+    "word": "patient",
+    "common": "耐心的",
+    "rare": "n. 病人；患者",
+    "en": "The patient is recovering well.",
+    "zh": "这位病人恢复得很好。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "pay": {
+    "word": "pay",
+    "common": "支付",
+    "rare": "v. 划算；有好处",
+    "en": "It pays to plan ahead.",
+    "zh": "提前计划是值得的。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "plain": {
+    "word": "plain",
+    "common": "清楚的；朴素的",
+    "rare": "n. 平原",
+    "en": "They travelled across the wide plain.",
+    "zh": "他们穿越了广阔的平原。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "please": {
+    "word": "please",
+    "common": "请",
+    "rare": "v. 使高兴；取悦",
+    "en": "The gift pleased her very much.",
+    "zh": "这份礼物让她非常高兴。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "pocket": {
+    "word": "pocket",
+    "common": "口袋",
+    "rare": "adj. 袖珍的；小型的",
+    "en": "He bought a pocket dictionary.",
+    "zh": "他买了一本袖珍词典。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "position": {
+    "word": "position",
+    "common": "位置",
+    "rare": "n. 职位；立场",
+    "en": "She applied for a position in the bank.",
+    "zh": "她申请了银行的一个职位。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "post": {
+    "word": "post",
+    "common": "邮政；邮寄",
+    "rare": "n. 岗位；职位；v. 张贴",
+    "en": "He took up a post as a teacher.",
+    "zh": "他担任了教师一职。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "power": {
+    "word": "power",
+    "common": "力量；权力",
+    "rare": "n. 电力；能力",
+    "en": "The storm cut off the power.",
+    "zh": "暴风雨切断了电力。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "press": {
+    "word": "press",
+    "common": "压；按",
+    "rare": "n. 出版社；新闻界",
+    "en": "The book was published by Oxford University Press.",
+    "zh": "这本书由牛津大学出版社出版。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "pretty": {
+    "word": "pretty",
+    "common": "漂亮的",
+    "rare": "adv. 相当；颇",
+    "en": "The problem is pretty difficult.",
+    "zh": "这个问题相当难。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "private": {
+    "word": "private",
+    "common": "私人的",
+    "rare": "adj. 私立的；私下的",
+    "en": "He sent his son to a private school.",
+    "zh": "他把儿子送进了一所私立学校。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "prize": {
+    "word": "prize",
+    "common": "奖品；奖金",
+    "rare": "v. 珍视；高度重视",
+    "en": "He prizes his freedom above all else.",
+    "zh": "他把自由看得高于一切。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "proper": {
+    "word": "proper",
+    "common": "适当的；合适的",
+    "rare": "adj. 真正的；本身的",
+    "en": "Please put the book in its proper place.",
+    "zh": "请把书放回它本来的位置。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "raise": {
+    "word": "raise",
+    "common": "举起；提高",
+    "rare": "v. 饲养；抚养；筹集",
+    "en": "They raise cattle on the farm.",
+    "zh": "他们在农场养牛。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rate": {
+    "word": "rate",
+    "common": "比率；速度",
+    "rare": "n. 价格；费用；v. 评价",
+    "en": "The hotel is rated three stars.",
+    "zh": "这家酒店被评为三星级。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "reach": {
+    "word": "reach",
+    "common": "到达",
+    "rare": "v. 伸手够到；达成",
+    "en": "She reached for the top shelf.",
+    "zh": "她伸手去够最上面的架子。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "ready": {
+    "word": "ready",
+    "common": "准备好的",
+    "rare": "adj. 愿意的",
+    "en": "He is ready to help anyone in need.",
+    "zh": "他乐意帮助任何有需要的人。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "real": {
+    "word": "real",
+    "common": "真实的；真的",
+    "rare": "adj. 真正的；实际的",
+    "en": "What is the real reason for your absence?",
+    "zh": "你缺席的真正原因是什么？",
+    "banks": [
+      "初中"
+    ]
+  },
+  "reason": {
+    "word": "reason",
+    "common": "理由；原因",
+    "rare": "v. 推理；论证",
+    "en": "We can reason from the facts.",
+    "zh": "我们可以依据事实来推理。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "receive": {
+    "word": "receive",
+    "common": "收到",
+    "rare": "v. 接待；欢迎",
+    "en": "The hotel receives guests from all over the world.",
+    "zh": "这家酒店接待来自世界各地的客人。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "regard": {
+    "word": "regard",
+    "common": "关于；把…看作",
+    "rare": "v. 注视；n. 问候",
+    "en": "He regarded her with curiosity.",
+    "zh": "他好奇地注视着她。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "regular": {
+    "word": "regular",
+    "common": "规则的；规律的",
+    "rare": "adj. 定期的；常规的",
+    "en": "He makes a regular visit to his doctor.",
+    "zh": "他定期去看医生。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "relate": {
+    "word": "relate",
+    "common": "联系；有关",
+    "rare": "v. 叙述；讲述",
+    "en": "She related the events of the day.",
+    "zh": "她讲述了当天发生的事情。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "remain": {
+    "word": "remain",
+    "common": "保持；仍然是",
+    "rare": "v. 剩余；留下",
+    "en": "After the fire, little remained of the house.",
+    "zh": "火灾后房子所剩无几。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "remove": {
+    "word": "remove",
+    "common": "移动；移除",
+    "rare": "v. 开除；脱掉",
+    "en": "He removed his coat as it was warm.",
+    "zh": "天热了，他脱掉了外套。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "rent": {
+    "word": "rent",
+    "common": "租金",
+    "rare": "v. 租用；出租",
+    "en": "We rented a car for the trip.",
+    "zh": "我们租了辆车去旅行。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rest": {
+    "word": "rest",
+    "common": "休息",
+    "rare": "n. 剩余部分；其余",
+    "en": "The rest of the students went home.",
+    "zh": "其余的学生都回家了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "return": {
+    "word": "return",
+    "common": "返回",
+    "rare": "v. 回报；回复",
+    "en": "Kindness often returns kindness.",
+    "zh": "善行常有善报。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rich": {
+    "word": "rich",
+    "common": "富有的",
+    "rare": "adj. 丰富的；丰盛的",
+    "en": "The country is rich in natural resources.",
+    "zh": "这个国家自然资源丰富。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "ring": {
+    "word": "ring",
+    "common": "戒指",
+    "rare": "v. 打电话；（铃）响",
+    "en": "I'll ring you when I arrive.",
+    "zh": "我到了就给你打电话。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rise": {
+    "word": "rise",
+    "common": "上升；上涨",
+    "rare": "v. 起床；起立",
+    "en": "He rises early every morning.",
+    "zh": "他每天早起。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rough": {
+    "word": "rough",
+    "common": "粗糙的",
+    "rare": "adj. 粗略的；大致的",
+    "en": "Could you give me a rough idea of the cost?",
+    "zh": "你能大概告诉我费用多少吗？",
+    "banks": [
+      "高中"
+    ]
+  },
+  "round": {
+    "word": "round",
+    "common": "圆的",
+    "rare": "n. 一轮；回合",
+    "en": "The boxer won in the final round.",
+    "zh": "这位拳击手在最后一轮获胜。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "rule": {
+    "word": "rule",
+    "common": "规则",
+    "rare": "v. 统治；裁定",
+    "en": "The king ruled the country wisely.",
+    "zh": "国王英明地统治着这个国家。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "safe": {
+    "word": "safe",
+    "common": "安全的",
+    "rare": "n. 保险箱",
+    "en": "He kept the money in the safe.",
+    "zh": "他把钱放在保险箱里。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "save": {
+    "word": "save",
+    "common": "节省；救",
+    "rare": "v. 储蓄；保留",
+    "en": "She saves part of her salary each month.",
+    "zh": "她每月把部分工资存起来。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "score": {
+    "word": "score",
+    "common": "分数",
+    "rare": "n. 二十；v. 得分",
+    "en": "A score of people attended the meeting.",
+    "zh": "二十个人参加了会议。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "sense": {
+    "word": "sense",
+    "common": "感觉；感官",
+    "rare": "n. 意义；情理",
+    "en": "There is no sense in arguing further.",
+    "zh": "再争论下去毫无意义。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "serve": {
+    "word": "serve",
+    "common": "服务",
+    "rare": "v. 服刑；担任职务",
+    "en": "He served as chairman for two years.",
+    "zh": "他担任了两年主席。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "set": {
+    "word": "set",
+    "common": "放置；一套；装置",
+    "rare": "v. 凝固；落下",
+    "en": "The sun sets in the west.",
+    "zh": "太阳在西边落下。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "sharp": {
+    "word": "sharp",
+    "common": "锋利的；尖锐的",
+    "rare": "adj. 急剧的；准时的",
+    "en": "Please be here at seven sharp.",
+    "zh": "请七点整到这里。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "shy": {
+    "word": "shy",
+    "common": "害羞的",
+    "rare": "adj. 缺乏的；不足的",
+    "en": "The village is shy of clean water.",
+    "zh": "这个村子缺水。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "side": {
+    "word": "side",
+    "common": "边；侧面",
+    "rare": "v. 支持；站在…一边",
+    "en": "Most people sided with the workers.",
+    "zh": "大多数人站在工人一边。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "sign": {
+    "word": "sign",
+    "common": "标志；符号",
+    "rare": "v. 签名；示意",
+    "en": "Please sign your name here.",
+    "zh": "请在这里签名。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "since": {
+    "word": "since",
+    "common": "自从",
+    "rare": "conj. 既然；因为",
+    "en": "Since you are here, let's begin.",
+    "zh": "既然你来了，我们开始吧。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "smooth": {
+    "word": "smooth",
+    "common": "光滑的",
+    "rare": "adj. 顺利的；平稳的",
+    "en": "The project went smoothly.",
+    "zh": "项目进展顺利。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "sound": {
+    "word": "sound",
+    "common": "声音",
+    "rare": "adj. 健康的；合理的",
+    "en": "He is sound in body and mind.",
+    "zh": "他身心都很健康。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "spare": {
+    "word": "spare",
+    "common": "备用的",
+    "rare": "adj. 多余的；v. 抽出（时间）",
+    "en": "Can you spare me a few minutes?",
+    "zh": "你能抽几分钟给我吗？",
+    "banks": [
+      "初中"
+    ]
+  },
+  "speak": {
+    "word": "speak",
+    "common": "说；讲话",
+    "rare": "v. 表明；显示",
+    "en": "Actions speak louder than words.",
+    "zh": "行动胜于言语。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "spot": {
+    "word": "spot",
+    "common": "斑点；地点",
+    "rare": "v. 认出；发现",
+    "en": "I spotted my friend in the crowd.",
+    "zh": "我在人群中认出了朋友。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "stage": {
+    "word": "stage",
+    "common": "舞台",
+    "rare": "n. 阶段；时期",
+    "en": "The project is still at an early stage.",
+    "zh": "项目仍处于早期阶段。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "state": {
+    "word": "state",
+    "common": "国家；州",
+    "rare": "v. 陈述；说明",
+    "en": "Please state your reasons clearly.",
+    "zh": "请清楚陈述你的理由。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "station": {
+    "word": "station",
+    "common": "车站",
+    "rare": "v. 驻扎；安置",
+    "en": "Soldiers were stationed at the border.",
+    "zh": "士兵驻扎在边境。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "stone": {
+    "word": "stone",
+    "common": "石头",
+    "rare": "n. 果核；宝石",
+    "en": "Don't eat the stone of the peach.",
+    "zh": "别吃桃核。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "store": {
+    "word": "store",
+    "common": "商店",
+    "rare": "v. 储存；贮藏",
+    "en": "We store food in the fridge.",
+    "zh": "我们把食物储存在冰箱里。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "stress": {
+    "word": "stress",
+    "common": "压力",
+    "rare": "v. 强调；重读",
+    "en": "The teacher stressed the importance of safety.",
+    "zh": "老师强调了安全的重要性。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "strike": {
+    "word": "strike",
+    "common": "打击；罢工",
+    "rare": "v. 给…以印象；突然想到",
+    "en": "The plan struck me as risky.",
+    "zh": "我觉得这计划有风险。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "strong": {
+    "word": "strong",
+    "common": "强壮的",
+    "rare": "adj. 浓烈的；坚强的",
+    "en": "He has a strong will.",
+    "zh": "他意志坚强。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "study": {
+    "word": "study",
+    "common": "学习；研究",
+    "rare": "n. 书房；研究",
+    "en": "He is reading in his study.",
+    "zh": "他正在书房里看书。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "subject": {
+    "word": "subject",
+    "common": "科目；主题",
+    "rare": "v. 使服从；n. 臣民",
+    "en": "The country was once subject to foreign rule.",
+    "zh": "这个国家曾受外国统治。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "succeed": {
+    "word": "succeed",
+    "common": "成功",
+    "rare": "v. 继承；接着做",
+    "en": "He succeeded his father as manager.",
+    "zh": "他继承父亲当了经理。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "suggest": {
+    "word": "suggest",
+    "common": "建议",
+    "rare": "v. 暗示；表明",
+    "en": "The data suggests a change in plan.",
+    "zh": "数据表明计划需要改变。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "suit": {
+    "word": "suit",
+    "common": "适合；一套衣服",
+    "rare": "v. 合身；适宜",
+    "en": "Does the job suit you well?",
+    "zh": "这份工作适合你吗？",
+    "banks": [
+      "初中"
+    ]
+  },
+  "support": {
+    "word": "support",
+    "common": "支持",
+    "rare": "v. 赡养；支撑",
+    "en": "He has a big family to support.",
+    "zh": "他有一大家子要养。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "surface": {
+    "word": "surface",
+    "common": "表面",
+    "rare": "v. 浮出水面；显露",
+    "en": "The fish surfaced and splashed.",
+    "zh": "鱼浮出水面溅起水花。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "surprise": {
+    "word": "surprise",
+    "common": "惊讶；惊喜",
+    "rare": "v. 突袭；出其不意地抓获",
+    "en": "The police surprised the thieves at night.",
+    "zh": "警察夜里突袭抓获了窃贼。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "sweet": {
+    "word": "sweet",
+    "common": "甜的",
+    "rare": "adj. 可爱的；芳香的",
+    "en": "What a sweet little child!",
+    "zh": "多可爱的小孩啊！",
+    "banks": [
+      "初中"
+    ]
+  },
+  "tend": {
+    "word": "tend",
+    "common": "趋向；倾向于",
+    "rare": "v. 照料；看护",
+    "en": "She tended the wounded soldier.",
+    "zh": "她照料那位受伤的士兵。",
+    "banks": [
+      "高中"
+    ]
+  },
+  "term": {
+    "word": "term",
+    "common": "学期",
+    "rare": "n. 术语；词语",
+    "en": "You must learn these technical terms.",
+    "zh": "你必须掌握这些专业术语。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "thing": {
+    "word": "thing",
+    "common": "东西；事物",
+    "rare": "n. 局面；情况",
+    "en": "Things are getting better.",
+    "zh": "情况正在好转。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "think": {
+    "word": "think",
+    "common": "想；认为",
+    "rare": "v. 思考；打算",
+    "en": "I think to go abroad next year.",
+    "zh": "我打算明年出国。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "though": {
+    "word": "though",
+    "common": "虽然；尽管",
+    "rare": "conj. 可是；然而",
+    "en": "It's a nice car; I can't afford it, though.",
+    "zh": "车子不错，不过我买不起。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "treat": {
+    "word": "treat",
+    "common": "对待；处理",
+    "rare": "v. 款待；治疗",
+    "en": "He treated me to a nice dinner.",
+    "zh": "他请我吃了一顿丰盛的晚餐。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "trouble": {
+    "word": "trouble",
+    "common": "麻烦",
+    "rare": "v. 使苦恼；折磨",
+    "en": "He was troubled by money worries.",
+    "zh": "他为钱的事发愁。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "trust": {
+    "word": "trust",
+    "common": "信任",
+    "rare": "v. 托付；存放",
+    "en": "She trusted him with her secret.",
+    "zh": "她把秘密托付给了他。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "try": {
+    "word": "try",
+    "common": "尝试；努力",
+    "rare": "n. 审判；审理",
+    "en": "The murder try lasted three days.",
+    "zh": "这起谋杀案审理了三天。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "turn": {
+    "word": "turn",
+    "common": "转动；变成",
+    "rare": "v. 达到（年龄）；翻阅",
+    "en": "He turned forty last month.",
+    "zh": "他上个月满四十了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "understand": {
+    "word": "understand",
+    "common": "理解；懂",
+    "rare": "v. 获悉；听说",
+    "en": "I understand he has left the city.",
+    "zh": "我听说他已经离开这座城市了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "value": {
+    "word": "value",
+    "common": "价值",
+    "rare": "v. 重视；珍视",
+    "en": "We value honesty above all.",
+    "zh": "我们把诚实看得最重。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "view": {
+    "word": "view",
+    "common": "视野；观点",
+    "rare": "v. 看待；考虑",
+    "en": "We should view the matter from all sides.",
+    "zh": "我们应全面地看待这件事。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "visit": {
+    "word": "visit",
+    "common": "参观；访问",
+    "rare": "v. 视察；拜访",
+    "en": "The doctor visited the patient daily.",
+    "zh": "医生每天去看望这位病人。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "waste": {
+    "word": "waste",
+    "common": "浪费",
+    "rare": "n. 荒地；v. 损耗",
+    "en": "The house stood on a waste of land.",
+    "zh": "房子坐落在一片荒地上。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "watch": {
+    "word": "watch",
+    "common": "观看",
+    "rare": "n. 手表；v. 注视",
+    "en": "He glanced at his watch.",
+    "zh": "他瞥了一眼手表。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "weigh": {
+    "word": "weigh",
+    "common": "称重",
+    "rare": "v. 权衡；掂量",
+    "en": "You must weigh the risks carefully.",
+    "zh": "你必须仔细权衡风险。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "well": {
+    "word": "well",
+    "common": "好；井",
+    "rare": "n. 井；adv. 充分",
+    "en": "They drew water from the well.",
+    "zh": "他们从井里打水。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "while": {
+    "word": "while",
+    "common": "当…时候",
+    "rare": "conj. 尽管；虽然",
+    "en": "While I agree, I still have doubts.",
+    "zh": "虽然我同意，但仍有些疑虑。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "wonder": {
+    "word": "wonder",
+    "common": "想知道；奇迹",
+    "rare": "v. 感到好奇；n. 奇观",
+    "en": "We wondered at the view.",
+    "zh": "我们惊叹于这番景色。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "work": {
+    "word": "work",
+    "common": "工作",
+    "rare": "v. 起作用；运转",
+    "en": "The medicine worked at last.",
+    "zh": "药终于起效了。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "worth": {
+    "word": "worth",
+    "common": "价值",
+    "rare": "adj. 值得…的；n. 价值",
+    "en": "The book is well worth reading.",
+    "zh": "这本书很值得一读。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "would": {
+    "word": "would",
+    "common": "将；愿意",
+    "rare": "v. 总是；过去常常",
+    "en": "He would sit by the window and read.",
+    "zh": "他过去常常坐在窗边看书。",
+    "banks": [
+      "初中"
+    ]
+  },
+  "yield": {
+    "word": "yield",
+    "common": "屈服；让步",
+    "rare": "v. 出产；带来",
+    "en": "The field yielded a good harvest.",
+    "zh": "这块田带来了好收成。",
+    "banks": [
+      "高中"
+    ]
+  }
+}

@@ -1119,7 +1119,11 @@ function wrong() {
   const renderFilterVal = () => {
     const fv = $('#wbFilterVal');
     fv.innerHTML = FILTER_OPTS[filterDim].map(([v, t]) => `<div data-v="${v}" class="${v === filterVal ? 'on' : ''}">${t}</div>`).join('');
-    fv.querySelectorAll('div').forEach(d => d.onclick = () => { filterVal = d.dataset.v; render(); });
+    fv.querySelectorAll('div').forEach(d => d.onclick = () => {
+      filterVal = d.dataset.v;
+      fv.querySelectorAll('div').forEach(x => x.classList.toggle('on', x.dataset.v === filterVal)); // 高亮跟随点击移动
+      render();
+    });
   };
   const passFilter = (w) => {
     if (filterDim === 'all' || filterVal === 'all') return true;

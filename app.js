@@ -462,7 +462,7 @@ function detailInner(w) {
   let h = '';
   if (bank && bank !== '词典') h += `<div class="dm">所属词库：<b>${esc(bank)}</b></div>`;
   else h += `<div class="dm dim">未归入词库（仅离线词典）</div>`;
-  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">🇺🇸 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">🇬🇧 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
+  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">美音 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">英音 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
   else h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','')">${icon('i-sound')} 朗读</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
   if (meaning) h += `<div class="mean-list">${renderMeaning(meaning)}</div>`;
   h += exampleHtml(w, 2);
@@ -765,8 +765,8 @@ function renderLearnBox() {
       <button class="speaker-btn" onclick="speak('${jsAttr(w.word)}','en-US')" title="朗读单词发音" aria-label="朗读">${icon('i-sound')}<span>朗读</span></button>
     </div>
     <div class="learn-phon">
-      <span class="p" onclick="speak('${jsAttr(w.word)}','en-US')">🇺🇸 ${esc(w.phonetic_us || '—')}</span>
-      <span class="p" onclick="speak('${jsAttr(w.word)}','en-GB')">🇬🇧 ${esc(w.phonetic_uk || '—')}</span>
+      <span class="p" onclick="speak('${jsAttr(w.word)}','en-US')">美音 ${esc(w.phonetic_us || '—')}</span>
+      <span class="p" onclick="speak('${jsAttr(w.word)}','en-GB')">英音 ${esc(w.phonetic_uk || '—')}</span>
     </div>
     <div class="mean-list">${renderMeaning(w.meaning)}</div>
     ${obscureHtml(w)}
@@ -1422,8 +1422,8 @@ function dict() {
       <input class="field" id="q" placeholder="输入英文单词或中文含义…">
       <div class="pron-bar">
         <div class="seg sm pron-accent">
-          <div data-a="en-US">🇺🇸 美音</div>
-          <div data-a="en-GB">🇬🇧 英音</div>
+          <div data-a="en-US">美音</div>
+          <div data-a="en-GB">英音</div>
         </div>
         <div class="seg sm pron-rate">
           <div data-r="0.95">正常</div>

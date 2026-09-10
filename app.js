@@ -68,7 +68,17 @@ function loadState() {
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
 }
 loadState();
+// 设置项变更检测：仅当「内容」真正变化才更新 _at，供多端同步判断哪一端更新。
+// 签名必须排除 _at 自身，否则「改时间戳→内容变→再改时间戳」会无限循环。
+let _settingsSig = '';
+function settingsSig() { const s = Object.assign({}, settings || {}); delete s._at; return JSON.stringify(s); }
+function touchSettings() {
+  const sj = settingsSig();
+  if (sj !== _settingsSig) { _settingsSig = sj; if (settings) settings._at = Date.now(); }
+}
+_settingsSig = settingsSig();          // 以「刚载入的设置」为基线，避免首次保存就误判为已修改
 function saveAll() {
+  touchSettings();
   if (currentAccount) store.set(ACCT.data(currentAccount), snapshot());
   else {
     store.set(K.progress, progress); store.set(K.wrong, wrongBook);

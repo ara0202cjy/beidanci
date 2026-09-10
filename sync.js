@@ -4,12 +4,17 @@
  * 默认后端：GitHub Gist（secret gist，单文件 JSON，天然带版本历史）
  * 备选后端：任意支持 GET/PUT JSON 的接口
  *
+ * 同步范围：学习进度 progress、错词记录 wrongBook、自建词库 selfBank（含删除墓碑）、
+ *           学习/打卡记录 history（保留 recallDone / sentenceDone 打卡标志）、
+ *           设置 settings（当前词库 curBank、每日新词量、发音口音与语速、复习方式等）。
+ *
  * 合并策略（多设备并发写入）：
  *   progress  按 key 取 lastReview 较新者，同日取 stage 较高者
  *   wrongBook 按 key 取 wrongCount 较大 / lastWrong 较新者
  *   selfBank  按单词取并集，用 selfTomb（墓碑）让删除也能同步
- *   history   按日期合并，同日按 key 去重取并集
- *   settings  取 savedAt 较新的一方
+ *   history   按日期合并，同日按 key 去重取并集；打卡标志任一端完成即保留
+ *   settings  比较 settings._at（仅当设置内容真正变化才由 app.js 的 touchSettings 更新）
+ *             ——不可用 state.savedAt，因为本地快照的 savedAt 恒为当前时间
  */
 'use strict';
 
@@ -112,17 +117,23 @@ const Sync = (function () {
     });
     out.selfBank = [...map.values()];
     out.selfTomb = [...new Set(tomb)];
-    // history
+    // history（必须保留打卡标志 recallDone / sentenceDone ——「单词复习 + 情境复习」两轮都完成才算当日已打卡。
+    // 旧写法只重建 { new, review }，会把打卡记录整端抹掉，导致同步后已打卡日变回未打卡）
     out.history = {};
     const hk = new Set([...Object.keys(a.history || {}), ...Object.keys(b.history || {})]);
     hk.forEach(d => {
       const x = (a.history || {})[d] || {}, y = (b.history || {})[d] || {};
       const uniq = arr => { const m = new Map(); (arr || []).forEach(i => { if (i && i.key) m.set(i.key, i); }); return [...m.values()]; };
-      out.history[d] = { new: uniq((x.new || []).concat(y.new || [])), review: uniq((x.review || []).concat(y.review || [])) };
+      const o = { new: uniq((x.new || []).concat(y.new || [])), review: uniq((x.review || []).concat(y.review || [])) };
+      if (x.recallDone || y.recallDone) o.recallDone = true;      // 任一端完成即视为完成
+      if (x.sentenceDone || y.sentenceDone) o.sentenceDone = true;
+      out.history[d] = o;
     });
-    // settings
-    const newer = (b.savedAt || 0) > (a.savedAt || 0) ? b : a;
-    out.settings = Object.assign({}, a.settings || {}, newer.settings || {});
+    // settings：不能用 state.savedAt 比较 —— 本地快照的 savedAt 恒为 Date.now()，
+    // 会永远判定本地更新，导致云端的当前词库 curBank / 口音等设置拉不回来。改用设置自身的 _at。
+    const sa = (a.settings && a.settings._at) || 0;
+    const sb = (b.settings && b.settings._at) || 0;
+    out.settings = Object.assign({}, a.settings || {}, (sb > sa ? (b.settings || {}) : (a.settings || {})));
     return out;
   }
 
@@ -262,7 +273,8 @@ const Sync = (function () {
       </div>`).join('');
     host.innerHTML = `
       <div class="card"><h2>☁️ 云同步 <span class="tag ${on_ ? 'green' : ''}">${on_ ? '已开启' : '未配置'}</span></h2>
-        <div class="sub-tip">${n ? '当前账号 <b>' + escv(n) + '</b> 的同步端口（可配置多个，自动同步到全部）：' : '开启后多台手机共享同一份进度：打开页面自动拉取，学习后自动上传。'}${targets[0] && targets[0].lastSync ? ' 上次同步：' + escv(targets[0].lastSync) : ''}</div>
+        <div class="sub-tip">${n ? '当前账号 <b>' + escv(n) + '</b> 的同步端口（可配置多个，自动同步到全部）：' : '开启后多台设备共享同一份数据：打开页面自动拉取，学习后自动上传。'}${targets[0] && targets[0].lastSync ? ' 上次同步：' + escv(targets[0].lastSync) : ''}</div>
+        <div class="sub-tip" style="margin-top:6px">同步内容：学习进度 · 错词记录 · 自建词库 · 打卡与学习记录 · 设置（当前词库 / 每日新词量 / 发音口音等）</div>
         <div class="seg" style="margin-top:12px">
           <div class="${t0.backend === 'gist' ? 'on' : ''}" id="bkGist">GitHub Gist</div>
           <div class="${t0.backend === 'http' ? 'on' : ''}" id="bkHttp">自定义接口</div>
@@ -328,6 +340,7 @@ const Sync = (function () {
 
   return {
     render, setup, pull, push, sync, schedulePush, on, reload,
+    merge,   // 暴露合并逻辑，供冒烟测试直接校验多端合并规则
     get targets() { return targets; },
     tryImportFromHash,
     noteDelete(word) { // 自建词库删除时记墓碑，让删除也能跨设备同步

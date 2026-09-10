@@ -262,6 +262,8 @@ input[type=range] { accent-color: var(--brand); }
 .pron-auto { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--sub); cursor: pointer; white-space: nowrap; }
 .pron-auto input { width: 14px; height: 14px; accent-color: var(--brand); }
 .learn-phon .p.slow { opacity: .85; }
+.spk svg { width: 17px; height: 17px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.learn-phon .p svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .dict-detail { width: 100%; margin-top: 10px; padding-top: 11px; border-top: 1px dashed var(--line); }
 .dict-detail .dm { font-size: 13px; color: var(--sub); margin-bottom: 7px; }
 .dict-detail .dm.dim { opacity: .72; }

@@ -462,8 +462,8 @@ function detailInner(w) {
   let h = '';
   if (bank && bank !== '词典') h += `<div class="dm">所属词库：<b>${esc(bank)}</b></div>`;
   else h += `<div class="dm dim">未归入词库（仅离线词典）</div>`;
-  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">🇺🇸 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">🇬🇧 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">🐢 慢速</span></div>`;
-  else h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','')">🔊 朗读</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">🐢 慢速</span></div>`;
+  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">🇺🇸 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">🇬🇧 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
+  else h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','')">${icon('i-sound')} 朗读</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
   if (meaning) h += `<div class="mean-list">${renderMeaning(meaning)}</div>`;
   h += exampleHtml(w, 2);
   h += obscureHtml(w);
@@ -1493,7 +1493,7 @@ function dict() {
             <div class="w clickable">${esc(x.word)} <span class="chev">▸</span></div>
             ${ph ? `<span class="dh-ph">${esc(ph)}</span>` : ''}
           </div>
-          <button class="spk" title="朗读">🔊</button>
+          <button class="spk" title="朗读" aria-label="朗读">${icon('i-sound')}</button>
           <button class="btn ghost sm self-btn">${inSelf ? '已加' : '＋加入'}</button>
         </div>
         <div class="dict-detail" style="display:none">

@@ -48,7 +48,7 @@ function saveSession() { store.set(ACCT.session, currentAccount); }
 let progress, wrongBook, selfBank, settings, history, learnState;
 function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState }; }
 function loadState() {
-  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' };
+  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
     const s = store.get(ACCT.data(currentAccount), null) || {};
     progress = s.progress || {};
@@ -112,7 +112,7 @@ async function registerAccount(name, pwd) {
   saveAll();                                   // 先保存当前空间数据
   currentAccount = name; saveSession();
   progress = {}; wrongBook = {}; selfBank = [];
-  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' }, settings);
+  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, settings);
   history = {}; learnState = null;
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
   store.set(ACCT.data(name), snapshot());
@@ -209,7 +209,7 @@ async function seedAccounts() {
   if (hasLegacy) {
     store.set(ACCT.data('lvcheng'), {
       progress: legacy.progress || {}, wrongBook: legacy.wrong || {}, selfBank: legacy.self || [],
-      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence' }, legacy.settings || {}),
+      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, legacy.settings || {}),
       history: legacy.history || {}, learnState: legacy.learn || null,
     });
     currentAccount = 'lvcheng'; saveSession(); loadState();
@@ -308,16 +308,30 @@ function highlight(en, word) {
   if (!w) return esc(en);
   return esc(en).replace(new RegExp('(' + w + ')', 'gi'), '<mark>$1</mark>');
 }
-function speak(text, lang) {
+function speak(text, lang, rate) {
   if (!text) return;
   try {
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang || 'en-US'; u.rate = 0.95;
-    const vs = speechSynthesis.getVoices();
-    const ev = vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang));
+    const L = lang || 'en-US';
+    u.lang = L; u.rate = rate || 0.95;
+    const vs = speechSynthesis.getVoices() || [];
+    const k = L.toLowerCase();
+    // 精确匹配口音（en-US / en-GB），匹配不到再退化为任意英语嗓音
+    const exact = vs.find(v => (v.lang || '').replace(/_/g, '-').toLowerCase() === k);
+    const anyEn = vs.find(v => /^en/i.test(v.lang || ''));
+    const ev = exact || anyEn;
     if (ev) u.voice = ev;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
   } catch (e) { }
+}
+// 统一发音入口：kind = 'us' | 'gb' | 'slow' | 其他/空 = 按设置里的口音与语速
+function pron(word, kind) {
+  const a = (settings && settings.accent) || 'en-US';
+  const r = (settings && settings.pronRate) || 0.95;
+  if (kind === 'us') speak(word, 'en-US');
+  else if (kind === 'gb') speak(word, 'en-GB');
+  else if (kind === 'slow') speak(word, a, 0.6);
+  else speak(word, a, r);
 }
 let _audioCtx = null;
 function beep(freq, dur) {
@@ -448,7 +462,8 @@ function detailInner(w) {
   let h = '';
   if (bank && bank !== '词典') h += `<div class="dm">所属词库：<b>${esc(bank)}</b></div>`;
   else h += `<div class="dm dim">未归入词库（仅离线词典）</div>`;
-  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="speak('${jsAttr(w.word)}','en-US')">🇺🇸 ${esc(us || '')}</span><span class="p" onclick="speak('${jsAttr(w.word)}','en-GB')">🇬🇧 ${esc(uk || '')}</span></div>`;
+  if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">🇺🇸 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">🇬🇧 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">🐢 慢速</span></div>`;
+  else h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','')">🔊 朗读</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">🐢 慢速</span></div>`;
   if (meaning) h += `<div class="mean-list">${renderMeaning(meaning)}</div>`;
   h += exampleHtml(w, 2);
   h += obscureHtml(w);
@@ -1405,10 +1420,36 @@ function dict() {
   app().innerHTML = `${topbar('查词')}
     <div class="card mint">
       <input class="field" id="q" placeholder="输入英文单词或中文含义…">
+      <div class="pron-bar">
+        <div class="seg sm pron-accent">
+          <div data-a="en-US">🇺🇸 美音</div>
+          <div data-a="en-GB">🇬🇧 英音</div>
+        </div>
+        <div class="seg sm pron-rate">
+          <div data-r="0.95">正常</div>
+          <div data-r="0.6">慢速</div>
+        </div>
+        <label class="pron-auto"><input type="checkbox" id="autoSpeakChk"> 自动发音</label>
+      </div>
       <div class="list" id="dictList"></div>
       <div class="empty" id="dictEmpty">输入关键词开始查词，点击词语查看详情，可加入自建词库</div>
     </div>`;
   const list = $('#dictList'), empty = $('#dictEmpty');
+  // 发音模块：口音 / 语速 / 展开自动朗读（设置持久化）
+  const aSeg = $('.pron-accent'), rSeg = $('.pron-rate'), chk = $('#autoSpeakChk');
+  const paintPron = () => {
+    const a = settings.accent || 'en-US', r = settings.pronRate || 0.95;
+    aSeg.querySelectorAll('div').forEach(d => d.classList.toggle('on', d.dataset.a === a));
+    rSeg.querySelectorAll('div').forEach(d => d.classList.toggle('on', Math.abs(parseFloat(d.dataset.r) - r) < 0.01));
+    chk.checked = !!settings.autoSpeak;
+  };
+  aSeg.querySelectorAll('div').forEach(d => d.onclick = () => {
+    settings.accent = d.dataset.a; saveAll(); paintPron();
+    const qi = $('#q'); if (qi && qi.value.trim()) qi.dispatchEvent(new Event('input'));   // 切换口音立即刷新音标
+  });
+  rSeg.querySelectorAll('div').forEach(d => d.onclick = () => { settings.pronRate = parseFloat(d.dataset.r); saveAll(); paintPron(); });
+  chk.onchange = () => { settings.autoSpeak = chk.checked; saveAll(); };
+  paintPron();
   $('#q').oninput = e => {
     const q = e.target.value.trim().toLowerCase(); if (!q) { list.innerHTML = ''; empty.style.display = ''; return; }
     const hit = new Set();
@@ -1444,19 +1485,27 @@ function dict() {
       const it = document.createElement('div'); it.className = 'item dict-item';
       const inSelf = selfBank.some(s => s.word.toLowerCase() === x.word.toLowerCase());
       const w = { word: x.word, bank: x.bank, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning };
+      const acc = settings.accent || 'en-US';
+      const ph = acc === 'en-GB' ? (x.uk || x.us) : (x.us || x.uk);
       it.innerHTML = `
         <div class="dict-head">
-          <div class="w clickable">${esc(x.word)} <span class="chev">▸</span></div>
+          <div class="dh-left">
+            <div class="w clickable">${esc(x.word)} <span class="chev">▸</span></div>
+            ${ph ? `<span class="dh-ph">${esc(ph)}</span>` : ''}
+          </div>
+          <button class="spk" title="朗读">🔊</button>
           <button class="btn ghost sm self-btn">${inSelf ? '已加' : '＋加入'}</button>
         </div>
         <div class="dict-detail" style="display:none">
           ${detailInner(w)}
         </div>`;
+      it.querySelector('.spk').onclick = (e) => { e.stopPropagation(); pron(x.word, ''); };
       it.querySelector('.dict-head').onclick = () => {
         const d = it.querySelector('.dict-detail');
         const open = d.style.display === 'none';
         d.style.display = open ? '' : 'none';
         it.querySelector('.chev').textContent = open ? '▾' : '▸';
+        if (open && settings.autoSpeak) pron(x.word, '');   // 展开即朗读，方便学新词
       };
       const sb = it.querySelector('.self-btn');
       sb.onclick = (e) => {

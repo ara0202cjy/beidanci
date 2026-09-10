@@ -253,6 +253,15 @@ input[type=range] { accent-color: var(--brand); }
 .dict-head { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
 .dict-head .w.clickable { cursor: pointer; display: flex; align-items: center; }
 .dict-head .chev { color: var(--sub); font-size: 12px; margin-left: 4px; font-weight: 400; }
+.dh-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.dh-ph { color: var(--sub); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spk { flex: none; width: 34px; height: 30px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.spk:active { filter: brightness(.95); }
+.pron-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.pron-bar .seg { flex: 1; margin-bottom: 0; min-width: 108px; }
+.pron-auto { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--sub); cursor: pointer; white-space: nowrap; }
+.pron-auto input { width: 14px; height: 14px; accent-color: var(--brand); }
+.learn-phon .p.slow { opacity: .85; }
 .dict-detail { width: 100%; margin-top: 10px; padding-top: 11px; border-top: 1px dashed var(--line); }
 .dict-detail .dm { font-size: 13px; color: var(--sub); margin-bottom: 7px; }
 .dict-detail .dm.dim { opacity: .72; }

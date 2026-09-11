@@ -319,6 +319,8 @@ function settleReview(r, correct, day) {
     wb.lastWrong = day; wrongBook[r.key] = wb;
   }
   refreshNext(p);
+  // 已掌握（双锚点档期均走完、不再推送）→ 移出错题本
+  if (!p.nextReview && wrongBook[r.key]) delete wrongBook[r.key];
   return p;
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
@@ -628,6 +630,8 @@ function calibrateSchedule() {
       p.lastWrongReview = p.lastWrongReview || p.lastReview || p.wrongAnchor;
     }
     refreshNext(p);
+    // 已掌握（不再推送）但仍在错题本中的旧数据 → 清理移出
+    if (!p.nextReview && wrongBook[p.key]) delete wrongBook[p.key];
     n++;
   });
   settings.scheduleV3 = true;

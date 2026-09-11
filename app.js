@@ -244,23 +244,34 @@ let COLLOC = {};    // 牛津搭配词典：{ word: [ {c, i:[{w,z}]} ] }
 let THES = {};      // 牛津同义词词典：{ word: [ {ex, g:[{c,s:[]}], ant:[]} ] }
 let PHRASE = {};    // 牛津短语动词：{ "bring about": {base, senses:[{en,zh,ex:[{en,zh}]}]} }
 let COMMON_SET = null; // 雅思与托福的交集（归一化词形），用于"先背相同词汇"
+let BANKS_READY = false;       // 词库与离线词典是否加载完成（后台加载，不阻塞核心功能）
+let BANK_LOAD_FAILED = false;  // 是否因 file:// 等无法读取词库
 
+// 仅探测词库基址（极快），立即返回——让学习/复习/工作本等核心功能先可用
 async function loadData() {
   WB = await detectBase();
-  await Promise.all(BANKS.map(b => fetch(WB + b.file).then(r => r.json()).then(d => { BANK_DATA[b.id] = d; }).catch(() => { })));
-  computeCommon(); // 计算雅思∩托福的共有词，供"先背相同词汇"排序使用
-  ALL_INDEX = [];
-  BANKS.forEach(b => (BANK_DATA[b.id]?.words || []).forEach(w => ALL_INDEX.push({ word: w.word, bank: b.id, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk })));
-  selfBank.forEach(w => ALL_INDEX.push({ word: w.word, bank: SELFBANK_ID, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk }));
-  BANK_MAP = {};
-  ALL_INDEX.forEach(x => { if (!BANK_MAP[x.word.toLowerCase()]) BANK_MAP[x.word.toLowerCase()] = x; });
-  try { const r = await fetch(WB + 'examples.json'); if (r.ok) EXAMPLES = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'freq.json'); if (r.ok) FREQ = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'obscure.json'); if (r.ok) OBSCURE = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'dict.json'); if (r.ok) DICT = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'collocation.json'); if (r.ok) COLLOC = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'thesaurus.json'); if (r.ok) THES = await r.json(); } catch (e) { }
-  try { const r = await fetch(WB + 'phrasal.json'); if (r.ok) PHRASE = await r.json(); } catch (e) { }
+}
+
+// 词库与各离线词典在后台并行加载；加载完成后补全索引并刷新当前页。
+// 学习/复习/工作本仅依赖 localStorage 中的进度数据，无需等待本函数。
+function loadBanksBg() {
+  const small = [
+    ['examples.json', v => EXAMPLES = v], ['freq.json', v => FREQ = v],
+    ['obscure.json', v => OBSCURE = v], ['dict.json', v => DICT = v],
+    ['collocation.json', v => COLLOC = v], ['thesaurus.json', v => THES = v],
+    ['phrasal.json', v => PHRASE = v],
+  ];
+  return Promise.all([
+    ...BANKS.map(b => fetch(WB + b.file).then(r => r.json()).then(d => { BANK_DATA[b.id] = d; }).catch(() => { })),
+    ...small.map(([f, set]) => fetch(WB + f).then(r => r.ok ? r.json() : null).then(d => { if (d) set(d); }).catch(() => { })),
+  ]).then(() => {
+    computeCommon(); // 计算雅思∩托福的共有词，供"先背相同词汇"排序使用
+    ALL_INDEX = [];
+    BANKS.forEach(b => (BANK_DATA[b.id]?.words || []).forEach(w => ALL_INDEX.push({ word: w.word, bank: b.id, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk })));
+    selfBank.forEach(w => ALL_INDEX.push({ word: w.word, bank: SELFBANK_ID, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk }));
+    BANK_MAP = {};
+    ALL_INDEX.forEach(x => { if (!BANK_MAP[x.word.toLowerCase()]) BANK_MAP[x.word.toLowerCase()] = x; });
+  });
 }
 
 /* ---------- 工具 ---------- */
@@ -795,6 +806,12 @@ function learn() {
 
 function renderLearnBox() {
   const box = $('#learnBox'); if (!box) return;
+  if (!BANKS_READY) {
+    box.innerHTML = `<h2>今日学习</h2>
+      <div class="boot-spin" style="margin:22px auto"></div>
+      <div class="sub-tip" style="text-align:center">词库加载中，稍候自动开始…</div>`;
+    return;
+  }
   if (!learnState || !learnState.queue.length) {
     setLearnActive(false);
     const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
@@ -1292,6 +1309,7 @@ function wrong() {
 /* ===================== 词库 ===================== */
 function banks() {
   app().innerHTML = `${topbar('词库')}
+    ${BANKS_READY ? '' : '<div class="sub-tip" style="margin-bottom:10px">词库数据加载中，稍候自动刷新…</div>'}
     <div class="card blueberry">
       <h2>自建词库 <span class="r">${selfBank.length} 词 · 优先背诵</span></h2>
       <div class="list" id="selfList"></div>
@@ -1521,6 +1539,7 @@ function importData(file) {
 /* ===================== 查词 ===================== */
 function dict() {
   app().innerHTML = `${topbar('查词')}
+    ${BANKS_READY ? '' : '<div class="sub-tip" style="margin-bottom:10px">词库索引加载中，稍候即可查词…</div>'}
     <div class="card mint">
       <input class="field" id="q" placeholder="输入英文单词或中文含义…">
       <div class="pron-bar">
@@ -1631,29 +1650,42 @@ function dict() {
 
 /* ===================== 启动 ===================== */
 (async function init() {
-  await loadData();
+  await loadData();                       // 仅探测基址，极快——不在此等待词库
   await seedAccounts();                 // 首次运行预置 lvcheng 等账号
   if (currentAccount && !accounts[currentAccount]) { currentAccount = ''; saveSession(); } // 会话账号已被删则回到登录页
   if (window.Sync) {
     Sync.reload();
     if (Sync.tryImportFromHash()) toast('已通过配对链接开启云同步');
   }
-  // 关键：先用本地数据渲染界面，绝不因云端同步请求卡住（pending）而长时间白屏
+  // 关键：先用本地数据渲染界面，绝不因词库/云端同步请求卡住（pending）而长时间白屏
   calibrateSchedule();
-  if (!Object.keys(BANK_DATA).length) {
-    app().innerHTML = `${topbar('背单词工作台')}
-      <div class="card"><h2>需要本地服务器</h2>
-      <div class="sub-tip">直接双击打开（file://）读不到词库。请在项目目录运行：</div>
-      <div class="pos" style="margin-top:10px"><span class="pt">①</span>python -m http.server 8000</div>
-      <div class="pos"><span class="pt">②</span>访问 http://localhost:8000/</div></div>`;
-    return;
-  }
   goto('learn');
   try { speechSynthesis.getVoices(); } catch (e) { }
-  // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
-  if (window.Sync && Sync.on()) {
-    Sync.sync()
-      .catch(() => { })
-      .then(() => { calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
-  }
+  // 词库与离线词典在后台加载；加载完成前，学习/复习/工作本等核心功能已可用
+  loadBanksBg().then(() => {
+    BANKS_READY = true;
+    if (!Object.keys(BANK_DATA).length) {
+      // file:// 直接双击打开或路径错误：读不到任何词库
+      BANK_LOAD_FAILED = true;
+      app().innerHTML = `${topbar('背单词工作台')}
+        <div class="card"><h2>需要本地服务器</h2>
+        <div class="sub-tip">直接双击打开（file://）读不到词库。请在项目目录运行：</div>
+        <div class="pos" style="margin-top:10px"><span class="pt">①</span>python -m http.server 8000</div>
+        <div class="pos"><span class="pt">②</span>访问 http://localhost:8000/</div></div>`;
+      return;
+    }
+    // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
+    if (window.Sync && Sync.on()) {
+      Sync.sync()
+        .catch(() => { })
+        .then(() => { calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
+    } else {
+      try { WB.refresh(); } catch (e) { }   // 词库就绪后刷新当前页，补全学习/词库/查词
+    }
+  }).catch(() => {
+    BANK_LOAD_FAILED = true;
+    app().innerHTML = `${topbar('背单词工作台')}
+      <div class="card"><h2>词库加载失败</h2>
+      <div class="sub-tip">无法读取词库文件，请检查网络或本地服务器后刷新重试。</div></div>`;
+  });
 })();

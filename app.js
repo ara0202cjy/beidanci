@@ -1248,25 +1248,18 @@ function wrong() {
         <div class="wb-head">
           <div class="w clickable">${esc(w.word)} <span class="chev">▸</span></div>
           <div class="meta">最后错：${esc(w.lastWrong || '-')} ｜ 错 ${w.wrongCount || 0} 次</div>
-          <button class="btn ghost sm wb-del">删</button>
         </div>
         <div class="wb-detail" style="display:none">
           ${detailInner({ word: w.word, bank: w.bank, phonetic_us: us, phonetic_uk: uk, meaning: meaning })}
         </div>`;
       const head = it.querySelector('.wb-head');
       head.onclick = (e) => {
-        if (e.target.closest('.wb-del')) return;
         const dv = it.querySelector('.wb-detail');
         const open = dv.style.display === 'none';
         dv.style.display = open ? '' : 'none';
         it.querySelector('.chev').textContent = open ? '▾' : '▸';
       };
       it.querySelector('.wb-check input').onchange = updateBar;
-      it.querySelector('.wb-del').onclick = (e) => {
-        e.stopPropagation();
-        delete wrongBook[w.key];
-        saveAll(); render(); toast('已删除');
-      };
       list.appendChild(it);
     });
     updateBar();
@@ -1303,8 +1296,11 @@ function banks() {
       <h2>自建词库 <span class="r">${selfBank.length} 词 · 优先背诵</span></h2>
       <div class="list" id="selfList"></div>
       <button class="btn primary sm" style="margin-top:10px" id="bulkBtn">📥 批量添加</button>
-      <button class="btn ghost sm" style="margin-top:10px; margin-left:8px" id="expLearnedBtn">📤 导出已背单词</button>
       ${selfBank.length ? '' : '<div class="empty">点「批量添加」导入单词，或到「查词」里加入</div>'}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>已背单词</h2>
+      <button class="btn ghost sm" id="expLearnedBtn">📤 导出已背单词（Excel）</button>
     </div>
     <div class="sub-tip" style="margin-top:10px">云同步与进度备份已移至右上角 ⚙ 设置里（点开即展开）。</div>`;
   const sl = $('#selfList');

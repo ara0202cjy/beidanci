@@ -98,6 +98,7 @@ window.WB = {
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
   sortStudyOrder, dayRand,
+  learnNext, wrongNext, refreshNext, isDue, settleReview, calibrateSchedule,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -278,16 +279,46 @@ function nextScheduleDate(anchor, intervals, afterDay) {
   }
   return '';                                   // 档期走完 → 已掌握，不再推送
 }
-// 依据单词当前路径（错词 / 新词）计算下次复习日；调用前需已更新 p.lastReview
-function scheduleNext(p) {
-  const today = todayStr();
-  const wb = wrongBook[bankKey(p.bank, p.word)];      // 答错日记在错题本里
-  if (p.wrongStage !== undefined) {
-    const anchor = p.wrongAnchor || (wb && wb.lastWrong) || p.lastWrong || p.firstLearned || today;
-    return nextScheduleDate(anchor, WRONG_INTERVALS, p.lastReview || anchor);
+// 双锚点排期：学习日锚点（firstLearned + INTERVALS）顺序固定；错题日锚点（wrongAnchor + WRONG_INTERVALS）叠加其上
+// 学习日复习顺序固定不变；每次新答错则重置 wrongAnchor，错题节奏从头（第 1 天）重新数
+function learnNext(p) {
+  if (!p.firstLearned) return '';
+  return nextScheduleDate(p.firstLearned, INTERVALS, p.lastLearnReview || p.firstLearned);
+}
+function wrongNext(p) {
+  if (!p.wrongAnchor) return '';
+  return nextScheduleDate(p.wrongAnchor, WRONG_INTERVALS, p.lastWrongReview || p.wrongAnchor);
+}
+// 任一锚点档期到期即应复习（学习顺序 + 错题顺序叠加）
+function isDue(p, day) {
+  const ln = learnNext(p), wn = wrongNext(p);
+  return (ln && ln <= day) || (wn && wn <= day);
+}
+// p.nextReview 取两个锚点中较近的一次，供复习池快速判定（不代表只走一条路径）
+function refreshNext(p) {
+  const ln = learnNext(p), wn = wrongNext(p);
+  p.nextReview = (ln && wn) ? (ln < wn ? ln : wn) : (ln || wn || '');
+}
+// 复习结算：correct=是否答对，day=复习日（默认今天）。学习/错题锚点各自独立推进；答错则重置错题锚点
+function settleReview(r, correct, day) {
+  day = day || dayOf();
+  let p = progress[r.key];
+  if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || day, lastLearnReview: day, stage: 0 };
+  p.lastReview = day;
+  if (correct) {
+    // 双锚点各自独立推进：哪个档期今日到期就推进哪个（与当天复习几轮无关）
+    if (learnNext(p) && learnNext(p) <= day) p.lastLearnReview = day;
+    if (p.wrongAnchor && wrongNext(p) && wrongNext(p) <= day) p.lastWrongReview = day;
+  } else {
+    // 答错：错题锚点重置为今天，错题节奏从头（第 1 天）重新数；学习日锚点不受影响
+    p.wrongStage = 0; p.wrongAnchor = day; p.lastWrongReview = day;
+    if (learnNext(p) && learnNext(p) <= day) p.lastLearnReview = day;
+    const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: day };
+    if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
+    wb.lastWrong = day; wrongBook[r.key] = wb;
   }
-  const anchor = p.firstLearned || today;
-  return nextScheduleDate(anchor, INTERVALS, p.lastReview || anchor);
+  refreshNext(p);
+  return p;
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
 // 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
@@ -580,22 +611,25 @@ function resetWordForSelf(word) {
 }
 // 一次性校准：改为"按学习日 / 答错日排档期"后，把既有单词的下次复习日统一重排
 // 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
+// 一次性校准：改为「双锚点」后，把既有单词的学习日/错题日两个锚点字段补全并重排
+// 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
 function calibrateSchedule() {
-  if (settings.scheduleV2) return 0;
+  if (settings.scheduleV3) return 0;
   let n = 0;
   Object.values(progress).forEach(p => {
     if (!p || !p.word) return;
-    if (p.wrongStage !== undefined) {
-      const wb = wrongBook[bankKey(p.bank, p.word)];   // 答错日记在错题本里
-      p.wrongAnchor = p.wrongAnchor || (wb && wb.lastWrong) || p.lastWrong || p.firstLearned || todayStr();
-      p.nextReview = nextScheduleDate(p.wrongAnchor, WRONG_INTERVALS, p.lastReview || p.wrongAnchor);
-      if (!p.nextReview) { delete p.wrongStage; delete p.wrongAnchor; }
-    } else {
-      p.nextReview = nextScheduleDate(p.firstLearned || todayStr(), INTERVALS, p.lastReview || p.firstLearned || todayStr());
+    // 学习日锚点
+    p.firstLearned = p.firstLearned || p.lastReview || p.wrongAnchor || todayStr();
+    p.lastLearnReview = p.lastLearnReview || p.lastReview || p.firstLearned;
+    // 错题日锚点（曾答错过的词保留，可继续叠加在正常学习顺序之上）
+    if (p.wrongStage !== undefined || p.wrongAnchor) {
+      p.wrongAnchor = p.wrongAnchor || p.lastReview || p.firstLearned || todayStr();
+      p.lastWrongReview = p.lastWrongReview || p.lastReview || p.wrongAnchor;
     }
+    refreshNext(p);
     n++;
   });
-  settings.scheduleV2 = true;
+  settings.scheduleV3 = true;
   if (n) saveAll();
   return n;
 }
@@ -841,7 +875,7 @@ function markLearned(w) {
   progress[key] = {
     word: w.word, bank: w.bank, meaning: w.meaning,
     phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk,
-    firstLearned: todayStr(), stage: 0, nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
+    firstLearned: todayStr(), stage: 0, lastLearnReview: todayStr(), nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
   };
   // 自建词库的词学完后即从自建词库移除（进度已写入 progress，继续走正常复习计划）
   if (w.bank === SELFBANK_ID) selfBank = selfBank.filter(x => x.word !== w.word);
@@ -868,7 +902,7 @@ function review() {
         <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
-      <div class="sub-tip" id="rvDesc">复习节奏：新词按<b>学习日</b>之后的第 1、2、3、5、7、15、30 天推送；答错的词按<b>答错日</b>之后的第 1、2、3、20、40 天推送。档期按日期固定排定，与当天复习几轮无关。</div>
+      <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。</div>
       <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
@@ -959,14 +993,9 @@ function renderReviewCard() {
     else { st.idx++; renderReviewCard(); }
   };
 }
-// 打叉：立即记入错题本，并让该词进入错词复习节奏（错后第 1、2、3、20、40 天）
+// 打叉：立即记入错题本，重置错题锚点（错后第 1、2、3、20、40 天重新叠加推送）
 function markWrongNow(r) {
-  let p = progress[r.key];
-  if (!p) p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
-  p.wrongStage = 0; p.wrongAnchor = dayOf(); p.nextReview = addDays(dayOf(), WRONG_INTERVALS[0]); p.lastReview = dayOf();
-  const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: dayOf() };
-  if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }
-  wb.lastWrong = dayOf(); wrongBook[r.key] = wb;
+  settleReview(r, false, dayOf());
   saveAll();
 }
 // 单词复习：逐词判定「认识 / 不认识」
@@ -1067,32 +1096,7 @@ function renderCheck() {
 function confirmCheck(after) {
   const st = reviewState;
   const wrong = st.check.filter(r => !r.ok);
-  st.check.forEach(r => {
-    let p = progress[r.key];
-    if (r.ok) {
-      if (p) {
-        p.lastReview = dayOf();                    // 先记本次复习日（补打卡时为原应打卡日），再据此取下一档期
-        if (p.wrongStage !== undefined) {
-          // 错词路径：档期 = 答错日之后的第 1、2、3、20、40 天；走完则视为掌握
-          const nx = scheduleNext(p);
-          if (nx) { p.nextReview = nx; p.wrongStage = Math.min((p.wrongStage || 0) + 1, WRONG_INTERVALS.length - 1); }
-          else { delete p.wrongStage; delete p.wrongAnchor; p.nextReview = ''; }
-        } else {
-          // 新词路径：档期 = 学习日之后的第 1、2、3、5、7、15、30 天（与当天复习几轮无关）
-          p.nextReview = nextScheduleDate(p.firstLearned || todayStr(), INTERVALS, p.lastReview);
-        }
-      }
-    } else {
-      // 答错：锚点重置为今天，按答错日之后的第 1、2、3、20、40 天依次推送
-      if (!p) {
-        p = progress[r.key] = { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, firstLearned: r.firstLearned || todayStr(), lastReview: '', stage: 0 };
-      }
-      p.wrongStage = 0; p.wrongAnchor = dayOf(); p.nextReview = addDays(dayOf(), WRONG_INTERVALS[0]); p.lastReview = dayOf();
-      const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: dayOf() };
-      if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
-      wb.lastWrong = dayOf(); wrongBook[r.key] = wb;
-    }
-  });
+  st.check.forEach(r => settleReview(r, r.ok, dayOf()));
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
   // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记
   if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }

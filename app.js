@@ -97,6 +97,7 @@ window.WB = {
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
+  sortStudyOrder, dayRand,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -289,6 +290,9 @@ function scheduleNext(p) {
   return nextScheduleDate(anchor, INTERVALS, p.lastReview || anchor);
 }
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
+// 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
+function strHash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+function dayRand(word) { return (strHash((word || '').toLowerCase() + '|' + todayStr()) % 1000000) / 1000000; }
 function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function jsAttr(s) { return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1600); }
@@ -518,9 +522,9 @@ function bankStat(id) {
 /* ---------- 词库与推送顺序 ---------- */
 function bankWords(id) { return (BANK_DATA[id]?.words || []).map(w => ({ ...w, bank: id })); }
 function unlearned(id) { return bankWords(id).filter(w => !progress[bankKey(id, w.word)]); }
-// 按常见度排序（freq 越小越常见）；同级内随机乱序
+// 按常见度排序（freq 越小越常见）；同级内用「当日确定性随机」打散，保证不同端顺序一致
 function sortByFreq(list) {
-  return list.map(w => ({ w, f: FREQ[w.word.toLowerCase()] ?? 5, r: Math.random() }))
+  return list.map(w => ({ w, f: FREQ[w.word.toLowerCase()] ?? 5, r: dayRand(w.word) }))
     .sort((a, b) => a.f - b.f || a.r - b.r)
     .map(x => x.w);
 }
@@ -533,9 +537,9 @@ function computeCommon() {
   COMMON_SET = new Set(a.filter(w => bset.has(wnorm(w.word))).map(w => wnorm(w.word)));
 }
 function isCommon(word) { return COMMON_SET ? COMMON_SET.has(wnorm(word)) : false; }
-// 学习排序：雅思/托福两库的共有词优先背诵（先打共同基础），其余再按常见度排序
+// 学习排序：雅思/托福两库的共有词优先背诵（先打共同基础），其余再按常见度排序；同级用当日确定性随机打散
 function sortStudyOrder(list) {
-  return list.map(w => ({ w, common: isCommon(w.word) ? 0 : 1, f: FREQ[w.word.toLowerCase()] ?? 5, r: Math.random() }))
+  return list.map(w => ({ w, common: isCommon(w.word) ? 0 : 1, f: FREQ[w.word.toLowerCase()] ?? 5, r: dayRand(w.word) }))
     .sort((a, b) => a.common - b.common || a.f - b.f || a.r - b.r)
     .map(x => x.w);
 }
@@ -546,19 +550,25 @@ function nextBank(fromId) {
   for (const b of order) if (unlearned(b.id).length) return b.id;
   return null;
 }
-function buildQueue() {
-  const self = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).map(w => ({ ...w, bank: SELFBANK_ID }));
+// 纯计算：返回当日推送计划（不改变 settings.curBank、不弹 toast），供「提前预览」与真正开始共用
+function planQueue() {
   let bank = settings.curBank;
-  if (!unlearned(bank).length && settings.autoNext !== false) {
-    const nb = nextBank(bank);
-    if (nb) { toast(`${bank} 已背完，已切换到 ${nb}`); bank = nb; settings.curBank = nb; }
-  }
-  // 每日推送总量固定为 settings.dailyNew：自建词库优先占额，剩余名额由当前大词库补足
+  const self = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).map(w => ({ ...w, bank: SELFBANK_ID }));
   const daily = Math.max(0, +settings.dailyNew || 0);
   const selfPart = sortByFreq(self).slice(0, daily);
   const rest = daily - selfPart.length;
-  const words = rest > 0 ? sortStudyOrder(unlearned(bank).map(w => ({ ...w, bank }))).slice(0, rest) : [];
-  return { bank, queue: selfPart.concat(words) };
+  let bankForNew = bank;
+  if (!unlearned(bank).length && settings.autoNext !== false) {
+    const nb = nextBank(bank);
+    if (nb) bankForNew = nb;   // 仅预览，不改 settings.curBank
+  }
+  const words = rest > 0 ? sortStudyOrder(unlearned(bankForNew).map(w => ({ ...w, bank: bankForNew }))).slice(0, rest) : [];
+  return { bank: bankForNew, queue: selfPart.concat(words) };
+}
+function buildQueue() {
+  const { bank, queue } = planQueue();
+  if (bank !== settings.curBank) { settings.curBank = bank; saveAll(); toast(`已切换到 ${bank}`); }
+  return { bank, queue };
 }
 // 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送
 function resetWordForSelf(word) {
@@ -756,10 +766,20 @@ function renderLearnBox() {
     const tip = selfLeft
       ? `今日共推送 ${daily} 个新词：自建词库优先占 ${selfTake} 个${bigTake ? `，其余 ${bigTake} 个来自「${settings.curBank}」` : ''}${selfLeft > selfTake ? `（自建还剩 ${selfLeft - selfTake} 词，将逐日推完）` : ''}`
       : `从「${settings.curBank}」按常见度推送 ${daily} 个新词`;
+    // 提前展示今日将推送的单词（与多端一致：基于当日确定性排序）
+    const plan = planQueue();
+    const selfN = plan.queue.filter(w => w.bank === SELFBANK_ID).length;
+    const bigN = plan.queue.length - selfN;
+    const srcNote = plan.queue.length ? (selfN ? `（自建词库 ${selfN}${bigN ? ` ＋ ${plan.bank} ${bigN}` : ''}）` : `（来自「${plan.bank}」）`) : '';
+    const preview = plan.queue.length
+      ? `<div class="sub-tip" style="margin-top:10px">今日将推送 <b>${plan.queue.length}</b> 个新词 ${srcNote}，可提前了解：</div>
+         <div class="chip-wrap">${plan.queue.map(w => `<span class="chip">${esc(w.word)}</span>`).join('')}</div>`
+      : '';
     box.innerHTML = `<h2>今日学习</h2>
       <div class="sub-tip">${tip}</div>
+      ${preview}
       <button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>
-      ${(!left && !self) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
+      ${(!left && !selfLeft) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
     $('#startLearn').onclick = startLearning;
     return;
   }
@@ -769,6 +789,7 @@ function renderLearnBox() {
   if (!w) { setLearnActive(false); box.innerHTML = renderFinish(); bindFinish(); return; }
   const last = st.idx >= st.queue.length - 1;
   box.innerHTML = `
+    <button class="btn ghost sm" id="exitLearn" style="margin-bottom:8px">← 返回首页</button>
     <div class="stepbar"><span>新学 ${st.idx + 1} / ${st.queue.length}</span><span class="tag">${w.bank}</span></div>
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
       <div class="learn-word">${esc(w.word)}</div>
@@ -787,6 +808,7 @@ function renderLearnBox() {
     </div>
     ${st.idx === 0 ? '' : '<div class="sub-tip" style="text-align:center">翻到下一个即记为已学，并进入复习计划</div>'}`;
   $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; saveAll(); renderLearnBox(); } };
+  $('#exitLearn').onclick = () => { learnState = null; saveAll(); goto('learn'); };
   $('#nextBtn').onclick = () => {
     markLearned(w);
     if (last) { learnState = { ...st, idx: st.idx + 1 }; saveAll(); renderLearnBox(); }
@@ -925,11 +947,12 @@ function renderReviewCard() {
       <div class="mean-list">${renderMeaning(cur.meaning)}</div>
     </div>`;
   }
-  box.innerHTML = `${stepbar}${prompt}
+  box.innerHTML = `<button class="btn ghost sm" id="exitReview" style="margin-bottom:8px">← 退出复习</button>${stepbar}${prompt}
     <div class="row" style="margin-top:18px">
       <button class="btn ghost" id="prevBtn">⬆ 上一个</button>
       <button class="btn primary" id="nextBtn">${isLast ? '提交核对 ✓' : '下一个 →'}</button>
     </div>`;
+  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
   $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; renderReviewCard(); } };
   $('#nextBtn').onclick = () => {
     if (isLast) { renderCheck(); }
@@ -959,6 +982,7 @@ function renderRecall() {
   const n = st.pool.length, i = st.idx;
   const wronged = cur.recallOk === false;   // 已打叉 → 展示详情供记忆
   box.innerHTML = `
+    <button class="btn ghost sm" id="exitReview" style="margin-bottom:8px">← 退出复习</button>
     <div class="stepbar"><span>单词复习 ${i + 1} / ${n}</span><span class="tag">${esc(cur.bank)}</span></div>
     <div class="rq-word">
       <div class="learn-word" style="margin:0">${esc(cur.word)}</div>
@@ -973,6 +997,7 @@ function renderRecall() {
     </div>
     <div class="sub-tip" style="text-align:center;margin-top:8px">本轮判定后不可修改</div>`;
   $('#rqSpeak').onclick = () => speak(cur.word, 'en-US');
+  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
   if (!wronged) {
     $('#rqOk').onclick = () => { cur.recallOk = true; st.idx++; renderRecall(); };
     $('#rqNo').onclick = () => { cur.recallOk = false; markWrongNow(cur); renderRecall(); };
@@ -1001,6 +1026,7 @@ function renderCheck() {
   const wrongCount = () => st.check.filter(r => !r.ok).length;
   const head = document.createElement('div');
   head.innerHTML = `<h2>核对答案（共 ${st.pool.length} 个）</h2>
+    <button class="btn ghost sm" id="exitReview" style="margin:6px 0">← 退出复习</button>
     <div class="sub-tip">对照你纸上的写法：对的保留，错的点击标记为「错」（自动加入错题本）。词组若无例句则显示中文释义。</div>`;
   st.check.forEach((r, i) => {
     const lc = r.word.toLowerCase();
@@ -1031,6 +1057,7 @@ function renderCheck() {
   });
   box.innerHTML = '';
   box.appendChild(head); box.appendChild(list);
+  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
   const okBtn = document.createElement('button');
   okBtn.className = 'btn primary'; okBtn.id = 'chkOk'; okBtn.style.marginTop = '12px';
   okBtn.textContent = `确认提交（错 ${wrongCount()}）`;

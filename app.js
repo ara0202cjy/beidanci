@@ -48,7 +48,7 @@ function saveSession() { store.set(ACCT.session, currentAccount); }
 let progress, wrongBook, selfBank, settings, history, learnState;
 function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState }; }
 function loadState() {
-  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
+  const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
     const s = store.get(ACCT.data(currentAccount), null) || {};
     progress = s.progress || {};
@@ -65,7 +65,7 @@ function loadState() {
     history = store.get(K.history, {});
     learnState = store.get(K.learn, null);
   }
-  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
+  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
 }
 loadState();
 // 设置项变更检测：仅当「内容」真正变化才更新 _at，供多端同步判断哪一端更新。
@@ -125,9 +125,9 @@ async function registerAccount(name, pwd) {
   saveAll();                                   // 先保存当前空间数据
   currentAccount = name; saveSession();
   progress = {}; wrongBook = {}; selfBank = [];
-  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, settings);
+  settings = Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, settings);
   history = {}; learnState = null;
-  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '雅思';
+  if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
   store.set(ACCT.data(name), snapshot());
   store.set(ACCT.sync(name), []);
   if (window.Sync) Sync.reload();
@@ -222,7 +222,7 @@ async function seedAccounts() {
   if (hasLegacy) {
     store.set(ACCT.data('lvcheng'), {
       progress: legacy.progress || {}, wrongBook: legacy.wrong || {}, selfBank: legacy.self || [],
-      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 20, curBank: '雅思', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, legacy.settings || {}),
+      settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, legacy.settings || {}),
       history: legacy.history || {}, learnState: legacy.learn || null,
     });
     currentAccount = 'lvcheng'; saveSession(); loadState();

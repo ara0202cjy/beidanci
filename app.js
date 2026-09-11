@@ -323,7 +323,7 @@ function settleReview(r, correct, day) {
     if (p.wrongAnchor && wrongNext(p) && wrongNext(p) <= day) p.lastWrongReview = day;
   } else {
     // 答错：错题锚点重置为今天，错题节奏从头（第 1 天）重新数；学习日锚点不受影响
-    p.wrongStage = 0; p.wrongAnchor = day; p.lastWrongReview = day;
+    p.wrongAnchor = day; p.lastWrongReview = day;
     if (learnNext(p) && learnNext(p) <= day) p.lastLearnReview = day;
     const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: day };
     if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
@@ -391,22 +391,6 @@ function pron(word, kind) {
   else if (kind === 'gb') speak(word, 'en-GB');
   else if (kind === 'slow') speak(word, a, 0.6);
   else speak(word, a, r);
-}
-let _audioCtx = null;
-function beep(freq, dur) {
-  try {
-    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const ctx = _audioCtx;
-    if (ctx.state === 'suspended') ctx.resume();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.value = freq || 660; o.type = 'sine';
-    const t = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.05, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.08));
-    o.connect(g); g.connect(ctx.destination);
-    o.start(t); o.stop(t + (dur || 0.08));
-  } catch (e) { }
 }
 function exampleHtml(w, limit) {
   const ex = (EXAMPLES[(w.word || '').toLowerCase()] || []).slice(0, limit || 1);

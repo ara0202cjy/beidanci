@@ -687,6 +687,10 @@ function learnCandidates(exclude) {
 // 返回是否有变化（变化时落盘，避免每次渲染都写）。
 function reconcileLearnPlan(forceResize) {
   const target = Math.max(0, +settings.dailyNew || 0);
+  const today = todayStr();
+  // 今日新词配额：以「今日实际新学单词数」为准；达到配额后今日不再生成新词（明日再学下一批）
+  const todayNew = (history[today] && history[today].new ? history[today].new.length : 0);
+  const quotaMet = target > 0 && todayNew >= target;
   const before = JSON.stringify(pendingPlan) + '|' + planTarget;
   let plan = (pendingPlan || []).filter(p => {
     const key = bankKey(p.bank, p.word);
@@ -694,14 +698,14 @@ function reconcileLearnPlan(forceResize) {
   });
   const changed = forceResize || target !== planTarget;
   if (changed) {
+    planTarget = target;
     if (plan.length > target) plan = plan.slice(0, target);            // 富余 ⇒ 删除已选，退回未学词库
-    else {
+    else if (!quotaMet) {                                             // 配额未达成才补词（达成后当日不再新增）
       const ex = new Set(plan.map(p => bankKey(p.bank, p.word)));
       for (const c of learnCandidates(ex)) { if (plan.length >= target) break; plan.push({ bank: c.bank, word: c.word }); }
     }
-    planTarget = target;
-  } else if (plan.length === 0 && target > 0) {
-    const ex = new Set();                                              // 批次空 ⇒ 学完才生成下一批
+  } else if (plan.length === 0 && target > 0 && !quotaMet) {
+    const ex = new Set();                                             // 新的一天 / 批次耗尽且未达配额 ⇒ 生成下一批
     for (const c of learnCandidates(ex)) { if (plan.length >= target) break; plan.push({ bank: c.bank, word: c.word }); }
     planTarget = target;
   }
@@ -929,26 +933,43 @@ function renderLearnBox() {
     const daily = Math.max(0, +settings.dailyNew || 0);
     const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
     const left = unlearned(settings.curBank).length;
-    const tip = daily
-      ? `每日计划 ${daily} 个新词${plan.length !== daily ? `（当前待学 ${plan.length} 个）` : ''}`
-      : '已设置为不推送新词';
-    const preview = plan.length
-      ? `<div class="sub-tip" style="margin-top:10px">本组待学 <b>${plan.length}</b> 个新词，可提前了解：</div>
+    const today = todayStr();
+    const todayNew = (history[today] && history[today].new ? history[today].new.length : 0);
+    const quotaMet = daily > 0 && todayNew >= daily;     // 今日新学完规定个数
+    const allDone = nothingToStudy();                    // 所有词库都已背完
+    let tip, preview = '', btn;
+    if (allDone) {
+      tip = '所有词库都已背完 🎉';
+      btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>词库已背完 🎉</button>`;
+    } else if (quotaMet) {
+      tip = `每日计划 ${daily} 个新词，今日已全部学完`;
+      preview = `<div class="sub-tip" style="margin-top:10px">今日已学完 <b>${todayNew}</b> 个新词，明天再来 🌙</div>`;
+      btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>今日已学完</button>`;
+    } else if (plan.length) {
+      tip = `每日计划 ${daily} 个新词${plan.length !== daily ? `（当前待学 ${plan.length} 个）` : ''}`;
+      preview = `<div class="sub-tip" style="margin-top:10px">本组待学 <b>${plan.length}</b> 个新词，可提前了解：</div>
          <div class="chip-wrap">${plan.map(w => `<span class="chip">${esc(w.word)}</span>`).join('')}</div>
-         <div class="sub-tip" style="margin-top:6px">本组未学完不会生成新词；单词的学习日期记在实际学习当天</div>`
-      : '';
+         <div class="sub-tip" style="margin-top:6px">本组未学完不会生成新词；单词的学习日期记在实际学习当天</div>`;
+      btn = `<button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>`;
+    } else if (daily <= 0) {
+      tip = '已设置为不推送新词';
+      btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>无新词</button>`;
+    } else {
+      tip = `每日计划 ${daily} 个新词`;
+      btn = `<button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>`;
+    }
     box.innerHTML = `<h2>今日学习</h2>
       <div class="sub-tip">${tip}</div>
       ${preview}
-      <button class="btn primary" style="margin-top:14px" id="startLearn" ${(!plan.length && daily > 0) ? 'disabled' : ''}>${plan.length ? '开始学习' : (daily > 0 ? '词库已背完 🎉' : '无新词')}</button>
-      ${(!left && !selfLeft && !plan.length) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
+      ${btn}
+      ${(!left && !selfLeft && !plan.length && !quotaMet) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
     const sl = document.getElementById('startLearn'); if (sl) sl.onclick = startLearning;
     return;
   }
   // 学习卡片：一个单词一页
   const st = learnState;
   const w = st.queue[st.idx];
-  if (!w) { setLearnActive(false); markStudyDone(); refreshCheckin(); box.innerHTML = renderFinish(); bindFinish(); return; }
+  if (!w) { setLearnActive(false); learnState = null; markStudyDone(); refreshCheckin(); renderLearnBox(); return; }
   const last = st.idx >= st.queue.length - 1;
   box.innerHTML = `
     <button class="btn ghost sm" id="exitLearn" style="margin-bottom:8px">← 返回首页</button>
@@ -980,19 +1001,6 @@ function renderLearnBox() {
     if (last) { learnState = { ...st, idx: st.idx + 1 }; saveAll(); renderLearnBox(); }
     else { st.idx++; saveAll(); renderLearnBox(); }
   };
-}
-function renderFinish() {
-  const n = learnState?.queue.length || 0;
-  return `<div style="text-align:center;padding:8px 0">
-    <div style="font-size:34px">🎉</div>
-    <h2 style="margin:8px 0 4px">今日新词已学完</h2>
-    <div class="sub-tip">共 ${n} 个单词已加入复习计划</div>
-    <button class="btn primary" style="margin-top:16px" id="toReview">学习完毕 · 去复习</button>
-    <button class="btn ghost" style="margin-top:10px" id="againBtn">再学一组</button></div>`;
-}
-function bindFinish() {
-  $('#toReview').onclick = () => { learnState = null; saveAll(); goto('review'); };
-  $('#againBtn').onclick = () => { startLearning(); };
 }
 // 今日打卡状态卡：学习内容与复习均完成 → 显示「打卡完成」，并从补打卡栏目移除
 function checkinCardHtml() {

@@ -25,7 +25,7 @@ const WRONG_INTERVALS = [1, 2, 3, 20, 40];
 const SELFBANK_ID = '自建';
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
-  settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate',
+  settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
 };
 
 /* ---------- 存储 ---------- */
@@ -45,8 +45,8 @@ let currentAccount = store.get(ACCT.session, '') || '';
 function saveAccounts() { store.set(ACCT.reg, accounts); }
 function saveSession() { store.set(ACCT.session, currentAccount); }
 
-let progress, wrongBook, selfBank, settings, history, learnState;
-function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState }; }
+let progress, wrongBook, selfBank, settings, history, learnState, reviewState;
+function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState }; }
 function loadState() {
   const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
@@ -57,6 +57,7 @@ function loadState() {
     settings = Object.assign({}, base, s.settings || {});
     history = s.history || {};
     learnState = s.learnState || null;
+    reviewState = s.reviewState || null;
   } else {
     progress = store.get(K.progress, {});
     wrongBook = store.get(K.wrong, {});
@@ -64,6 +65,7 @@ function loadState() {
     settings = store.get(K.settings, base);
     history = store.get(K.history, {});
     learnState = store.get(K.learn, null);
+    reviewState = store.get(K.review, null);
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
 }
@@ -82,8 +84,8 @@ function saveAll() {
   if (currentAccount) store.set(ACCT.data(currentAccount), snapshot());
   else {
     store.set(K.progress, progress); store.set(K.wrong, wrongBook);
-    store.set(K.self, selfBank); store.set(K.settings, settings); store.set(K.history, history);
-    store.set(K.learn, learnState);
+    store.set(K.self, selfBank);     store.set(K.settings, settings); store.set(K.history, history);
+    store.set(K.learn, learnState); store.set(K.review, reviewState);
   }
   try { if (window.Sync) Sync.schedulePush(); } catch (e) { }
 }
@@ -94,6 +96,8 @@ window.WB = {
   get selfBank() { return selfBank; }, set selfBank(v) { selfBank = v; },
   get settings() { return settings; }, set settings(v) { settings = v; },
   get history() { return history; }, set history(v) { history = v; },
+  get learnState() { return learnState; }, set learnState(v) { learnState = v; },
+  get reviewState() { return reviewState; }, set reviewState(v) { reviewState = v; },
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
@@ -217,13 +221,14 @@ async function seedAccounts() {
   const legacy = {
     progress: store.get(K.progress, null), wrong: store.get(K.wrong, null), self: store.get(K.self, null),
     settings: store.get(K.settings, null), history: store.get(K.history, null), learn: store.get(K.learn, null),
+    review: store.get(K.review, null),
   };
-  const hasLegacy = [legacy.progress, legacy.wrong, legacy.self, legacy.history].some(v => v && (Array.isArray(v) ? v.length : true)) || !!legacy.learn;
+  const hasLegacy = [legacy.progress, legacy.wrong, legacy.self, legacy.history].some(v => v && (Array.isArray(v) ? v.length : true)) || !!legacy.learn || !!legacy.review;
   if (hasLegacy) {
     store.set(ACCT.data('lvcheng'), {
       progress: legacy.progress || {}, wrongBook: legacy.wrong || {}, selfBank: legacy.self || [],
       settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, legacy.settings || {}),
-      history: legacy.history || {}, learnState: legacy.learn || null,
+      history: legacy.history || {}, learnState: legacy.learn || null, reviewState: legacy.review || null,
     });
     currentAccount = 'lvcheng'; saveSession(); loadState();
     if (window.Sync) Sync.reload();
@@ -763,16 +768,16 @@ function openSettings() {
     if (currentAccount) {
       // 账号模式：仅清空该账号的学习数据，保留其同步端口配置
       const syncTargets = store.get(ACCT.sync(currentAccount), null);
-      store.set(ACCT.data(currentAccount), { progress: {}, wrongBook: {}, selfBank: [], settings, history: {}, learnState: null });
+      store.set(ACCT.data(currentAccount), { progress: {}, wrongBook: {}, selfBank: [], settings, history: {}, learnState: null, reviewState: null });
       if (syncTargets !== null) store.set(ACCT.sync(currentAccount), syncTargets);
-      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null;
+      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null;
     } else {
       // 未登录：保留 wb_sync 云配置，仅写入空学习数据（不调用 saveAll，避免触发自动上传空数据）
       const syncCfg = window.store ? store.get('wb_sync', null) : null;
-      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null;
+      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null;
       store.set(K.progress, progress); store.set(K.wrong, wrongBook);
       store.set(K.self, selfBank); store.set(K.settings, settings); store.set(K.history, history);
-      store.set(K.learn, learnState);
+      store.set(K.learn, learnState); store.set(K.review, reviewState);
       if (syncCfg !== null) store.set('wb_sync', syncCfg);
     }
     toast('已清空（云端同步端口已保留）'); closeModal(); PAGES[CUR]();
@@ -881,9 +886,13 @@ function renderLearnBox() {
       <button class="btn ghost" id="prevBtn" ${st.idx === 0 ? 'disabled' : ''}>${icon('i-prev')}上一个</button>
       <button class="btn ${last ? 'green' : 'primary'}" id="nextBtn">${last ? '学习完毕' : '下一个'}${last ? '' : icon('i-next')}</button>
     </div>
+    <div class="row" style="margin-top:8px;justify-content:center">
+      <button class="btn ghost sm" id="restartLearn">↺ 重新开始本组</button>
+    </div>
     ${st.idx === 0 ? '' : '<div class="sub-tip" style="text-align:center">翻到下一个即记为已学，并进入复习计划</div>'}`;
   $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; saveAll(); renderLearnBox(); } };
-  $('#exitLearn').onclick = () => { learnState = null; saveAll(); goto('learn'); };
+  $('#exitLearn').onclick = () => { saveAll(); goto('learn'); };   // 仅暂停：保留 learnState 以便重开工作台后续接
+  $('#restartLearn').onclick = () => { if (confirm('放弃当前这组，重新从今日新词开始？已学的词仍计入复习计划。')) { learnState = null; saveAll(); startLearning(); } };
   $('#nextBtn').onclick = () => {
     markLearned(w);
     if (last) { learnState = { ...st, idx: st.idx + 1 }; saveAll(); renderLearnBox(); }
@@ -957,7 +966,6 @@ function markLearned(w) {
 }
 
 /* ===================== 复习 ===================== */
-let reviewState = null;
 function review() {
   app().innerHTML = `${topbar('复习')}
     <div class="card matcha" id="reviewSetup"></div>
@@ -967,6 +975,7 @@ function review() {
     const pool = buildReviewPool();
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
+    const resuming = reviewState && !reviewState.done;   // 存在未完成的中途复习 → 提供「继续」
     // 三种题型下方的提示统一为「复习节奏」，未开始复习前不暴露任何待复习单词
     $('#reviewSetup').innerHTML = `
       <h2>今日复习 <span class="r">${pool.length} 词</span></h2>
@@ -976,10 +985,16 @@ function review() {
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
       <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。</div>
-      <div><button class="btn primary" id="startReview" ${pool.length ? '' : 'disabled'}>▶ 开始复习${pool.length ? '（' + pool.length + '）' : ''}</button></div>
+      ${resuming ? `<div class="sub-tip" style="margin-bottom:8px">检测到上次未完成的复习（第 ${reviewState.idx + 1}/${reviewState.pool.length} 个），可继续或重新开始。</div>` : ''}
+      <div><button class="btn primary" id="startReview" ${pool.length || resuming ? '' : 'disabled'}>${resuming ? '▶ 继续复习（剩 ' + (reviewState.pool.length - reviewState.idx) + '）' : '▶ 开始复习' + (pool.length ? '（' + pool.length + '）' : '')}</button></div>
+      ${resuming ? '<div style="margin-top:8px"><button class="btn ghost sm" id="restartReview">↺ 重新开始今日复习</button></div>' : ''}
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
-    $('#startReview').onclick = () => { REVIEW_DAY = null; startReview(pool); };
+    $('#startReview').onclick = () => {
+      if (resuming) { review(); return; }            // 续接上次中途复习
+      REVIEW_DAY = null; startReview(pool);
+    };
+    if (resuming) $('#restartReview').onclick = () => { reviewState = null; saveAll(); renderSetup(); };
     $('#makeup').onclick = openMakeup;
   }
   function renderBox() {
@@ -1027,10 +1042,10 @@ function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   if (settings.reviewType === 'recall') {
     reviewState = { pool: shuffle(pool.map(e => ({ ...e, type: 'recall' }))), idx: 0, mode: 'recall' };
-    review(); return;
+    saveAll(); review(); return;
   }
   reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0 };
-  review(); renderReviewCard();
+  saveAll(); review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页
 function renderReviewCard() {
@@ -1039,6 +1054,7 @@ function renderReviewCard() {
   if (!cur) { return renderCheck(); }
   const isLast = st.idx >= st.pool.length - 1;
   const stepbar = `<div class="stepbar"><span>第 ${st.idx + 1} / ${st.pool.length} 个</span><span class="tag">${esc(cur.bank)}</span></div>`;
+  if (st.idx === undefined) st.idx = 0; saveAll();   // 进入复习卡片即落盘当前进度，便于中途退出后续接
   let prompt;
   if (cur.type === 'sentence' && cur.sentence) {
     const sb = blankSentence(cur.sentence.en, cur.word);
@@ -1059,11 +1075,11 @@ function renderReviewCard() {
       <button class="btn ghost" id="prevBtn">⬆ 上一个</button>
       <button class="btn primary" id="nextBtn">${isLast ? '提交核对 ✓' : '下一个 →'}</button>
     </div>`;
-  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
-  $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; renderReviewCard(); } };
+  $('#exitReview').onclick = () => { saveAll(); goto('learn'); };   // 仅暂停：保留 reviewState 以便重开工作台后续接
+  $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; saveAll(); renderReviewCard(); } };
   $('#nextBtn').onclick = () => {
     if (isLast) { renderCheck(); }
-    else { st.idx++; renderReviewCard(); }
+    else { st.idx++; saveAll(); renderReviewCard(); }
   };
 }
 // 打叉：立即记入错题本，重置错题锚点（错后第 1、2、3、20、40 天重新叠加推送）
@@ -1099,12 +1115,12 @@ function renderRecall() {
     </div>
     <div class="sub-tip" style="text-align:center;margin-top:8px">本轮判定后不可修改</div>`;
   $('#rqSpeak').onclick = () => speak(cur.word, 'en-US');
-  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
+  $('#exitReview').onclick = () => { saveAll(); goto('learn'); };   // 仅暂停：保留 reviewState 以便重开工作台后续接
   if (!wronged) {
-    $('#rqOk').onclick = () => { cur.recallOk = true; st.idx++; renderRecall(); };
+    $('#rqOk').onclick = () => { cur.recallOk = true; st.idx++; saveAll(); renderRecall(); };
     $('#rqNo').onclick = () => { cur.recallOk = false; markWrongNow(cur); renderRecall(); };
   } else {
-    $('#rqNext').onclick = () => { st.idx++; renderRecall(); };
+    $('#rqNext').onclick = () => { st.idx++; saveAll(); renderRecall(); };
   }
 }
 // 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 1、2、3、20、40 天），随后自动进入情境填词
@@ -1159,7 +1175,7 @@ function renderCheck() {
   });
   box.innerHTML = '';
   box.appendChild(head); box.appendChild(list);
-  $('#exitReview').onclick = () => { reviewState = null; saveAll(); goto('learn'); };
+  $('#exitReview').onclick = () => { saveAll(); goto('learn'); };   // 仅暂停：保留 reviewState 以便重开工作台后续接
   const okBtn = document.createElement('button');
   okBtn.className = 'btn primary'; okBtn.id = 'chkOk'; okBtn.style.marginTop = '12px';
   okBtn.textContent = `确认提交（错 ${wrongCount()}）`;

@@ -66,6 +66,8 @@ const Sync = (function () {
       selfTomb: store.get('wb_selftomb', []),
       history: a.history || {},
       settings: a.settings || {},
+      learnState: a.learnState || null,
+      reviewState: a.reviewState || null,
     };
   }
   function applyState(s) {
@@ -75,6 +77,8 @@ const Sync = (function () {
     if (s.wrongBook) a.wrongBook = s.wrongBook;
     if (s.selfBank) a.selfBank = s.selfBank;
     if (s.history) a.history = s.history;
+    if (s.learnState !== undefined && s.learnState !== null) a.learnState = s.learnState;
+    if (s.reviewState !== undefined && s.reviewState !== null) a.reviewState = s.reviewState;
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
     if (window.saveAll) saveAll();
@@ -135,6 +139,11 @@ const Sync = (function () {
     const sa = (a.settings && a.settings._at) || 0;
     const sb = (b.settings && b.settings._at) || 0;
     out.settings = Object.assign({}, a.settings || {}, (sb > sa ? (b.settings || {}) : (a.settings || {})));
+    // 进行中的学习/复习会话：取「最近一次活动时间」较新的一端（savedAt 后者胜出，含 null）。
+    // 同一人在不同端口各学各的，以最后操作的端口为准，保证所有端口最终一致。
+    const aNewer = (a.savedAt || 0) >= (b.savedAt || 0);
+    out.learnState = (aNewer ? a.learnState : b.learnState) || null;
+    out.reviewState = (aNewer ? a.reviewState : b.reviewState) || null;
     return out;
   }
 

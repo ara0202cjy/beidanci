@@ -1155,7 +1155,7 @@ function renderReviewCard() {
       <div class="pp-label">情境填词：写出横线处的单词</div>
       <div class="eg" style="margin-top:0"><div class="en">${sb.html}</div></div>
       <div class="mean-list">${renderMeaning(cur.meaning)}</div>
-      ${sb.variantBlank ? `<div class="sub-tip pp-warn" style="margin-top:8px">⚠ 句中为「变形词」<b>${esc(sb.variantText)}</b>，请注意写出它的<b>原形 ${esc(cur.word)}</b></div>` : (sb.hasBlank ? '' : '<div class="sub-tip" style="margin-top:8px">⚠ 例句中未直接出现该词，请依据中文释义回忆拼写</div>')}
+      ${sb.variantBlank ? `<div class="sub-tip pp-warn" style="margin-top:8px">⚠ 此题为变形词</div>` : (sb.hasBlank ? '' : '<div class="sub-tip" style="margin-top:8px">⚠ 例句中未直接出现该词，请依据中文释义回忆拼写</div>')}
     </div>`;
   } else {
     prompt = `<div class="paper-prompt">

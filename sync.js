@@ -68,6 +68,8 @@ const Sync = (function () {
       settings: a.settings || {},
       learnState: a.learnState || null,
       reviewState: a.reviewState || null,
+      pendingPlan: a.pendingPlan || [],
+      planTarget: a.planTarget || 0,
     };
   }
   function applyState(s) {
@@ -79,6 +81,8 @@ const Sync = (function () {
     if (s.history) a.history = s.history;
     if (s.learnState !== undefined && s.learnState !== null) a.learnState = s.learnState;
     if (s.reviewState !== undefined && s.reviewState !== null) a.reviewState = s.reviewState;
+    if (s.pendingPlan) a.pendingPlan = s.pendingPlan;
+    if (typeof s.planTarget === 'number') a.planTarget = s.planTarget;
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
     if (window.saveAll) saveAll();
@@ -144,6 +148,9 @@ const Sync = (function () {
     const aNewer = (a.savedAt || 0) >= (b.savedAt || 0);
     out.learnState = (aNewer ? a.learnState : b.learnState) || null;
     out.reviewState = (aNewer ? a.reviewState : b.reviewState) || null;
+    // 待学批次：同样取「最近一次活动」较新的一端，保证所有端口的待学词一致
+    out.pendingPlan = (aNewer ? a.pendingPlan : b.pendingPlan) || [];
+    out.planTarget = (aNewer ? a.planTarget : b.planTarget) || 0;
     return out;
   }
 

@@ -26,6 +26,7 @@ const SELFBANK_ID = '自建';
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
+  plan: 'wb_plan', plantarget: 'wb_plantarget',
 };
 
 /* ---------- 存储 ---------- */
@@ -45,8 +46,8 @@ let currentAccount = store.get(ACCT.session, '') || '';
 function saveAccounts() { store.set(ACCT.reg, accounts); }
 function saveSession() { store.set(ACCT.session, currentAccount); }
 
-let progress, wrongBook, selfBank, settings, history, learnState, reviewState;
-function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState }; }
+let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget;
+function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget }; }
 function loadState() {
   const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
@@ -58,6 +59,8 @@ function loadState() {
     history = s.history || {};
     learnState = s.learnState || null;
     reviewState = s.reviewState || null;
+    pendingPlan = s.pendingPlan || [];
+    planTarget = s.planTarget || 0;
   } else {
     progress = store.get(K.progress, {});
     wrongBook = store.get(K.wrong, {});
@@ -66,6 +69,8 @@ function loadState() {
     history = store.get(K.history, {});
     learnState = store.get(K.learn, null);
     reviewState = store.get(K.review, null);
+    pendingPlan = store.get(K.plan, []);
+    planTarget = store.get(K.plantarget, 0);
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
 }
@@ -86,6 +91,7 @@ function saveAll() {
     store.set(K.progress, progress); store.set(K.wrong, wrongBook);
     store.set(K.self, selfBank);     store.set(K.settings, settings); store.set(K.history, history);
     store.set(K.learn, learnState); store.set(K.review, reviewState);
+    store.set(K.plan, pendingPlan); store.set(K.plantarget, planTarget);
   }
   try { if (window.Sync) Sync.schedulePush(); } catch (e) { }
 }
@@ -98,12 +104,15 @@ window.WB = {
   get history() { return history; }, set history(v) { history = v; },
   get learnState() { return learnState; }, set learnState(v) { learnState = v; },
   get reviewState() { return reviewState; }, set reviewState(v) { reviewState = v; },
+  get pendingPlan() { return pendingPlan; }, set pendingPlan(v) { pendingPlan = v; },
+  get planTarget() { return planTarget; }, set planTarget(v) { planTarget = v; },
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
   sortStudyOrder, dayRand,
   learnNext, wrongNext, refreshNext, isDue, settleReview, calibrateSchedule,
   exportLearnedExcel,
+  reconcileLearnPlan, learnCandidates, resolveWord,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -229,6 +238,7 @@ async function seedAccounts() {
       progress: legacy.progress || {}, wrongBook: legacy.wrong || {}, selfBank: legacy.self || [],
       settings: Object.assign({ speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 }, legacy.settings || {}),
       history: legacy.history || {}, learnState: legacy.learn || null, reviewState: legacy.review || null,
+      pendingPlan: [], planTarget: 0,
     });
     currentAccount = 'lvcheng'; saveSession(); loadState();
     if (window.Sync) Sync.reload();
@@ -624,6 +634,65 @@ function buildQueue() {
   if (bank !== settings.curBank) { settings.curBank = bank; saveAll(); toast(`已切换到 ${bank}`); }
   return { bank, queue };
 }
+// 按 bank+word 反查完整词对象（学习/预览时使用）
+function resolveWord(bank, word) {
+  if (bank === SELFBANK_ID) return selfBank.find(w => w.word === word);
+  return (BANK_DATA[bank]?.words || []).find(w => w.word === word);
+}
+// 稳定排序的「待学候选」：自建词库优先（保持自建数组顺序），其余按「共有词优先 → 词频 → 原词库序号」，
+// 不使用当日随机(dayRand)，使一旦入选的批次顺序固定、跨天/跨端一致（批次本身已进同步）。
+function learnCandidates(exclude) {
+  const ex = new Set(exclude || []);
+  const out = [];
+  // 自建词库优先
+  selfBank.forEach((w, i) => {
+    const key = bankKey(SELFBANK_ID, w.word);
+    if (ex.has(key)) return;
+    if (progress[key] && progress[key].firstLearned) return;
+    out.push({ ...w, bank: SELFBANK_ID, _i: i, _common: 0 });
+  });
+  // 主词库
+  let bank = settings.curBank;
+  if (!unlearned(bank).length && settings.autoNext !== false) { const nb = nextBank(bank); if (nb) bank = nb; }
+  const mainIdx = {};
+  (BANK_DATA[bank]?.words || []).forEach((w, i) => { mainIdx[wnorm(w.word)] = i; });
+  unlearned(bank).forEach(w => {
+    const key = bankKey(bank, w.word);
+    if (ex.has(key)) return;
+    out.push({ ...w, bank, _i: mainIdx[wnorm(w.word)] ?? 0, _common: isCommon(w.word) ? 0 : 1 });
+  });
+  out.sort((a, b) => a._common - b._common || (FREQ[wnorm(a.word)] ?? 5) - (FREQ[wnorm(b.word)] ?? 5) || a._i - b._i);
+  return out;
+}
+// 粘性批次 reconcile：
+//  • 已学过的词自动移出批次；
+//  • 批次非空且 dailyNew 未变 ⇒ 保留原批次（不新增），满足「只有学完才生成新词」；
+//  • 批次为空（全部学完）⇒ 重新从词库选出 dailyNew 个新词（即「学完才生成」）；
+//  • dailyNew 改变（或 forceResize）⇒ 立即按新目标增/删：不够从词库补，富余把已选词退回未学词库。
+// 返回是否有变化（变化时落盘，避免每次渲染都写）。
+function reconcileLearnPlan(forceResize) {
+  const target = Math.max(0, +settings.dailyNew || 0);
+  const before = JSON.stringify(pendingPlan) + '|' + planTarget;
+  let plan = (pendingPlan || []).filter(p => {
+    const key = bankKey(p.bank, p.word);
+    return !(progress[key] && progress[key].firstLearned);
+  });
+  const changed = forceResize || target !== planTarget;
+  if (changed) {
+    if (plan.length > target) plan = plan.slice(0, target);            // 富余 ⇒ 删除已选，退回未学词库
+    else {
+      const ex = new Set(plan.map(p => bankKey(p.bank, p.word)));
+      for (const c of learnCandidates(ex)) { if (plan.length >= target) break; plan.push({ bank: c.bank, word: c.word }); }
+    }
+    planTarget = target;
+  } else if (plan.length === 0 && target > 0) {
+    const ex = new Set();                                              // 批次空 ⇒ 学完才生成下一批
+    for (const c of learnCandidates(ex)) { if (plan.length >= target) break; plan.push({ bank: c.bank, word: c.word }); }
+    planTarget = target;
+  }
+  pendingPlan = plan;
+  if (JSON.stringify(pendingPlan) + '|' + planTarget !== before) saveAll();
+}
 // 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送
 function resetWordForSelf(word) {
   const key = bankKey(SELFBANK_ID, word);
@@ -742,6 +811,7 @@ function openSettings() {
   });
   $('#dnRange').oninput = e => {
     settings.dailyNew = +e.target.value; saveAll();
+    reconcileLearnPlan(true);   // 改每日新词数 ⇒ 立即按新目标增/删批次（不够补、富余退）
     $('#dnRange').previousElementSibling.innerHTML = `每日新词数：<b style="color:var(--brand)">${settings.dailyNew}</b> 词`;
   };
   $('#autoNext').onchange = e => { settings.autoNext = e.target.checked; saveAll(); };
@@ -768,16 +838,17 @@ function openSettings() {
     if (currentAccount) {
       // 账号模式：仅清空该账号的学习数据，保留其同步端口配置
       const syncTargets = store.get(ACCT.sync(currentAccount), null);
-      store.set(ACCT.data(currentAccount), { progress: {}, wrongBook: {}, selfBank: [], settings, history: {}, learnState: null, reviewState: null });
+      store.set(ACCT.data(currentAccount), { progress: {}, wrongBook: {}, selfBank: [], settings, history: {}, learnState: null, reviewState: null, pendingPlan: [], planTarget: 0 });
       if (syncTargets !== null) store.set(ACCT.sync(currentAccount), syncTargets);
-      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null;
+      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null; pendingPlan = []; planTarget = 0;
     } else {
       // 未登录：保留 wb_sync 云配置，仅写入空学习数据（不调用 saveAll，避免触发自动上传空数据）
       const syncCfg = window.store ? store.get('wb_sync', null) : null;
-      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null;
+      progress = {}; wrongBook = {}; selfBank = []; history = {}; learnState = null; reviewState = null; pendingPlan = []; planTarget = 0;
       store.set(K.progress, progress); store.set(K.wrong, wrongBook);
       store.set(K.self, selfBank); store.set(K.settings, settings); store.set(K.history, history);
       store.set(K.learn, learnState); store.set(K.review, reviewState);
+      store.set(K.plan, pendingPlan); store.set(K.plantarget, planTarget);
       if (syncCfg !== null) store.set('wb_sync', syncCfg);
     }
     toast('已清空（云端同步端口已保留）'); closeModal(); PAGES[CUR]();
@@ -838,29 +909,25 @@ function renderLearnBox() {
   }
   if (!learnState || !learnState.queue.length) {
     setLearnActive(false);
+    reconcileLearnPlan();
+    const plan = pendingPlan.map(p => resolveWord(p.bank, p.word)).filter(Boolean);
+    const daily = Math.max(0, +settings.dailyNew || 0);
     const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
     const left = unlearned(settings.curBank).length;
-    const daily = Math.max(0, +settings.dailyNew || 0);
-    const selfTake = Math.min(selfLeft, daily);
-    const bigTake = daily - selfTake;
-    const tip = selfLeft
-      ? `今日共推送 ${daily} 个新词：自建词库优先占 ${selfTake} 个${bigTake ? `，其余 ${bigTake} 个来自「${settings.curBank}」` : ''}${selfLeft > selfTake ? `（自建还剩 ${selfLeft - selfTake} 词，将逐日推完）` : ''}`
-      : `从「${settings.curBank}」按常见度推送 ${daily} 个新词`;
-    // 提前展示今日将推送的单词（与多端一致：基于当日确定性排序）
-    const plan = planQueue();
-    const selfN = plan.queue.filter(w => w.bank === SELFBANK_ID).length;
-    const bigN = plan.queue.length - selfN;
-    const srcNote = plan.queue.length ? (selfN ? `（自建词库 ${selfN}${bigN ? ` ＋ ${plan.bank} ${bigN}` : ''}）` : `（来自「${plan.bank}」）`) : '';
-    const preview = plan.queue.length
-      ? `<div class="sub-tip" style="margin-top:10px">今日将推送 <b>${plan.queue.length}</b> 个新词 ${srcNote}，可提前了解：</div>
-         <div class="chip-wrap">${plan.queue.map(w => `<span class="chip">${esc(w.word)}</span>`).join('')}</div>`
+    const tip = daily
+      ? `每日计划 ${daily} 个新词${plan.length !== daily ? `（当前待学 ${plan.length} 个）` : ''}`
+      : '已设置为不推送新词';
+    const preview = plan.length
+      ? `<div class="sub-tip" style="margin-top:10px">本组待学 <b>${plan.length}</b> 个新词，可提前了解：</div>
+         <div class="chip-wrap">${plan.map(w => `<span class="chip">${esc(w.word)}</span>`).join('')}</div>
+         <div class="sub-tip" style="margin-top:6px">本组未学完不会生成新词；单词的学习日期记在实际学习当天</div>`
       : '';
     box.innerHTML = `<h2>今日学习</h2>
       <div class="sub-tip">${tip}</div>
       ${preview}
-      <button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>
-      ${(!left && !selfLeft) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
-    $('#startLearn').onclick = startLearning;
+      <button class="btn primary" style="margin-top:14px" id="startLearn" ${(!plan.length && daily > 0) ? 'disabled' : ''}>${plan.length ? '开始学习' : (daily > 0 ? '词库已背完 🎉' : '无新词')}</button>
+      ${(!left && !selfLeft && !plan.length) ? '<div class="sub-tip" style="margin-top:10px">该词库已背完，开始学习会自动切换到下一个词库</div>' : ''}`;
+    const sl = document.getElementById('startLearn'); if (sl) sl.onclick = startLearning;
     return;
   }
   // 学习卡片：一个单词一页
@@ -945,10 +1012,11 @@ function bindCheckin() {
 }
 function refreshCheckin() { const el = document.getElementById('checkinCard'); if (el) { el.outerHTML = checkinCardHtml(); bindCheckin(); } }
 function startLearning() {
-  const { bank, queue } = buildQueue();
+  if (!BANKS_READY) { toast('词库加载中，请稍候…'); return; }
+  reconcileLearnPlan();
+  const queue = pendingPlan.map(p => resolveWord(p.bank, p.word)).filter(Boolean);
   if (!queue.length) { toast('所有词库都已背完 🎉'); return; }
-  settings.curBank = bank;
-  learnState = { bank, queue, idx: 0 };
+  learnState = { bank: queue[0].bank, queue, idx: 0 };
   saveAll(); setLearnActive(true); window.scrollTo(0, 0); renderLearnBox();
 }
 function markLearned(w) {
@@ -962,6 +1030,8 @@ function markLearned(w) {
   // 自建词库的词学完后即从自建词库移除（进度已写入 progress，继续走正常复习计划）
   if (w.bank === SELFBANK_ID) selfBank = selfBank.filter(x => x.word !== w.word);
   recordHistory('new', { key, word: w.word, bank: w.bank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
+  // 学完一个即从待学批次移除：批次随之收缩；全部学完才会在 reconcile 时生成下一批
+  pendingPlan = (pendingPlan || []).filter(p => bankKey(p.bank, p.word) !== key);
   saveAll();
 }
 
@@ -1738,6 +1808,7 @@ function dict() {
   // 关键：先用本地数据渲染界面，绝不因词库/云端同步请求卡住（pending）而长时间白屏
   calibrateSchedule();
   seedStudyDone();
+  reconcileLearnPlan();   // 生成首屏待学批次（若无本地批次则按 dailyNew 选出）
   goto('learn');
   try { speechSynthesis.getVoices(); } catch (e) { }
   // 词库与离线词典在后台加载；加载完成前，学习/复习/工作本等核心功能已可用

@@ -127,6 +127,7 @@ const Sync = (function () {
       const o = { new: uniq((x.new || []).concat(y.new || [])), review: uniq((x.review || []).concat(y.review || [])) };
       if (x.recallDone || y.recallDone) o.recallDone = true;      // 任一端完成即视为完成
       if (x.sentenceDone || y.sentenceDone) o.sentenceDone = true;
+      if (x.studyDone || y.studyDone) o.studyDone = true;        // 任一端完成「学习内容」即保留
       out.history[d] = o;
     });
     // settings：不能用 state.savedAt 比较 —— 本地快照的 savedAt 恒为 Date.now()，

@@ -538,10 +538,30 @@ function markReviewDone(kind) {
   history[d][kind + 'Done'] = true;
   saveAll();
 }
-function isChecked(d) {
+// 打卡完成 = 完成「固定学习内容」（当日新词学习）且「全部应复习单词」已复习
+function nothingToStudy() {
+  if (!BANKS_READY) return false;       // 词库未就绪时不可断言「无词可学」
+  return selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length === 0
+      && BANKS.every(b => unlearned(b.id).length === 0);
+}
+function dayStudyDone(d) {
+  const h = history[d];
+  if (h && h.studyDone) return true;
+  if (d === todayStr() && nothingToStudy()) return true;   // 当日已无新词可学，视为满足
+  return false;
+}
+function dayReviewDone(d) {
   const h = history[d];
   return !!(h && h.recallDone && h.sentenceDone);
 }
+function dayComplete(d) { return dayStudyDone(d) && dayReviewDone(d); }
+function markStudyDone(d) {
+  d = d || todayStr();
+  if (!history[d]) history[d] = { new: [], review: [] };
+  history[d].studyDone = true;
+  saveAll();
+}
+function isChecked(d) { return dayComplete(d); }   // 兼容：连续打卡 / 补打卡判定统一为「打卡完成」
 function bankStat(id) {
   const total = BANK_DATA[id]?.count || 0;
   const learned = Object.values(progress).filter(p => p.bank === id).length;
@@ -630,6 +650,18 @@ function calibrateSchedule() {
     n++;
   });
   settings.scheduleV3 = true;
+  if (n) saveAll();
+  return n;
+}
+// 一次性迁移：为「既有学习记录」补上 studyDone 标志（历史已学+已复习的日期，连续打卡不丢）
+function seedStudyDone() {
+  if (settings.studyDoneSeeded) return 0;
+  let n = 0;
+  Object.keys(history).forEach(d => {
+    const h = history[d];
+    if (h && (h.new && h.new.length) && !h.studyDone) { h.studyDone = true; n++; }
+  });
+  settings.studyDoneSeeded = true;
   if (n) saveAll();
   return n;
 }
@@ -775,6 +807,8 @@ function learn() {
       <div class="stat blueberry p"><div class="n">${t.review}</div><div class="l">今日复习单词</div></div>
     </div>
 
+    ${checkinCardHtml()}
+
     <div class="card lemon" style="margin-top:14px">
       <h2>正在背：${settings.curBank} <span class="r">${s.learned} / ${s.total}</span></h2>
       <div class="prog"><i style="width:${s.pct}%"></i></div>
@@ -786,6 +820,7 @@ function learn() {
     <div class="card vanilla" id="learnBox"></div>`;
   setLearnActive(!!(learnState && learnState.queue && learnState.queue.length && learnState.idx < learnState.queue.length));
   renderLearnBox();
+  bindCheckin();
 }
 
 function renderLearnBox() {
@@ -826,7 +861,7 @@ function renderLearnBox() {
   // 学习卡片：一个单词一页
   const st = learnState;
   const w = st.queue[st.idx];
-  if (!w) { setLearnActive(false); box.innerHTML = renderFinish(); bindFinish(); return; }
+  if (!w) { setLearnActive(false); markStudyDone(); refreshCheckin(); box.innerHTML = renderFinish(); bindFinish(); return; }
   const last = st.idx >= st.queue.length - 1;
   box.innerHTML = `
     <button class="btn ghost sm" id="exitLearn" style="margin-bottom:8px">← 返回首页</button>
@@ -868,6 +903,38 @@ function bindFinish() {
   $('#toReview').onclick = () => { learnState = null; saveAll(); goto('review'); };
   $('#againBtn').onclick = () => { startLearning(); };
 }
+// 今日打卡状态卡：学习内容与复习均完成 → 显示「打卡完成」，并从补打卡栏目移除
+function checkinCardHtml() {
+  const d = todayStr();
+  const sd = dayStudyDone(d), rd = dayReviewDone(d);
+  if (sd && rd) {
+    const t = todayStat(d);
+    return `<div class="card checkin done" id="checkinCard">
+      <div class="ci-emoji">🎉</div>
+      <div class="ci-main">
+        <div class="ci-title">今日打卡完成</div>
+        <div class="ci-sub">已学 ${t.new} 个新词 · 已复习 ${t.review} 个词，今日已结算，不再计入补打卡</div>
+      </div></div>`;
+  }
+  let btn = '';
+  if (!sd) btn = '<button class="btn primary sm" id="ciGoLearn" style="margin-top:10px">去学习新词 →</button>';
+  else if (!rd) btn = '<button class="btn primary sm" id="ciGoReview" style="margin-top:10px">去完成复习 →</button>';
+  return `<div class="card checkin" id="checkinCard">
+    <div class="ci-main">
+      <div class="ci-title">今日打卡进度</div>
+      <div class="ci-sub">完成「学习内容」与「复习」即视为打卡完成</div>
+    </div>
+    <div class="ci-row">
+      <span class="ci-chip ${sd ? 'on' : ''}">${sd ? '✓' : '○'} 学习内容${sd ? '已完成' : '待完成'}</span>
+      <span class="ci-chip ${rd ? 'on' : ''}">${rd ? '✓' : '○'} 复习${rd ? '已完成' : '待完成'}</span>
+    </div>${btn}
+  </div>`;
+}
+function bindCheckin() {
+  const gl = document.getElementById('ciGoLearn'); if (gl) gl.onclick = () => startLearning();
+  const gr = document.getElementById('ciGoReview'); if (gr) gr.onclick = () => goto('review');
+}
+function refreshCheckin() { const el = document.getElementById('checkinCard'); if (el) { el.outerHTML = checkinCardHtml(); bindCheckin(); } }
 function startLearning() {
   const { bank, queue } = buildQueue();
   if (!queue.length) { toast('所有词库都已背完 🎉'); return; }
@@ -1108,6 +1175,11 @@ function confirmCheck(after) {
   if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }
   else if (settings.reviewType === 'sentence') markReviewDone('sentence');
   else markReviewDone('recall');
+  // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即视为该日「打卡完成」，使其从补打卡栏目移除
+  if (REVIEW_DAY) {
+    if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] };
+    history[REVIEW_DAY].studyDone = true;
+  }
   saveAll();
   if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
   st.done = true;
@@ -1137,16 +1209,22 @@ function renderSummary() {
   $('#backHome').onclick = () => goto('learn');
 }
 function openMakeup() {
-  // 只列出「尚未打卡」的日期
-  const dates = Object.keys(history).filter(d => !isChecked(d)).sort().reverse();
-  openModal(`<h3>补打卡 · 选择未打卡日期</h3>
-    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">当日学习 ${dayTotal(d)} 词（去重）</div></div><span class="tag">补卡</span></div>`).join('') : '<div class="empty">打卡全部完成 🎉</div>'}</div>
-    <div class="sub-tip" style="margin-top:8px">补打卡的学习进度按<b>原应打卡日</b>计算，不按今天。</div>
+  // 仅列出「尚未打卡完成」的过往日期（今日不在此列；已完成学习+复习的日期也不出现）
+  const dates = Object.keys(history).filter(d => d !== todayStr() && !dayComplete(d)).sort().reverse();
+  openModal(`<h3>补打卡 · 选择未完成的日期</h3>
+    <div class="list" id="mkList">${dates.length ? dates.map(d => `<div class="item" data-d="${d}"><div><div class="w">${d}</div><div class="m">当日学习 ${dayTotal(d)} 词（去重）｜${dayStudyDone(d) ? '已学新词' : '未学新词'} · ${dayReviewDone(d) ? '已复习' : '未复习'}</div></div><span class="tag">补卡</span></div>`).join('') : '<div class="empty">全部日期已打卡完成 🎉</div>'}</div>
+    <div class="sub-tip" style="margin-top:8px">补打卡的学习进度按<b>原应打卡日</b>计算，不按今天。完成复习即视为该日打卡完成。</div>
     <button class="btn ghost" style="margin-top:12px" onclick="closeModal()">取消</button>`);
   document.querySelectorAll('#mkList .item').forEach(it => it.onclick = () => {
     const d = it.dataset.d;
     const pool = buildReviewPool(d); closeModal();
-    if (!pool.length) { toast('该日无复习内容'); return; }
+    if (!pool.length) {
+      // 该日已无待复习词（或仅学未复习）：直接结算为打卡完成
+      if (!history[d]) history[d] = { new: [], review: [] };
+      history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true;
+      saveAll(); toast('该日已结算为打卡完成 🎉');
+      openMakeup(); return;
+    }
     REVIEW_DAY = d;                        // 进度与打卡均记到「原应打卡日」
     settings.reviewType = 'recall'; saveAll();   // 补打卡走「单词复习→情境填词」双轮，方算完整打卡
     startReview(pool);
@@ -1643,6 +1721,7 @@ function dict() {
   }
   // 关键：先用本地数据渲染界面，绝不因词库/云端同步请求卡住（pending）而长时间白屏
   calibrateSchedule();
+  seedStudyDone();
   goto('learn');
   try { speechSynthesis.getVoices(); } catch (e) { }
   // 词库与离线词典在后台加载；加载完成前，学习/复习/工作本等核心功能已可用

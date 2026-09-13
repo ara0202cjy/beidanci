@@ -68,6 +68,16 @@ body {
 .card.blueberry { background: var(--blueberry); border-color: #C6C4DC; }
 .card.mint { background: var(--mint); border-color: #C0D2CF; }
 .card.lemon { background: var(--lemon); border-color: #DAD0B2; }
+.card.checkin { display: flex; align-items: center; gap: 12px; background: var(--mint); border-color: #C0D2CF; }
+.card.checkin.done { background: #E4F4E2; border-color: #B6DCB4; }
+.card.checkin .ci-emoji { font-size: 30px; line-height: 1; }
+.card.checkin .ci-main { flex: 1; min-width: 0; }
+.card.checkin .ci-title { font-size: 16px; font-weight: 600; }
+.card.checkin.done .ci-title { color: var(--green); }
+.card.checkin .ci-sub { color: var(--sub); font-size: 12px; margin-top: 2px; line-height: 1.5; }
+.card.checkin .ci-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ci-chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--sub); }
+.ci-chip.on { background: var(--green); border-color: var(--green); color: #fff; }
 .card h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; }
 .card h2 .r { float: right; font-weight: 400; color: var(--sub); font-size: 12px; }
 

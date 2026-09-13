@@ -559,15 +559,22 @@ function nothingToStudy() {
   return selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length === 0
       && BANKS.every(b => unlearned(b.id).length === 0);
 }
+function nothingToReview() {
+  if (!BANKS_READY) return false;       // 词库未就绪时不可断言「无词可复习」
+  return buildReviewPool().length === 0;
+}
 function dayStudyDone(d) {
   const h = history[d];
   if (h && h.studyDone) return true;
-  if (d === todayStr() && nothingToStudy()) return true;   // 当日已无新词可学，视为满足
+  if (!settings.dailyNew || settings.dailyNew <= 0) return true;   // 未设置每日新词，学习内容视为满足
+  if (d === todayStr() && nothingToStudy()) return true;           // 当日已无新词可学，视为满足
   return false;
 }
 function dayReviewDone(d) {
   const h = history[d];
-  return !!(h && h.recallDone && h.sentenceDone);
+  if (h && (h.reviewDone || (h.recallDone && h.sentenceDone))) return true;   // 兼容旧数据
+  if (d === todayStr() && nothingToReview()) return true;                      // 当日无待复习词，视为满足
+  return false;
 }
 function dayComplete(d) { return dayStudyDone(d) && dayReviewDone(d); }
 function markStudyDone(d) {
@@ -1257,15 +1264,17 @@ function confirmCheck(after) {
   const wrong = st.check.filter(r => !r.ok);
   st.check.forEach(r => settleReview(r, r.ok, dayOf()));
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
-  // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记
+  // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记（保留历史标记）
   if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }
   else if (settings.reviewType === 'sentence') markReviewDone('sentence');
   else markReviewDone('recall');
+  // 复习完成标记（打卡判定用）：完成一次复习即记当日「复习完成」，无需单词复习+情境填词都做
+  // （修复“每日只做一轮复习却永远显示复习待完成”的进度错乱）
+  const cday = dayOf();
+  if (!history[cday]) history[cday] = { new: [], review: [] };
+  history[cday].reviewDone = true;
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即视为该日「打卡完成」，使其从补打卡栏目移除
-  if (REVIEW_DAY) {
-    if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] };
-    history[REVIEW_DAY].studyDone = true;
-  }
+  if (REVIEW_DAY) history[REVIEW_DAY].studyDone = true;
   saveAll();
   if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
   st.done = true;
@@ -1307,7 +1316,7 @@ function openMakeup() {
     if (!pool.length) {
       // 该日已无待复习词（或仅学未复习）：直接结算为打卡完成
       if (!history[d]) history[d] = { new: [], review: [] };
-      history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true;
+      history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true; history[d].reviewDone = true;
       saveAll(); toast('该日已结算为打卡完成 🎉');
       openMakeup(); return;
     }

@@ -572,8 +572,8 @@ function dayStudyDone(d) {
 }
 function dayReviewDone(d) {
   const h = history[d];
-  if (h && (h.reviewDone || (h.recallDone && h.sentenceDone))) return true;   // 兼容旧数据
-  if (d === todayStr() && nothingToReview()) return true;                      // 当日无待复习词，视为满足
+  if (h && h.recallDone && h.sentenceDone) return true;   // 复习需单词复习+情境填词两轮都完成
+  if (d === todayStr() && nothingToReview()) return true; // 当日无待复习词，视为满足
   return false;
 }
 function dayComplete(d) { return dayStudyDone(d) && dayReviewDone(d); }
@@ -1265,16 +1265,12 @@ function confirmCheck(after) {
   st.check.forEach(r => settleReview(r, r.ok, dayOf()));
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
   // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记（保留历史标记）
+  // 说明：选「单词复习」模式一轮即同时记 recallDone+sentenceDone（算作完整复习两轮）；选「情境填词」或「听中文听写」仅记其一，需另补一轮方算复习完成
   if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }
   else if (settings.reviewType === 'sentence') markReviewDone('sentence');
   else markReviewDone('recall');
-  // 复习完成标记（打卡判定用）：完成一次复习即记当日「复习完成」，无需单词复习+情境填词都做
-  // （修复“每日只做一轮复习却永远显示复习待完成”的进度错乱）
-  const cday = dayOf();
-  if (!history[cday]) history[cday] = { new: [], review: [] };
-  history[cday].reviewDone = true;
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即视为该日「打卡完成」，使其从补打卡栏目移除
-  if (REVIEW_DAY) history[REVIEW_DAY].studyDone = true;
+  if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();
   if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
   st.done = true;
@@ -1316,7 +1312,7 @@ function openMakeup() {
     if (!pool.length) {
       // 该日已无待复习词（或仅学未复习）：直接结算为打卡完成
       if (!history[d]) history[d] = { new: [], review: [] };
-      history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true; history[d].reviewDone = true;
+      history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true;
       saveAll(); toast('该日已结算为打卡完成 🎉');
       openMakeup(); return;
     }

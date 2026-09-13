@@ -68,10 +68,10 @@ body {
 .card.blueberry { background: var(--blueberry); border-color: #C6C4DC; }
 .card.mint { background: var(--mint); border-color: #C0D2CF; }
 .card.lemon { background: var(--lemon); border-color: #DAD0B2; }
-.card.checkin { display: flex; align-items: center; gap: 12px; background: var(--mint); border-color: #C0D2CF; }
-.card.checkin.done { background: #E4F4E2; border-color: #B6DCB4; }
-.card.checkin .ci-emoji { font-size: 30px; line-height: 1; }
-.card.checkin .ci-main { flex: 1; min-width: 0; }
+.card.checkin { background: var(--mint); border-color: #C0D2CF; }   /* 默认竖排：标题/副标题/chip行/按钮自上而下，避免窄屏横排挤压导致竖排叠压 */
+.card.checkin.done { display: flex; align-items: center; gap: 12px; background: #E4F4E2; border-color: #B6DCB4; }
+.card.checkin .ci-emoji { font-size: 30px; line-height: 1; flex: none; }
+.card.checkin.done .ci-main { flex: 1; min-width: 0; }
 .card.checkin .ci-title { font-size: 16px; font-weight: 600; }
 .card.checkin.done .ci-title { color: var(--green); }
 .card.checkin .ci-sub { color: var(--sub); font-size: 12px; margin-top: 2px; line-height: 1.5; }

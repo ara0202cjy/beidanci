@@ -113,6 +113,7 @@ window.WB = {
   learnNext, wrongNext, refreshNext, isDue, settleReview, calibrateSchedule,
   exportLearnedExcel,
   reconcileLearnPlan, learnCandidates, resolveWord,
+  nextReviewRoundNeeded,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -546,12 +547,19 @@ function recordHistory(type, entry, day) {
   if (!arr.some(x => x.key === entry.key)) arr.push(entry);
   saveAll();
 }
-// 打卡：单词复习记 recallDone、情境复习记 sentenceDone，两轮都完成才算当日已打卡
-function markReviewDone(kind) {
-  const d = dayOf();
+// 打卡：单词复习/听中文听写记 recallDone（单词轮）、情境复习记 sentenceDone（情境轮），两轮都完成才算当日复习完成
+function markReviewDone(kind, day) {
+  const d = day || dayOf();
   if (!history[d]) history[d] = { new: [], review: [] };
   history[d][kind + 'Done'] = true;
   saveAll();
+}
+// 复习还需完成哪一轮：单词复习/听中文听写 = recall 轮；情境填词 = sentence 轮
+function nextReviewRoundNeeded(d) {
+  const h = history[d] || {};
+  if (!h.recallDone) return 'recall';
+  if (!h.sentenceDone) return 'sentence';
+  return null;
 }
 // 打卡完成 = 完成「固定学习内容」（当日新词学习）且「全部应复习单词」已复习
 function nothingToStudy() {
@@ -1061,7 +1069,7 @@ function review() {
         <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
-      <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。</div>
+      <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。<br><b style="color:var(--brand)">打卡完成需「单词复习 + 情境填词」各完成一轮</b>（听中文听写视作单词轮）；系统会在你完成一轮后自动引导进入另一轮。</div>
       ${resuming ? `<div class="sub-tip" style="margin-bottom:8px">检测到上次未完成的复习（第 ${reviewState.idx + 1}/${reviewState.pool.length} 个），可继续或重新开始。</div>` : ''}
       <div><button class="btn primary" id="startReview" ${pool.length || resuming ? '' : 'disabled'}>${resuming ? '▶ 继续复习（剩 ' + (reviewState.pool.length - reviewState.idx) + '）' : '▶ 开始复习' + (pool.length ? '（' + pool.length + '）' : '')}</button></div>
       ${resuming ? '<div style="margin-top:8px"><button class="btn ghost sm" id="restartReview">↺ 重新开始今日复习</button></div>' : ''}
@@ -1210,7 +1218,13 @@ function submitRecall() {
 function startSentenceRound(srcPool) {
   settings.reviewType = 'sentence'; saveAll();
   reviewState = { pool: makeTypedQueue(srcPool, 'sentence'), idx: 0 };
-  review(); renderReviewCard();
+  $('#reviewBox').innerHTML = ''; renderReviewCard();
+}
+// 补齐「单词复习」轮：同一批词逐词判定认识/不认识（听中文听写视作单词轮）
+function startRecallRound(srcPool) {
+  settings.reviewType = 'recall'; saveAll();
+  reviewState = { pool: shuffle(srcPool.map(e => ({ ...e, type: 'recall', recallOk: undefined }))), idx: 0, mode: 'recall' };
+  $('#reviewBox').innerHTML = ''; renderRecall();
 }
 // 核对页：自行勾选对错，错误入错题本
 function renderCheck() {
@@ -1264,17 +1278,20 @@ function confirmCheck(after) {
   const wrong = st.check.filter(r => !r.ok);
   st.check.forEach(r => settleReview(r, r.ok, dayOf()));
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
-  // 打卡：单词复习 → recallDone；情境填词 → sentenceDone；听中文听写为独立完整一轮，两轮都记（保留历史标记）
-  // 说明：选「单词复习」模式一轮即同时记 recallDone+sentenceDone（算作完整复习两轮）；选「情境填词」或「听中文听写」仅记其一，需另补一轮方算复习完成
-  if (settings.reviewType === 'word') { markReviewDone('recall'); markReviewDone('sentence'); }
-  else if (settings.reviewType === 'sentence') markReviewDone('sentence');
-  else markReviewDone('recall');
-  // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即视为该日「打卡完成」，使其从补打卡栏目移除
+  // 复习完成 = 「单词复习（或听中文听写）」一轮 + 「情境填词」一轮，各自独立记一轮，两轮都完成才算复习完成
+  // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
+  const rday = REVIEW_DAY || dayOf();
+  if (settings.reviewType === 'sentence') markReviewDone('sentence', rday);
+  else markReviewDone('recall', rday);
+  // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();
-  if (typeof after === 'function') { after(); return; }   // 有后续流程（如跳转情境填词）则不落地结果页
-  st.done = true;
-  renderSummary();
+  if (typeof after === 'function') { after(); return; }   // 显式后续流程优先（如 recall→sentence 链式）
+  // 自动引导完成另一轮，满足「单词复习 + 情境填词各完成一轮」才算复习完成
+  const need = nextReviewRoundNeeded(rday);
+  if (need === 'sentence') { startSentenceRound(st.pool); toast('第 2 轮：情境填词'); return; }
+  if (need === 'recall') { startRecallRound(st.pool); toast('第 2 轮：单词复习'); return; }
+  st.done = true; renderSummary();
 }
 function renderSummary() {
   const st = reviewState;

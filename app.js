@@ -363,6 +363,15 @@ function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--
 // 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
 function strHash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
 function dayRand(word) { return (strHash((word || '').toLowerCase() + '|' + todayStr()) % 1000000) / 1000000; }
+// 基于「目标键 + 指定日期」的确定性伪随机：当日复习题目的顺序与内容（例句选择）也用它，
+// 保证同一天在不同设备/端口生成完全相同的题序与题目内容（多端同步一致的根基）。
+function dayRandOn(seed, day) { return (strHash(String(seed == null ? '' : seed).toLowerCase() + '|' + (day || dayOf())) % 1000000) / 1000000; }
+// 按「键 + 日期」确定性打乱：观感随机，但同一天各端结果完全相同（同分用原下标稳定兜底）
+function dayShuffle(arr, seedFn, day) {
+  return (arr || []).map((v, i) => ({ v, r: dayRandOn(seedFn ? seedFn(v, i) : i, day), i }))
+    .sort((a, b) => (a.r - b.r) || (a.i - b.i))
+    .map(x => x.v);
+}
 function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function jsAttr(s) { return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1600); }
@@ -1226,16 +1235,21 @@ function buildReviewPool(dateStr) {
       if (WRONG_INTERVALS.includes(db)) add({ key: w.key, word: w.word, bank: w.bank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
     });
   }
-  return pool;
+  return dayShuffle(pool, e => e.key, dateStr || dayOf());   // 顺序按「词 + 当日日期」确定性排序 → 各端当日复习题序一致
 }
 // 为「情境填词」构造一句含目标词的英文语境：
 // 优先词典例句 → 其次同义词词典例句 → 最后按词性造一句含目标词的简单英文（横线处即目标词）。
 // 保证情境填词永远展示带横线的英文句子，绝不静默降级为「听中文听写」（纯中文释义）。
-function contextSentence(word, meaning) {
+function contextSentence(word, meaning, day) {
+  const d = day || dayOf();
   const lc = (word || '').toLowerCase();
   if (lc) {
     const exs = EXAMPLES[lc];
-    if (exs && exs.length) return { en: exs[Math.floor(Math.random() * exs.length)].en, zh: (exs[0] && exs[0].zh) || '' };
+    if (exs && exs.length) {
+      // 例句按「词 + 当日日期」确定性挑选（不用 Math.random）：各端当天看到同一句，多端一致
+      const i = Math.min(exs.length - 1, Math.floor(dayRandOn(lc, d) * exs.length));
+      return { en: exs[i].en, zh: (exs[i] && exs[i].zh) || (exs[0] && exs[0].zh) || '' };
+    }
     const th = THES[lc];
     if (Array.isArray(th)) {
       for (const e of th) {
@@ -1255,25 +1269,30 @@ function contextSentence(word, meaning) {
   else tpl = `The word ${w} is important to learn.`;
   return { en: tpl, zh: '' };
 }
-// 按题型构造答题队列：sentence 始终产出「带横线的英文语境句」（无例句也用兜底句），听写则只给中文释义
-function makeTypedQueue(pool, type) {
-  return shuffle(pool.map(e => {
+// 按题型构造答题队列：sentence 始终产出「带横线的英文语境句」（无例句也用兜底句），听写则只给中文释义。
+// 不再内部随机打乱：队列顺序沿用传入 pool 的顺序（pool 已按「词 + 当日日期」确定性排序）→ 多端题序一致。
+function makeTypedQueue(pool, type, day) {
+  const d = day || dayOf();
+  return pool.map(e => {
     const c = { ...e };
     delete c._wrongAdded;                       // 新一轮重新计错
     if (type === 'sentence') {
-      const s = contextSentence(e.word, e.meaning);
+      const s = contextSentence(e.word, e.meaning, d);
       if (s && s.en) return { ...c, type: 'sentence', sentence: s };
     }
     return { ...c, type: 'word' };
-  }));
+  });
 }
 function startReview(pool) {
+  const d = dayOf();
   if (!pool.length) { toast('今日暂无复习词'); return; }
+  // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
+  const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
   if (settings.reviewType === 'recall') {
-    reviewState = { pool: shuffle(pool.map(e => ({ ...e, type: 'recall' }))), idx: 0, mode: 'recall', day: dayOf() };
+    reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d };
     saveAll(); review(); return;
   }
-  reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0, day: dayOf() };
+  reviewState = { pool: makeTypedQueue(queue, settings.reviewType, d), idx: 0, day: d };
   saveAll(); review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页
@@ -1364,16 +1383,19 @@ function submitRecall() {
   st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
   confirmCheck();
 }
-// 单词复习收尾后进入情境填词：同一批词二次巩固（有例句走填词，无例句降级听写）
+// 单词复习收尾后进入情境填词：同一批词二次巩固（有例句走填词，无例句走兜底语境句）
 function startSentenceRound(srcPool) {
+  const d = dayOf();
   settings.reviewType = 'sentence'; saveAll();
-  reviewState = { pool: makeTypedQueue(srcPool, 'sentence'), idx: 0, day: dayOf() };
+  // 第 2 轮用「#r2」盐做确定性洗牌：与第 1 轮顺序不同（利于二次巩固），但各端仍完全一致
+  reviewState = { pool: makeTypedQueue(dayShuffle(srcPool, e => e.key + '#r2', d), 'sentence', d), idx: 0, day: d };
   $('#reviewBox').innerHTML = ''; renderReviewCard();
 }
 // 补齐「单词复习」轮：同一批词逐词判定认识/不认识（听中文听写视作单词轮）
 function startRecallRound(srcPool) {
+  const d = dayOf();
   settings.reviewType = 'recall'; saveAll();
-  reviewState = { pool: shuffle(srcPool.map(e => ({ ...e, type: 'recall', recallOk: undefined }))), idx: 0, mode: 'recall', day: dayOf() };
+  reviewState = { pool: dayShuffle(srcPool, e => e.key + '#r2', d).map(e => ({ ...e, type: 'recall', recallOk: undefined })), idx: 0, mode: 'recall', day: d };
   $('#reviewBox').innerHTML = ''; renderRecall();
 }
 // 核对页：自行勾选对错，错误入错题本
@@ -1481,8 +1503,9 @@ function renderSummary() {
     else { startRecallRound(st.pool); toast('第 2 轮：单词复习'); }
   };
   if ($('#reWrong')) $('#reWrong').onclick = () => {
-    const wq = wrong.map(r => ({ ...r, ok: true }));
-    reviewState = { pool: wq, idx: 0 };
+    const d = dayOf();
+    const wq = dayShuffle(wrong, r => r.key + '#rw', d).map(r => ({ ...r, ok: true }));
+    reviewState = { pool: wq, idx: 0, day: d };
     review(); renderReviewCard();
   };
   $('#backHome').onclick = () => goto('learn');

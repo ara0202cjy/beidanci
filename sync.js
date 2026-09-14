@@ -49,6 +49,25 @@ const Sync = (function () {
   }
   function on() { return targets.some(t => t.token || t.apiUrl); }
   function setToast(m) { if (window.toast) toast(m); }
+  // 是否「可重试的瞬时错误」：限流 / 超时 / 网络中断。这类不影响本地数据，稍后自动重试即可，
+  // 不应弹成吓人的「同步失败」。
+  let retryTimer = null;
+  function transientErr(e) {
+    const m = (e && e.message) || '';
+    return /rate limit|timeout|timed out|network|Failed to fetch|aborted|ECONN|socket|503|502/i.test(m) || (e && e.status === 403);
+  }
+  function handleSyncError(e, verb) {
+    if (transientErr(e)) {
+      setToast('同步暂未成功（接口限流或网络波动），本地进度已保存，将自动重试');
+      // 限流/抖动通常很快恢复：1 分钟后自动补一次，避免反复弹窗
+      if (!retryTimer) retryTimer = setTimeout(() => {
+        retryTimer = null;
+        if (on()) push().then(() => scheduleRefresh()).catch(err => handleSyncError(err, verb));
+      }, 60000);
+    } else {
+      setToast('同步失败（' + verb + '）：' + e.message);
+    }
+  }
 
   function reload() { loadTargets(); }
 
@@ -220,7 +239,7 @@ const Sync = (function () {
     const st = localState();
     for (const t of targets) {
       try { await pushFn(st, t); t.lastSync = new Date().toLocaleString('zh-CN'); }
-      catch (e) { setToast('同步失败(' + (t.gistId || t.apiUrl || '?') + ')：' + e.message); }
+      catch (e) { handleSyncError(e, '上传'); }
     }
     saveTargets();
   }
@@ -231,7 +250,7 @@ const Sync = (function () {
       try {
         const remote = await pullFn(t);
         if (remote) { merged = merge(merged, remote); t.lastPull = new Date().toLocaleString('zh-CN'); }
-      } catch (e) { setToast('拉取失败(' + (t.gistId || t.apiUrl || '?') + ')：' + e.message); }
+      } catch (e) { handleSyncError(e, '拉取'); }
     }
     applyState(merged);
     saveTargets();
@@ -242,7 +261,7 @@ const Sync = (function () {
       for (const t of targets) if (t.backend === 'gist' && t.token && !t.gistId) await gistCreate(t);
       await sync();
       setToast('已同步到云端');
-    } catch (e) { setToast('同步失败：' + e.message); }
+    } catch (e) { handleSyncError(e, '同步'); }
     scheduleRefresh();
   }
 
@@ -250,7 +269,7 @@ const Sync = (function () {
     if (!on() || !targets.some(t => t.auto !== false)) return;
     clearTimeout(timer);
     timer = setTimeout(() => {
-      pushing = push().then(() => { pushing = null; scheduleRefresh(); }).catch(e => { pushing = null; setToast('同步失败：' + e.message); });
+      pushing = push().then(() => { pushing = null; scheduleRefresh(); }).catch(e => { pushing = null; handleSyncError(e, '上传'); });
     }, 2500);
   }
   function scheduleRefresh() { if (window.WB && window.WB.refresh) window.WB.refresh(); }

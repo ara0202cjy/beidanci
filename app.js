@@ -126,6 +126,7 @@ window.WB = {
   exportLearnedExcel,
   reconcileLearnPlan, resolveWord, candidatesForBank, buildBatch, studyBanks, studyTotal,
   secondRoundBank, secondRoundQuota, secondRoundStat, reconcileSecondRound,
+  cleanupProbeData,
   nextReviewRoundNeeded,
 };
 
@@ -1035,13 +1036,44 @@ function sec2Html() {
   if (!st.bank) return `<div class="sub-tip" style="margin-top:6px">词库2 未选择 → 第二轮复习未开启（在设置里选第 2 个词库即开启）</div>`;
   const left = Math.max(0, st.learned - st.started);
   const okDone = st.done - st.wrongOut;
-  return `<div class="sub-tip" style="margin-top:6px">词库2（复习词库）· ${esc(st.bank)}：每日新推 <b>${st.quota}</b> 个<b>已背过</b>的词做第二轮（推送当日 + 第 ${SECOND_INTERVAL} 天）｜今日已推 <b>${st.pushedToday}</b>、待做 <b>${st.due}</b>、已完成 <b>${okDone}</b>/${st.learned}${st.wrongOut ? `，转错题 <b>${st.wrongOut}</b>` : ''}${left ? `，尚未开始 ${left}` : ''}</div>`;
+  return `<div class="sub-tip" style="margin-top:6px">词库2（复习词库）· ${esc(st.bank)}：每日新推 <b>${st.quota}</b> 个已背词做第二轮（当日 ＋ 第 ${SECOND_INTERVAL} 天）｜今推 <b>${st.pushedToday}</b> · 待做 <b>${st.due}</b> · 完成 <b>${okDone}</b>/${st.learned}${st.wrongOut ? ` · 错题 <b>${st.wrongOut}</b>` : ''}${left ? ` · 未开始 ${left}` : ''}</div>`;
 }
 // 复习页里「第二轮」的一句话说明
 function sec2Desc() {
   const st = secondRoundStat();
   if (!st.bank) return '未选择词库2 → 尚未开启（在设置里选第 2 个词库即开启）';
   return `${esc(st.bank)} 库的已背词每日新推 ${st.quota} 个，每个词两轮（推送当日 ＋ 第 ${SECOND_INTERVAL} 天）；期间答错的转错题节奏。今日已推 ${st.pushedToday}、待做 ${st.due}、已完成 ${st.done - st.wrongOut}/${st.learned}${st.wrongOut ? `（转错题 ${st.wrongOut}）` : ''}`;
+}
+// 一次性迁移：清理本地预览探针误入云端的测试进度（2026-09-15 事故）。
+// 特征：词形如 seed0/seed12（真实词库经核验不存在「seed + 数字」的词条，只有单独的 seed），
+// 且库为「初中 / 高中」（探针只写过这两个库）。清理后随云同步把干净状态推回，避免污染扩散。
+function cleanupProbeData() {
+  if (settings.probeCleanupV1) return 0;
+  const isProbe = (e, key) => {
+    if (!e) return false;
+    const ks = String(key || '');
+    const w = String(e.word || ks.split('::').pop() || '');
+    if (!/^seed\d+$/i.test(w)) return false;
+    const bank = String(e.bank || ks.split('::')[0] || '');
+    return !bank || bank === '初中' || bank === '高中';
+  };
+  let n = 0;
+  Object.keys(progress || {}).forEach(k => { if (isProbe(progress[k], k)) { delete progress[k]; n++; } });
+  Object.keys(wrongBook || {}).forEach(k => { if (isProbe(wrongBook[k], k)) { delete wrongBook[k]; n++; } });
+  if (Array.isArray(selfBank)) { const b = selfBank.length; selfBank = selfBank.filter(w => !isProbe(w)); n += b - selfBank.length; }
+  Object.keys(history || {}).forEach(d => {
+    const h = history[d]; if (!h) return;
+    ['new', 'review'].forEach(t => {
+      if (!Array.isArray(h[t])) return;
+      const b = h[t].length;
+      h[t] = h[t].filter(x => !isProbe(x, x && x.key));
+      n += b - h[t].length;
+    });
+  });
+  if (Array.isArray(pendingPlan)) { const b = pendingPlan.length; pendingPlan = pendingPlan.filter(p => !isProbe(p, bankKey(p.bank, p.word))); n += b - pendingPlan.length; }
+  settings.probeCleanupV1 = true;      // 只跑一次（标记本身随云同步，避免多端重复处理）
+  saveAll();
+  return n;
 }
 function learn() {
   const t = todayStat();
@@ -1076,7 +1108,7 @@ function learn() {
     <div class="card lemon" style="margin-top:14px">
       <h2>今日学习计划</h2>
       <div class="sb-line sb-total"><span class="sb-name">学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
-      ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1（学习）' : (i === 1 ? '词库2（复习）' : '词库'); return `<div class="sb-line"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">每日 ${b.count} 个 ｜ 已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
+      ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1（学习）' : (i === 1 ? '词库2（复习）' : '词库'); return `<div class="sb-line sb-bank"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
       ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（占用总词数名额）</div>` : ''}
       ${sec2Html()}
       <div class="sub-tip" style="margin-top:6px">新词计划共 <b>${totalPlanned}</b> 个（受总词数上限约束）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
@@ -2122,6 +2154,7 @@ function dict() {
   // 关键：先用本地数据渲染界面，绝不因词库/云端同步请求卡住（pending）而长时间白屏
   calibrateSchedule();
   seedStudyDone();
+  cleanupProbeData();     // 一次性清理探针误入的测试进度（见函数注释），须在生成批次/复习池之前
   reconcileLearnPlan();   // 生成首屏待学批次（若无本地批次则按 dailyNew 选出）
   goto('learn');
   try { speechSynthesis.getVoices(); } catch (e) { }

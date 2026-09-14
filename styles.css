@@ -399,3 +399,8 @@ input[type=range] { accent-color: var(--brand); }
 .sb-line.sb-total { gap: 8px; }
 .sb-line.sb-total .sb-name { width: auto; flex: 0 0 auto; }
 .sb-line.sb-total .sb-txt { margin-left: auto; }
+/* 词库行：名称字号变小、占位放大并单行显示（不再换行折行），进度条随之后移 */
+.sb-line.sb-bank { gap: 8px; }
+.sb-line.sb-bank .sb-name { width: auto; flex: 0 0 auto; min-width: 112px; font-size: 12px; white-space: nowrap; }
+.sb-line.sb-bank .sb-bar { margin-left: 2px; }
+.sb-line.sb-bank .sb-txt { font-size: 12px; }

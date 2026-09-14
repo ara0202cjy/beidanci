@@ -113,7 +113,7 @@ window.WB = {
   sortStudyOrder, dayRand,
   learnNext, wrongNext, refreshNext, isDue, settleReview, calibrateSchedule,
   exportLearnedExcel,
-  reconcileLearnPlan, resolveWord, candidatesForBank, buildBatch, studyBanks,
+  reconcileLearnPlan, resolveWord, candidatesForBank, buildBatch, studyBanks, studyTotal,
   nextReviewRoundNeeded,
 };
 
@@ -575,11 +575,18 @@ function nothingToReview() {
 function dayStudyDone(d) {
   const h = history[d];
   if (h && h.studyDone) return true;
-  const planned = studyBanks().reduce((s, b) => s + Math.max(0, +b.count || 0), 0);
-  const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
-  if (planned === 0 && selfLeft === 0) return true;   // 无计划新词且无自建未背词 → 学习内容视为满足
-  if (d === todayStr() && nothingToStudy()) return true;           // 当日已无新词可学，视为满足
-  return false;
+  if (d === todayStr() && nothingToStudy()) return true;           // 所有词库都已背完
+  const total = studyTotal();
+  const learnedToday = (history[d] && history[d].new) ? history[d].new.length : 0;
+  if (total <= 0) {                                // 未设总词数：仅当无自建未背词时视为满足
+    const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
+    return selfLeft === 0;
+  }
+  // 实际可学上限 = min(总词数, 可用未学词数)；达到该上限即视为当日学习内容完成
+  let avail = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
+  studyBanks().forEach(b => { avail += unlearned(b.id).length; });
+  const target = Math.min(total, avail);
+  return target > 0 && learnedToday >= target;
 }
 function dayReviewDone(d) {
   const h = history[d];
@@ -625,10 +632,16 @@ function sortStudyOrder(list) {
     .sort((a, b) => a.common - b.common || a.f - b.f || a.r - b.r)
     .map(x => x.w);
 }
-// 选词库（跨库背词）：最多 2 个正式词库，各自独立设每日词数；自建词库始终优先，不占额度
+// 跨库背词：最多 2 个正式词库（词库1优先、词库2其次），各库独立设「每日个数」；
+// 另设单一「学习总词数」作为当日上限；自建词库始终优先、占用总词数名额。
 function normalizeStudyBanks() {
+  if (typeof settings.dailyNew !== 'number' || !(settings.dailyNew >= 0)) settings.dailyNew = Math.max(0, +settings.dailyNew || 5);
   let arr = (settings.studyBanks && settings.studyBanks.slice(0, 2)) || [];
-  arr = arr.filter(b => b && BANKS.some(x => x.id === b.id)).map(b => ({ id: b.id, count: Math.max(0, +b.count || 0) }));
+  arr = arr.map(b => {
+    if (typeof b === 'string') return { id: b, count: Math.max(0, +settings.dailyNew || 0) };
+    if (b && b.id) return { id: b.id, count: Math.max(0, +b.count || 0) };
+    return null;
+  }).filter(b => b && BANKS.some(x => x.id === b.id) && b.id !== SELFBANK_ID);
   const seen = new Set(); arr = arr.filter(b => seen.has(b.id) ? false : (seen.add(b.id), true));   // 去重
   if (!arr.length) {
     const id = (settings.curBank && BANKS.some(b => b.id === settings.curBank)) ? settings.curBank : '初中';
@@ -637,6 +650,8 @@ function normalizeStudyBanks() {
   settings.studyBanks = arr;
 }
 function studyBanks() { if (!settings.studyBanks || !settings.studyBanks.length) normalizeStudyBanks(); return settings.studyBanks; }
+// 当日学习总词数（上限）：各库「每日个数」与该上限共同约束当日批次
+function studyTotal() { normalizeStudyBanks(); return Math.max(0, +settings.dailyNew || 0); }
 // 单库的未学候选（稳定排序：共有词优先 → 词频 → 原序号），不含已学词
 function candidatesForBank(bankId, exclude) {
   const ex = new Set(exclude || []);
@@ -652,27 +667,43 @@ function candidatesForBank(bankId, exclude) {
   out.sort((a, b) => a._c - b._c || (FREQ[wnorm(a.word)] ?? 5) - (FREQ[wnorm(b.word)] ?? 5) || a._i - b._i);
   return out;
 }
-// 组合当日待学批次：① 自建词库全部未背词（优先，不占额度）② 各选词库按其每日额度补足（今日已学部分计为已用）
-function buildBatch(plan, banks, learnedByBank) {
-  const result = [];
-  selfBank.forEach(w => {
-    const key = bankKey(SELFBANK_ID, w.word);
+// 组合当日待学批次：① 保留已选未学词（粘性，受 maxSize 约束）② 自建词库优先、占用总词数名额
+// ③ 词库1「每日个数」先满足 ④ 词库2「每日个数」后满足；全程受 maxSize（=总词数−今日已学）约束
+function buildBatch(plan, maxSize, banks) {
+  const out = [];
+  const used = new Set();
+  const add = (bankId, word) => { out.push({ bank: bankId, word }); used.add(bankKey(bankId, word)); };
+  const cnt = bankId => out.filter(x => x.bank === bankId).length;
+  (plan || []).forEach(p => {                                  // 已选未学词先保留（粘性批次）
+    const key = bankKey(p.bank, p.word);
     if (progress[key] && progress[key].firstLearned) return;
-    result.push({ bank: SELFBANK_ID, word: w.word });
+    if (out.length >= maxSize) return;
+    add(p.bank, p.word);
   });
-  for (const b of banks) {
-    const id = b.id, count = Math.max(0, +b.count || 0);
-    const allowed = Math.max(0, count - (learnedByBank[id] || 0));   // 该库今日还可学的上限
-    let existing = plan.filter(p => p.bank === id);
-    if (existing.length > allowed) existing = existing.slice(0, allowed);   // 富余 ⇒ 退回未学词库
-    existing.forEach(p => result.push(p));
-    let need = allowed - existing.length;
-    if (need > 0) {
-      const ex = new Set(result.map(p => bankKey(p.bank, p.word)));
-      for (const c of candidatesForBank(id, ex)) { if (need <= 0) break; result.push({ bank: id, word: c.word }); need--; ex.add(bankKey(id, c.word)); }
+  const pullBank = (bankId, cap) => {                          // 正式词库走 BANK_DATA
+    if (out.length >= maxSize) return;
+    if (cap !== undefined && cnt(bankId) >= cap) return;
+    const ex = new Set(used);
+    for (const c of candidatesForBank(bankId, ex)) {
+      if (out.length >= maxSize) break;
+      if (cap !== undefined && cnt(bankId) >= cap) break;
+      const key = bankKey(bankId, c.word);
+      if (used.has(key)) continue;
+      add(bankId, c.word);
+    }
+  };
+  // 自建词库：优先、占额（直接遍历 selfBank，不走 BANK_DATA）
+  if (out.length < maxSize) {
+    for (const w of selfBank) {
+      if (out.length >= maxSize) break;
+      const key = bankKey(SELFBANK_ID, w.word);
+      if (progress[key] && progress[key].firstLearned) continue;
+      if (used.has(key)) continue;
+      add(SELFBANK_ID, w.word);
     }
   }
-  return result;
+  banks.forEach(b => pullBank(b.id, Math.max(0, +b.count || 0)));  // 词库1 → 词库2，先满足各自「个数」
+  return out;
 }
 // 纯计算：返回当日推送计划（自建优先 + 各选词库按各自每日额度），供「提前预览」与真正开始共用
 function planQueue() {
@@ -686,28 +717,29 @@ function resolveWord(bank, word) {
   if (bank === SELFBANK_ID) return selfBank.find(w => w.word === word);
   return (BANK_DATA[bank]?.words || []).find(w => w.word === word);
 }
-// 粘性批次 reconcile（跨库版）：
+// 粘性批次 reconcile（跨库版，总词数上限模型）：
 //  • 已学过的词自动移出批次；
-//  • 批次非空且选库/额度未变 ⇒ 保留原批次（不新增），满足「只有学完才生成新词」；
-//  • 批次为空（全部学完）⇒ 重新按各库额度选出新词（即「学完才生成」）；
-//  • 选库/额度改变（或 forceResize）⇒ 立即按新目标增/删：不够从词库补，富余把已选词退回未学词库。
-// 今日配额以「各库今日实际新学数」为准：某库今日已达其额度，当天不再从该库出词（明日再学下一批）。
+//  • 批次非空且「总词数 + 选库/个数」未变 ⇒ 保留原批次（不新增），满足「只有学完才生成新词」；
+//  • 批次为空（全部学完）⇒ 重新按 maxSize（=总词数−今日已学）选出新词（即「学完才生成」）；
+//  • 总词数/选库/个数改变（或 forceResize）⇒ 立即按新目标增/删：不够从词库补，富余把已选词退回未学词库。
+// 当日上限为单一「学习总词数」：今日已学新词数达到该上限后，当天不再出新词（明日再学下一批）。
 function reconcileLearnPlan(forceResize) {
   const banks = studyBanks();
+  const total = studyTotal();
   const today = todayStr();
   const todayNew = (history[today] && history[today].new) || [];
-  const learnedByBank = {};
-  todayNew.forEach(x => { learnedByBank[x.bank] = (learnedByBank[x.bank] || 0) + 1; });
-  const before = JSON.stringify(pendingPlan) + '|' + JSON.stringify(banks);
+  const learnedTotal = todayNew.length;          // 今日已学新词总数（含自建与两库）
+  const before = JSON.stringify(pendingPlan) + '|' + total + '|' + JSON.stringify(banks);
   let plan = (pendingPlan || []).filter(p => {
     const key = bankKey(p.bank, p.word);
     return !(progress[key] && progress[key].firstLearned);
   });
-  const sig = JSON.stringify(banks);
+  const sig = JSON.stringify({ total, banks });
   const changed = forceResize || sig !== planTarget;
-  if (changed || plan.length === 0) {          // 配置变化，或批次已耗尽 → 重新组合（受今日各库配额约束）
+  if (changed || plan.length === 0) {            // 配置变化，或批次已耗尽 → 重新组合（受 maxSize 约束）
     planTarget = sig;
-    plan = buildBatch(plan, banks, learnedByBank);
+    const maxSize = Math.max(0, total - learnedTotal);
+    plan = buildBatch(plan, maxSize, banks);
   }
   pendingPlan = plan;
   if (JSON.stringify(pendingPlan) + '|' + planTarget !== before) saveAll();
@@ -783,9 +815,16 @@ function topbar(title) {
 function openSettings() {
   openModal(`
     <h3>设置</h3>
-    <div class="sub-tip" style="margin:-6px 0 10px">选择 1–2 个词库同时背（最多 2 个），每个库单独设每日词数；自建词库始终优先背诵，不占正式库额度</div>
+    <div class="sub-tip" style="margin:-6px 0 10px">选择 1–2 个词库同时背：<b>词库1 优先、词库2 其次</b>，各库单独设「每日个数」；并设一个<b>学习总词数</b>作为当日上限。自建词库始终优先、占用总词数名额</div>
     <div class="bank-pick" id="bankPick"></div>
     <div id="bankCounts" style="margin-top:14px"></div>
+    <div class="cnt-row" style="margin-top:14px">
+      <span class="cnt-name">学习总词数（当日上限）</span>
+      <span class="cnt-label">每日</span>
+      <input type="number" min="0" max="100" step="1" value="${studyTotal()}" class="cnt-input" id="totalInput">
+      <span class="cnt-label">个</span>
+    </div>
+    <div class="sub-tip" style="margin-top:8px">分配顺序：自建优先占额 → 先满足词库1 的「每日个数」 → 再满足词库2 的「每日个数」，均受总词数上限约束</div>
     <div class="set-fold">
       <div class="set-fold-head" id="acctHead">👤 账号 <span class="tag ${currentAccount ? 'green' : ''}">${currentAccount ? ('已登录：' + esc(currentAccount)) : '未登录'}</span><span class="chev">▸</span></div>
       <div class="set-fold-body" id="acctHost" style="display:none"></div>
@@ -849,6 +888,11 @@ function openSettings() {
     });
   };
   renderBankPick();
+  const totalInput = document.getElementById('totalInput');
+  if (totalInput) totalInput.oninput = () => {
+    settings.dailyNew = Math.max(0, Math.min(100, +totalInput.value || 0));
+    saveAll(); reconcileLearnPlan(true);
+  };
   $('#setOk').onclick = () => { closeModal(); PAGES[CUR](); };
   // 折叠区块：默认收起，点击标题展开/收起
   const bindFold = (headSel, bodySel) => {
@@ -895,7 +939,7 @@ function learn() {
   const t = todayStat();
   const total = Object.keys(progress).length;
   const banks = studyBanks();
-  const totalPlanned = banks.reduce((s, b) => s + Math.max(0, +b.count || 0), 0);
+  const totalPlanned = studyTotal();
   const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
   const due = Object.values(progress).filter(p => p.nextReview && p.nextReview <= todayStr()).length;
   let bars = '';
@@ -923,9 +967,10 @@ function learn() {
 
     <div class="card lemon" style="margin-top:14px">
       <h2>今日学习计划</h2>
-      ${banks.map(b => { const st = bankStat(b.id); return `<div class="sb-line"><span class="sb-name">${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">已背 ${st.learned}/${st.total} ｜ 每日 ${b.count} 个</span></div>`; }).join('')}
-      ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背</div>` : ''}
-      <div class="sub-tip" style="margin-top:6px">每日新词计划 <b>${totalPlanned}</b> 个${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
+      <div class="sb-line"><span class="sb-name">学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
+      ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1' : (i === 1 ? '词库2' : '词库'); return `<div class="sb-line"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">每日 ${b.count} 个 ｜ 已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
+      ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（占用总词数名额）</div>` : ''}
+      <div class="sub-tip" style="margin-top:6px">新词计划共 <b>${totalPlanned}</b> 个（受总词数上限约束）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
     </div>
 
     <div class="card mint"><h2>近 7 天学习量</h2><div style="display:flex;gap:6px;align-items:flex-end">${bars}</div></div>
@@ -949,31 +994,32 @@ function renderLearnBox() {
     reconcileLearnPlan();
     const plan = pendingPlan.map(p => resolveWord(p.bank, p.word)).filter(Boolean);
     const banks = studyBanks();
-    const planned = banks.reduce((s, b) => s + Math.max(0, +b.count || 0), 0);
+    const total = studyTotal();
     const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
     const today = todayStr();
     const todayNew = (history[today] && history[today].new) || [];
-    const learnedByBank = {};
-    todayNew.forEach(x => { learnedByBank[x.bank] = (learnedByBank[x.bank] || 0) + 1; });
-    const bankQuotaMet = banks.every(b => (learnedByBank[b.id] || 0) >= Math.max(0, +b.count || 0));
-    const todayDone = planned > 0 && bankQuotaMet && selfLeft === 0;   // 今日新词已全部学完
-    const allDone = nothingToStudy();                                  // 所有词库都已背完
-    const bankSummary = banks.map(b => `${b.id} ${b.count}个`).join(' + ');
+    const learnedToday = todayNew.length;
+    let avail = selfLeft;
+    banks.forEach(b => { avail += unlearned(b.id).length; });
+    const target = Math.min(total, avail);                          // 实际可学上限
+    const todayDone = target > 0 && learnedToday >= target;        // 今日新词已达上限
+    const allDone = nothingToStudy();                               // 所有词库都已背完
+    const bankSummary = `学习总词数 ${total} 个（上限）｜ 自建优先${banks.length ? ' ＋ ' + banks.map((b, i) => (i === 0 ? '词库1' : (i === 1 ? '词库2' : '词库')) + '·' + b.id + ' ' + b.count + '个').join(' → ') : ''}`;
     let tip, preview = '', btn;
     if (allDone) {
       tip = '所有词库都已背完 🎉';
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>词库已背完 🎉</button>`;
     } else if (todayDone) {
       tip = `今日新词已全部学完（计划：${bankSummary}）`;
-      preview = `<div class="sub-tip" style="margin-top:10px">今日已学完 <b>${todayNew.length}</b> 个新词，明天再来 🌙</div>`;
+      preview = `<div class="sub-tip" style="margin-top:10px">今日已学完 <b>${learnedToday}</b> 个新词（上限 ${total} 个），明天再来 🌙</div>`;
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>今日已学完</button>`;
     } else if (plan.length) {
-      tip = `每日计划：${bankSummary}${selfLeft ? ` ｜ 自建优先 ${selfLeft} 个` : ''}${plan.length !== planned + selfLeft ? `（当前待学 ${plan.length} 个）` : ''}`;
+      tip = `每日计划：${bankSummary}${selfLeft ? ` ｜ 自建优先 ${selfLeft} 个` : ''}${plan.length !== target ? `（当前待学 ${plan.length} 个）` : ''}`;
       preview = `<div class="sub-tip" style="margin-top:10px">本组待学 <b>${plan.length}</b> 个新词，可提前了解：</div>
          <div class="chip-wrap">${plan.map(w => `<span class="chip">${esc(w.word)}</span>`).join('')}</div>
          <div class="sub-tip" style="margin-top:6px">本组未学完不会生成新词；单词的学习日期记在实际学习当天</div>`;
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>`;
-    } else if (planned <= 0 && selfLeft === 0) {
+    } else if (total <= 0 && selfLeft === 0) {
       tip = '未设置每日新词';
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>无新词</button>`;
     } else {

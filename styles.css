@@ -380,3 +380,19 @@ input[type=range] { accent-color: var(--brand); }
 /* 待复习词预览（胶囊列表） */
 .rp-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .rp-w { font-size: 13px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+
+/* ---------- 跨库背词：选词库 + 每库每日词数 ---------- */
+.bank-pick { display: flex; flex-wrap: wrap; gap: 10px; }
+.bank-pick .bank { cursor: pointer; transition: outline-color .15s, transform .1s; }
+.bank-pick .bank.sel { outline: 2px solid var(--brand); outline-offset: 2px; }
+.bank-pick .bank .ord { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; text-align: center; font-size: 12px; color: #fff; background: var(--brand); border-radius: 50%; margin-left: 4px; }
+#bankCounts .cnt-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+#bankCounts .cnt-name { width: 64px; font-weight: 600; }
+#bankCounts .cnt-label { color: var(--sub); font-size: 13px; }
+#bankCounts .cnt-input { width: 64px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; text-align: center; }
+/* 首页学习计划行 */
+.sb-line { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.sb-line .sb-name { width: 56px; font-weight: 600; color: var(--ink); }
+.sb-line .sb-bar { flex: 1; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.sb-line .sb-bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+.sb-line .sb-txt { color: var(--sub); font-size: 13px; white-space: nowrap; }

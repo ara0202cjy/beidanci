@@ -1293,11 +1293,11 @@ function renderRecall() {
     $('#rqNext').onclick = () => { st.idx++; saveAll(); renderRecall(); };
   }
 }
-// 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 1、2、3、20、40 天），随后自动进入情境填词
+// 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 1、2、3、20、40 天），进入结果页（不再自动跳进下一轮）
 function submitRecall() {
   const st = reviewState;
   st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
-  confirmCheck(() => startSentenceRound(st.pool));
+  confirmCheck();
 }
 // 单词复习收尾后进入情境填词：同一批词二次巩固（有例句走填词，无例句降级听写）
 function startSentenceRound(srcPool) {
@@ -1358,7 +1358,7 @@ function renderCheck() {
   okBtn.onclick = confirmCheck;
   box.appendChild(okBtn);
 }
-function confirmCheck(after) {
+function confirmCheck() {
   const st = reviewState;
   const wrong = st.check.filter(r => !r.ok);
   st.check.forEach(r => settleReview(r, r.ok, dayOf()));
@@ -1371,30 +1371,44 @@ function confirmCheck(after) {
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();
-  if (typeof after === 'function') { after(); return; }   // 显式后续流程优先（如 recall→sentence 链式）
-  // 自动引导完成另一轮，满足「单词复习 + 情境填词各完成一轮」才算复习完成
-  const need = nextReviewRoundNeeded(rday);
-  if (need === 'sentence') { startSentenceRound(st.pool); toast('第 2 轮：情境填词'); return; }
-  if (need === 'recall') { startRecallRound(st.pool); toast('第 2 轮：单词复习'); return; }
+  // 不再自动跳进另一轮：停留在结果页，由用户选择是否继续「第2轮」，避免「核对答案后突然跳转」的突兀感
   st.done = true; renderSummary();
 }
 function renderSummary() {
   const st = reviewState;
   const wrong = (st.check || st.pool).filter(r => !r.ok);
   const box = $('#reviewBox');
-  if (!wrong.length) { box.innerHTML = `<div class="empty">🎉 全部正确！本次 ${st.pool.length} 词已掌握</div>`; return; }
-  box.innerHTML = `<h2>本次结果（${st.pool.length - wrong.length}/${st.pool.length} 正确）</h2>
-    <div class="sub-tip">错词已加入错题本</div>
-    <div class="list" id="doneList" style="margin-top:10px"></div>
-    <button class="btn red" style="margin-top:12px" id="reWrong">🔁 重练错词（${wrong.length}）</button>
-    <button class="btn ghost sm" style="margin-top:10px" id="backHome">返回首页</button>`;
+  const rday = REVIEW_DAY || dayOf();
+  const doneRecall = !!(history[rday] && history[rday].recallDone);
+  const doneSentence = !!(history[rday] && history[rday].sentenceDone);
+  const need = nextReviewRoundNeeded(rday);     // 还需完成哪一轮（null=两轮均已完成）
+  let html = '';
+  if (!wrong.length) {
+    html += `<div class="empty">🎉 本轮全部正确！本次 ${st.pool.length} 词已掌握</div>`;
+  } else {
+    html += `<h2>本次结果（${st.pool.length - wrong.length}/${st.pool.length} 正确）</h2>
+      <div class="sub-tip">错词已加入错题本</div>
+      <div class="list" id="doneList" style="margin-top:10px"></div>`;
+  }
+  // 双轮打卡进度（单词复习 + 情境填词 各完成一轮才记当日复习完成）
+  html += `<div class="sub-tip" style="margin-top:12px">打卡进度：单词复习 ${doneRecall ? '✅' : '⬜'} ｜ 情境填词 ${doneSentence ? '✅' : '⬜'}</div>`;
+  if (need === 'sentence') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：情境填词 →</button>`;
+  else if (need === 'recall') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：单词复习 →</button>`;
+  else html += `<div class="sub-tip" style="margin-top:10px">🎉 两轮复习均已完成，今日打卡达成！</div>`;
+  if (wrong.length) html += `<button class="btn red" style="margin-top:12px" id="reWrong">🔁 重练错词（${wrong.length}）</button>`;
+  html += `<button class="btn ghost sm" style="margin-top:10px" id="backHome">返回首页</button>`;
+  box.innerHTML = html;
   const list = $('#doneList');
-  wrong.forEach(r => {
+  if (list) wrong.forEach(r => {
     const it = document.createElement('div'); it.className = 'item';
     it.innerHTML = `<div><div class="w">${esc(r.word)}</div><div class="m">${esc(r.meaning)}</div></div></div>`;
     list.appendChild(it);
   });
-  $('#reWrong').onclick = () => {
+  if ($('#nextRound')) $('#nextRound').onclick = () => {
+    if (need === 'sentence') { startSentenceRound(st.pool); toast('第 2 轮：情境填词'); }
+    else { startRecallRound(st.pool); toast('第 2 轮：单词复习'); }
+  };
+  if ($('#reWrong')) $('#reWrong').onclick = () => {
     const wq = wrong.map(r => ({ ...r, ok: true }));
     reviewState = { pool: wq, idx: 0 };
     review(); renderReviewCard();

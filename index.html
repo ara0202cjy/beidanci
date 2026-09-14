@@ -45,6 +45,18 @@
 
 <script src="sync.js"></script>
 <script src="app.js"></script>
-<script>if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }</script>
+<script>
+// 注册 Service Worker，并在新版本就绪后自动刷新当前页面，
+// 保证「已安装到主屏的 PWA」也能拿到最新代码（否则旧 app.js 会一直留在内存中）。
+if ("serviceWorker" in navigator) {
+  var swHadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js").then(function () {
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!swHadController) { swHadController = true; return; } // 首次安装不刷新，避免打开即重载
+      window.location.reload();                                  // 新 SW 接管 → 重新加载以加载最新 app.js
+    });
+  }).catch(function () {});
+}
+</script>
 </body>
 </html>

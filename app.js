@@ -1196,14 +1196,41 @@ function buildReviewPool(dateStr) {
   }
   return pool;
 }
-// 按题型构造答题队列：sentence 有例句则用情境填词，否则降级为听中文听写
+// 为「情境填词」构造一句含目标词的英文语境：
+// 优先词典例句 → 其次同义词词典例句 → 最后按词性造一句含目标词的简单英文（横线处即目标词）。
+// 保证情境填词永远展示带横线的英文句子，绝不静默降级为「听中文听写」（纯中文释义）。
+function contextSentence(word, meaning) {
+  const lc = (word || '').toLowerCase();
+  if (lc) {
+    const exs = EXAMPLES[lc];
+    if (exs && exs.length) return { en: exs[Math.floor(Math.random() * exs.length)].en, zh: (exs[0] && exs[0].zh) || '' };
+    const th = THES[lc];
+    if (Array.isArray(th)) {
+      for (const e of th) {
+        if (e && e.ex && new RegExp('\\b' + lc + '\\w*\\b', 'i').test(e.ex)) return { en: e.ex, zh: '' };
+      }
+    }
+  }
+  // 退化兜底：按词性造一句含目标词的简单英文，确保情境填词仍「有语境、有横线」
+  const pos = ((splitPOS(meaning || '')[0] || {}).pos) || '';
+  const w = word || 'word';
+  let tpl;
+  if (/^n\b/.test(pos)) tpl = `A ${w} is something worth remembering.`;
+  else if (/^v\b/.test(pos)) tpl = `You should ${w} it as often as you can.`;
+  else if (/^adj|^a\b/.test(pos)) tpl = `This is a very ${w} place to study.`;
+  else if (/^adv/.test(pos)) tpl = `He finished the work ${w}.`;
+  else if (/^prep/.test(pos)) tpl = `We arrived there ${w} the morning.`;
+  else tpl = `The word ${w} is important to learn.`;
+  return { en: tpl, zh: '' };
+}
+// 按题型构造答题队列：sentence 始终产出「带横线的英文语境句」（无例句也用兜底句），听写则只给中文释义
 function makeTypedQueue(pool, type) {
   return shuffle(pool.map(e => {
     const c = { ...e };
     delete c._wrongAdded;                       // 新一轮重新计错
     if (type === 'sentence') {
-      const exs = EXAMPLES[(e.word || '').toLowerCase()] || [];
-      if (exs.length) return { ...c, type: 'sentence', sentence: exs[Math.floor(Math.random() * exs.length)] };
+      const s = contextSentence(e.word, e.meaning);
+      if (s && s.en) return { ...c, type: 'sentence', sentence: s };
     }
     return { ...c, type: 'word' };
   }));

@@ -22,6 +22,9 @@ const BANKS = [
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
 // 错词复习节奏：在错误的第 1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
 const WRONG_INTERVALS = [1, 2, 3, 20, 40];
+// 第二轮复习（词库2＝复习词库）：已背过的词再做一遍，只有两轮 —— 推送当日、推送日 + 10 天；
+// 期间答错则该词退出第二轮、转由错题节奏（WRONG_INTERVALS）继续推送。
+const SECOND_INTERVAL = 10;
 const SELFBANK_ID = '自建';
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
@@ -119,9 +122,10 @@ window.WB = {
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
   sortStudyOrder, dayRand,
-  learnNext, wrongNext, refreshNext, isDue, settleReview, calibrateSchedule,
+  learnNext, wrongNext, secNext, refreshNext, isDue, settleReview, calibrateSchedule,
   exportLearnedExcel,
   reconcileLearnPlan, resolveWord, candidatesForBank, buildBatch, studyBanks, studyTotal,
+  secondRoundBank, secondRoundQuota, secondRoundStat, reconcileSecondRound,
   nextReviewRoundNeeded,
 };
 
@@ -326,15 +330,22 @@ function wrongNext(p) {
   if (!p.wrongAnchor) return '';
   return nextScheduleDate(p.wrongAnchor, WRONG_INTERVALS, p.lastWrongReview || p.wrongAnchor);
 }
-// 任一锚点档期到期即应复习（学习顺序 + 错题顺序叠加）
-function isDue(p, day) {
-  const ln = learnNext(p), wn = wrongNext(p);
-  return (ln && ln <= day) || (wn && wn <= day);
+// 第二轮复习（词库2＝复习词库）的下次推送日：
+//   secStage=0（尚未完成「推送当日」这轮）→ 推送当日；secStage=1（已完成当日）→ 推送日 + 10 天；完成/答错转错题 → 不再推送
+function secNext(p) {
+  if (!p || !p.secStart || p.secDone) return '';
+  if (!(p.secStage >= 1)) return p.secStart;
+  if (p.secStage === 1) return addDays(p.secStart, SECOND_INTERVAL);
+  return '';
 }
-// p.nextReview 取两个锚点中较近的一次，供复习池快速判定（不代表只走一条路径）
+// 任一锚点档期到期即应复习（学习顺序 + 错题顺序 + 第二轮 叠加）
+function isDue(p, day) {
+  return [learnNext(p), wrongNext(p), secNext(p)].some(d => d && d <= day);
+}
+// p.nextReview 取各档期中较近的一次，供复习池快速判定（不代表只走一条路径）
 function refreshNext(p) {
-  const ln = learnNext(p), wn = wrongNext(p);
-  p.nextReview = (ln && wn) ? (ln < wn ? ln : wn) : (ln || wn || '');
+  const ds = [learnNext(p), wrongNext(p), secNext(p)].filter(Boolean);
+  p.nextReview = ds.length ? ds.sort()[0] : '';
 }
 // 复习结算：correct=是否答对，day=复习日（默认今天）。学习/错题锚点各自独立推进；答错则重置错题锚点
 function settleReview(r, correct, day) {
@@ -353,6 +364,18 @@ function settleReview(r, correct, day) {
     const wb = wrongBook[r.key] || { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk, wrongCount: 0, lastWrong: '', added: day };
     if (!r._wrongAdded) { wb.wrongCount++; r._wrongAdded = true; }   // 打叉时已计过则不再重复累加
     wb.lastWrong = day; wrongBook[r.key] = wb;
+  }
+  // 第二轮（复习词库＝词库2）按「日期」推进两轮：当日完成 → 待 D+10；D+10 完成 → 整轮结束。
+  // 用日期判定（而非「复习一次就进一轮」），保证提前在其他轮次复习不会把 D+10 那轮跳过。
+  if (p.secStart && !p.secDone) {
+    if (correct) {
+      if (!(p.secStage >= 1) && day >= p.secStart) p.secStage = 1;
+      if (p.secStage === 1 && day >= addDays(p.secStart, SECOND_INTERVAL)) { p.secStage = 2; p.secDone = true; p.secExit = 'done'; }
+      p.secLast = day;
+    } else {
+      p.secDone = true; p.secExit = 'wrong';   // 答错 → 退出第二轮，改按错题节奏 1/2/3/20/40 推送
+      p.secLast = day;
+    }
   }
   refreshNext(p);
   // 已掌握（双锚点档期均走完、不再推送）→ 移出错题本
@@ -669,6 +692,56 @@ function normalizeStudyBanks() {
 function studyBanks() { if (!settings.studyBanks || !settings.studyBanks.length) normalizeStudyBanks(); return settings.studyBanks; }
 // 当日学习总词数（上限）：各库「每日个数」与该上限共同约束当日批次
 function studyTotal() { normalizeStudyBanks(); return Math.max(0, +settings.dailyNew || 0); }
+
+/* ---------- 第二轮复习（词库2＝复习词库）----------
+   需求：词库2 默认为「复习词库」，推送该词库里「已背过」的词做第二轮复习；
+        每个词两轮 —— 推送当日、推送日 + 10 天；期间进入错题的，改按错题节奏 1/2/3/20/40 推送。
+        未背过的词仍按新词学（走原学习节奏），背完后才可进入第二轮。
+        未设置词库2 → 不推送第二轮（本特性由手动设置词库2 开启）。 */
+function secondRoundBank() { const b = studyBanks()[1]; return (b && b.id) ? b.id : ''; }
+function secondRoundQuota() { const b = studyBanks()[1]; return b ? Math.max(0, +b.count || 0) : 0; }   // 每日新推 N 个
+// 统计（供界面显示）：该库已背词 / 已进入第二轮 / 已完成 / 今日新推 / 今日待做
+function secondRoundStat() {
+  const bank = secondRoundBank();
+  const st = { bank, quota: secondRoundQuota(), learned: 0, started: 0, done: 0, wrongOut: 0, pushedToday: 0, due: 0 };
+  if (!bank) return st;
+  const today = todayStr();
+  Object.values(progress).forEach(p => {
+    if (!p || !p.word || p.bank !== bank || !p.firstLearned) return;
+    st.learned++;
+    if (p.secStart) { st.started++; if (p.secStart === today) st.pushedToday++; }
+    if (p.secDone) { st.done++; if (p.secExit === 'wrong') st.wrongOut++; }
+    const n = secNext(p);
+    if (n && n <= today) st.due++;
+  });
+  return st;
+}
+// 每日新推：从「词库2 所选库的已背词」里选 N 个（最久没复习的优先；同日期用「词 + 当日」确定性顺序兜底，
+// 保证多端当天推同一批词）开始第二轮。幂等：已进入第二轮的词不再重复入选，同日重复调用不会超量。
+function reconcileSecondRound() {
+  const bank = secondRoundBank();
+  if (!bank) return 0;
+  const today = todayStr();
+  let pushedToday = 0;
+  const cand = [];
+  Object.values(progress).forEach(p => {
+    if (!p || !p.word || p.bank !== bank || !p.firstLearned) return;
+    if (p.secStart) { if (p.secStart === today) pushedToday++; return; }   // 已进入第二轮（含已完成）→ 不再入选
+    if (p.firstLearned >= today) return;                                   // 当天刚学的新词不当天做第二轮
+    cand.push(p);
+  });
+  const need = secondRoundQuota() - pushedToday;
+  if (need <= 0 || !cand.length) return 0;
+  cand.sort((a, b) => {
+    const da = a.lastReview || a.firstLearned || '', db = b.lastReview || b.firstLearned || '';
+    return (da < db ? -1 : da > db ? 1 : 0)
+      || (dayRandOn(a.key || a.word) - dayRandOn(b.key || b.word));
+  });
+  let n = 0;
+  cand.slice(0, need).forEach(p => { p.secStart = today; p.secStage = 0; p.secDone = false; p.secExit = ''; refreshNext(p); n++; });
+  if (n) saveAll();
+  return n;
+}
 // 单库的未学候选（稳定排序：共有词优先 → 词频 → 原序号），不含已学词
 function candidatesForBank(bankId, exclude) {
   const ex = new Set(exclude || []);
@@ -760,6 +833,7 @@ function reconcileLearnPlan(forceResize) {
   }
   pendingPlan = plan;
   if (JSON.stringify(pendingPlan) + '|' + planTarget !== before) saveAll();
+  reconcileSecondRound();   // 顺带结算「词库2＝复习词库」的当日新推（幂等）
 }
 // 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送
 function resetWordForSelf(word) {
@@ -890,14 +964,17 @@ function openSettings() {
     });
     const counts = banks.map((b, i) => {
       const col = (BANKS.find(x => x.id === b.id) || {}).color || '#333';
+      const label = i === 0 ? '每日学' : (i === 1 ? '每日新推' : '每日');
       return `<div class="cnt-row">
         <span class="cnt-name" style="color:${col}">${b.id}</span>
-        <span class="cnt-label">每日</span>
+        <span class="cnt-label">${label}</span>
         <input type="number" min="0" max="50" step="1" value="${b.count}" class="cnt-input" data-i="${i}">
-        <span class="cnt-label">个</span>
+        <span class="cnt-label">个${i === 1 ? '（第二轮）' : ''}</span>
       </div>`;
     }).join('');
-    $('#bankCounts').innerHTML = counts || '<div class="sub-tip">未选择词库</div>';
+    $('#bankCounts').innerHTML = (counts || '<div class="sub-tip">未选择词库</div>') + (banks.length > 1
+      ? `<div class="sub-tip" style="margin-top:8px">词库2 ＝ <b>复习词库</b>：①「每日 N 个」＝每天新推 N 个该库<b>已背过</b>的词做第二轮，每个词两轮（<b>推送当日</b> ＋ 第 ${SECOND_INTERVAL} 天）；②该库<b>未背过</b>的词仍按每天 N 个学新词（受学习总词数上限约束），背完后才进入第二轮；③第二轮期间答错 → 转按<b>错题节奏</b>（第 1、2、3、20、40 天）推送。</div>`
+      : `<div class="sub-tip" style="margin-top:8px">再选 1 个词库作为<b>词库2（复习词库）</b>，即可开启「已背词第二轮复习」。</div>`);
     document.querySelectorAll('#bankCounts .cnt-input').forEach(inp => inp.oninput = () => {
       const i = +inp.dataset.i, v = Math.max(0, Math.min(50, +inp.value || 0));
       const list = studyBanks().slice(); list[i].count = v; settings.studyBanks = list;
@@ -952,6 +1029,20 @@ function openSettings() {
 }
 
 /* ===================== 学习（首页） ===================== */
+// 学习页「词库2 ＝ 复习词库」说明行
+function sec2Html() {
+  const st = secondRoundStat();
+  if (!st.bank) return `<div class="sub-tip" style="margin-top:6px">词库2 未选择 → 第二轮复习未开启（在设置里选第 2 个词库即开启）</div>`;
+  const left = Math.max(0, st.learned - st.started);
+  const okDone = st.done - st.wrongOut;
+  return `<div class="sub-tip" style="margin-top:6px">词库2（复习词库）· ${esc(st.bank)}：每日新推 <b>${st.quota}</b> 个<b>已背过</b>的词做第二轮（推送当日 + 第 ${SECOND_INTERVAL} 天）｜今日已推 <b>${st.pushedToday}</b>、待做 <b>${st.due}</b>、已完成 <b>${okDone}</b>/${st.learned}${st.wrongOut ? `，转错题 <b>${st.wrongOut}</b>` : ''}${left ? `，尚未开始 ${left}` : ''}</div>`;
+}
+// 复习页里「第二轮」的一句话说明
+function sec2Desc() {
+  const st = secondRoundStat();
+  if (!st.bank) return '未选择词库2 → 尚未开启（在设置里选第 2 个词库即开启）';
+  return `${esc(st.bank)} 库的已背词每日新推 ${st.quota} 个，每个词两轮（推送当日 ＋ 第 ${SECOND_INTERVAL} 天）；期间答错的转错题节奏。今日已推 ${st.pushedToday}、待做 ${st.due}、已完成 ${st.done - st.wrongOut}/${st.learned}${st.wrongOut ? `（转错题 ${st.wrongOut}）` : ''}`;
+}
 function learn() {
   const t = todayStat();
   const total = Object.keys(progress).length;
@@ -985,8 +1076,9 @@ function learn() {
     <div class="card lemon" style="margin-top:14px">
       <h2>今日学习计划</h2>
       <div class="sb-line sb-total"><span class="sb-name">学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
-      ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1' : (i === 1 ? '词库2' : '词库'); return `<div class="sb-line"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">每日 ${b.count} 个 ｜ 已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
+      ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1（学习）' : (i === 1 ? '词库2（复习）' : '词库'); return `<div class="sb-line"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">每日 ${b.count} 个 ｜ 已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
       ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（占用总词数名额）</div>` : ''}
+      ${sec2Html()}
       <div class="sub-tip" style="margin-top:6px">新词计划共 <b>${totalPlanned}</b> 个（受总词数上限约束）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
     </div>
 
@@ -1177,6 +1269,7 @@ function review() {
   if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
     reviewState = null; saveAll();
   }
+  reconcileSecondRound();   // 进入复习页先结算「词库2＝复习词库」的当日新推，保证今日复习池完整
   app().innerHTML = `${topbar('复习')}
     <div class="card matcha" id="reviewSetup"></div>
     <div class="card" id="reviewBox"></div>`;
@@ -1194,7 +1287,7 @@ function review() {
         <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
         <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
-      <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。<br><b style="color:var(--brand)">打卡完成需「单词复习 + 情境填词」各完成一轮</b>（听中文听写视作单词轮）；系统会在你完成一轮后自动引导进入另一轮。</div>
+      <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。<br><b>第二轮（词库2 ＝ 复习词库）</b>：${sec2Desc()}<br><b style="color:var(--brand)">打卡完成需「单词复习 + 情境填词」各完成一轮</b>（听中文听写视作单词轮）；系统会在你完成一轮后自动引导进入另一轮。</div>
       ${resuming ? `<div class="sub-tip" style="margin-bottom:8px">检测到上次未完成的复习（第 ${reviewState.idx + 1}/${reviewState.pool.length} 个），可继续或重新开始。</div>` : ''}
       <div><button class="btn primary" id="startReview" ${pool.length || resuming ? '' : 'disabled'}>${resuming ? '▶ 继续复习（剩 ' + (reviewState.pool.length - reviewState.idx) + '）' : '▶ 开始复习' + (pool.length ? '（' + pool.length + '）' : '')}</button></div>
       ${resuming ? '<div style="margin-top:8px"><button class="btn ghost sm" id="restartReview">↺ 重新开始今日复习</button></div>' : ''}
@@ -1215,6 +1308,11 @@ function review() {
     renderReviewCard();
   }
 }
+// 第二轮标记（供复习卡片显示「二轮 当日 / 二轮 D+10」）
+function secTag(p) {
+  if (!p || !p.secStart || p.secDone) return '';
+  return (p.secStage >= 1) ? `二轮 D+${SECOND_INTERVAL}` : '二轮 当日';
+}
 function buildReviewPool(dateStr) {
   const day = dateStr || todayStr();   const seen = new Set(); const pool = [];
   const add = e => { if (e && e.key && !seen.has(e.key)) { seen.add(e.key); pool.push(e); } };
@@ -1225,7 +1323,7 @@ function buildReviewPool(dateStr) {
       if (!p || !p.word || p.firstLearned === day) return;
       // 间隔到期即入池（错词路径的 nextReview 已由 WRONG_INTERVALS 精确计算）
       if (p.nextReview && p.nextReview <= day)
-        add({ key: bankKey(p.bank, p.word), word: p.word, bank: p.bank, meaning: p.meaning, phonetic_us: p.phonetic_us, phonetic_uk: p.phonetic_uk });
+        add({ key: bankKey(p.bank, p.word), word: p.word, bank: p.bank, meaning: p.meaning, phonetic_us: p.phonetic_us, phonetic_uk: p.phonetic_uk, sec: secTag(p) });
     });
     // 已排入复习计划的错词由 progress.nextReview 精确控制（错后第 1、2、3、20、40 天）；
     // 未进入计划的错词按 WRONG_INTERVALS 兜底加考
@@ -1303,7 +1401,7 @@ function renderReviewCard() {
   if (st.at !== 'card') { st.at = 'card'; saveReviewState(); }   // 记住所在步骤（卡片页），刷新后回到同一张卡
   if (!cur) { return renderCheck(); }
   const isLast = st.idx >= st.pool.length - 1;
-  const stepbar = `<div class="stepbar"><span>第 ${st.idx + 1} / ${st.pool.length} 个</span><span class="tag">${esc(cur.bank)}</span></div>`;
+  const stepbar = `<div class="stepbar"><span>第 ${st.idx + 1} / ${st.pool.length} 个</span><span class="tag">${esc(cur.bank)}${cur.sec ? ' · ' + esc(cur.sec) : ''}</span></div>`;
   if (st.idx === undefined) st.idx = 0; saveAll();   // 进入复习卡片即落盘当前进度，便于中途退出后续接
   let prompt;
   if (cur.type === 'sentence' && cur.sentence) {
@@ -1353,7 +1451,7 @@ function renderRecall() {
   const wronged = cur.recallOk === false;   // 已打叉 → 展示详情供记忆
   box.innerHTML = `
     <button class="btn ghost sm" id="exitReview" style="margin-bottom:8px">← 退出复习</button>
-    <div class="stepbar"><span>单词复习 ${i + 1} / ${n}</span><span class="tag">${esc(cur.bank)}</span></div>
+    <div class="stepbar"><span>单词复习 ${i + 1} / ${n}</span><span class="tag">${esc(cur.bank)}${cur.sec ? ' · ' + esc(cur.sec) : ''}</span></div>
     <div class="rq-word">
       <div class="learn-word" style="margin:0">${esc(cur.word)}</div>
       <button class="speaker-btn" id="rqSpeak" title="朗读单词发音">${icon('i-sound')}<span>朗读</span></button>

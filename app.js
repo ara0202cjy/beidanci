@@ -976,7 +976,7 @@ function learn() {
     <div class="card mint"><h2>近 7 天学习量</h2><div style="display:flex;gap:6px;align-items:flex-end">${bars}</div></div>
 
     <div class="card vanilla" id="learnBox"></div>`;
-  setLearnActive(!!(learnState && learnState.queue && learnState.queue.length && learnState.idx < learnState.queue.length));
+  setLearnActive(!!(learnState && learnState.queue && learnState.queue.length && !learnState.paused && learnState.idx < learnState.queue.length));
   renderLearnBox();
   bindCheckin();
 }
@@ -987,6 +987,16 @@ function renderLearnBox() {
     box.innerHTML = `<h2>今日学习</h2>
       <div class="boot-spin" style="margin:22px auto"></div>
       <div class="sub-tip" style="text-align:center">词库加载中，稍候自动开始…</div>`;
+    return;
+  }
+  if (learnState && learnState.paused) {            // 已暂停回到首页：提供「继续学习」入口
+    const remain = Math.max(0, learnState.queue.length - learnState.idx);
+    box.innerHTML = `<h2>继续学习</h2>
+      <div class="sub-tip">上次学习已暂停，还剩 <b>${remain}</b> 个新词未学（本组共 ${learnState.queue.length} 个）。</div>
+      <button class="btn primary" style="margin-top:14px" id="resumeLearn">继续学习</button>
+      <button class="btn ghost" style="margin-top:10px" id="restartPaused">重新开始本组</button>`;
+    $('#resumeLearn').onclick = () => { learnState.paused = false; saveAll(); renderLearnBox(); };
+    $('#restartPaused').onclick = () => { if (confirm('放弃当前这组，重新从今日新词开始？已学的词仍计入复习计划。')) { learnState = null; saveAll(); startLearning(); } };
     return;
   }
   if (!learnState || !learnState.queue.length) {
@@ -1061,7 +1071,7 @@ function renderLearnBox() {
     </div>
     ${st.idx === 0 ? '' : '<div class="sub-tip" style="text-align:center">翻到下一个即记为已学，并进入复习计划</div>'}`;
   $('#prevBtn').onclick = () => { if (st.idx > 0) { st.idx--; saveAll(); renderLearnBox(); } };
-  $('#exitLearn').onclick = () => { saveAll(); goto('learn'); };   // 仅暂停：保留 learnState 以便重开工作台后续接
+  $('#exitLearn').onclick = () => { if (learnState) learnState.paused = true; saveAll(); goto('learn'); };   // 暂停：保留 learnState，首页提供「继续学习」
   $('#restartLearn').onclick = () => { if (confirm('放弃当前这组，重新从今日新词开始？已学的词仍计入复习计划。')) { learnState = null; saveAll(); startLearning(); } };
   $('#nextBtn').onclick = () => {
     markLearned(w);

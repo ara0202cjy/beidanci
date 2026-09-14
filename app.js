@@ -96,6 +96,14 @@ function saveAll() {
   }
   try { if (window.Sync) Sync.schedulePush(); } catch (e) { }
 }
+// 只落盘 reviewState（不触发云推送）：用于记录「本轮复习走到哪一步」，避免云同步刷新时把批改页冲回卡片页。
+// 若这里改用 saveAll() 会 schedulePush → 推送完又 scheduleRefresh → 又渲染批改页 → 无限循环，故必须分开。
+function saveReviewState() {
+  if (currentAccount) {
+    const s = store.get(ACCT.data(currentAccount), null) || {};
+    s.reviewState = reviewState; store.set(ACCT.data(currentAccount), s);
+  } else store.set(K.review, reviewState);
+}
 window.store = store;
 window.WB = {
   get progress() { return progress; }, set progress(v) { progress = v; },
@@ -1136,7 +1144,30 @@ function markLearned(w) {
 }
 
 /* ===================== 复习 ===================== */
+// 本轮复习是否已完成（含「结果页」状态）。
+// 关键：done/settled 必须随 reviewState 一起落盘。否则刷新页面、云端同步合并、重开 App（PWA）
+// 之后 reviewState 被重新载入却没有 done 标记，renderBox 会退回 renderReviewCard → 停在最后一张卡片，
+// 表现为「第二轮复习批改后跳回最后一个单词，无法完成批改」。
+function reviewRoundFinished() {
+  const st = reviewState;
+  if (!st || !st.pool || !st.pool.length) return false;
+  const d = st.day || null;
+  if (st.done || st.settled) return d ? d === dayOf() : true;
+  // 兼容旧版遗留状态（老版本 done 未落盘，且不会写 at）：批改页已生成(check)且本轮打卡已记录 → 视为本轮已完成，
+  // 避免旧数据刷新后退回最后一张卡片。注意必须要求 at 缺失：新版本带 at 的状态是「正在批改」，不能被它盖掉。
+  if (st.at) return false;
+  if (!st.check || !st.check.length) return false;
+  const h = history[dayOf()] || {};
+  const flag = (settings.reviewType === 'sentence') ? h.sentenceDone : h.recallDone;
+  if (!flag) return false;
+  const rec = new Set((h.review || []).map(x => x && x.key));
+  return st.pool.every(r => r && rec.has(r.key));
+}
 function review() {
+  // 往日遗留的「结果页状态」不阻塞今日复习：同一轮只在当天保持结果页
+  if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
+    reviewState = null; saveAll();
+  }
   app().innerHTML = `${topbar('复习')}
     <div class="card matcha" id="reviewSetup"></div>
     <div class="card" id="reviewBox"></div>`;
@@ -1145,7 +1176,7 @@ function review() {
     const pool = buildReviewPool();
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
-    const resuming = reviewState && !reviewState.done;   // 存在未完成的中途复习 → 提供「继续」
+    const resuming = reviewState && !reviewRoundFinished();   // 存在未完成的中途复习 → 提供「继续」
     // 三种题型下方的提示统一为「复习节奏」，未开始复习前不暴露任何待复习单词
     $('#reviewSetup').innerHTML = `
       <h2>今日复习 <span class="r">${pool.length} 词</span></h2>
@@ -1169,7 +1200,8 @@ function review() {
   }
   function renderBox() {
     if (!reviewState) { $('#reviewBox').innerHTML = '<div class="empty">复习完成后在此查看结果</div>'; return; }
-    if (reviewState.done) { renderSummary(); return; }
+    if (reviewRoundFinished()) { renderSummary(); return; }   // 已完成：始终停在结果页（刷新/同步/重开 App 后一致）
+    if (reviewState.at === 'check') { renderCheck(); return; } // 正在批改：恢复批改页，不被刷新冲回卡片页
     if (reviewState.mode === 'recall') { renderRecall(); return; }
     renderReviewCard();
   }
@@ -1238,16 +1270,18 @@ function makeTypedQueue(pool, type) {
 function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   if (settings.reviewType === 'recall') {
-    reviewState = { pool: shuffle(pool.map(e => ({ ...e, type: 'recall' }))), idx: 0, mode: 'recall' };
+    reviewState = { pool: shuffle(pool.map(e => ({ ...e, type: 'recall' }))), idx: 0, mode: 'recall', day: dayOf() };
     saveAll(); review(); return;
   }
-  reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0 };
+  reviewState = { pool: makeTypedQueue(pool, settings.reviewType), idx: 0, day: dayOf() };
   saveAll(); review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页
 function renderReviewCard() {
   const box = $('#reviewBox'); if (!box) return;
+  if (reviewRoundFinished()) return renderSummary();     // 本轮已结算：不退回卡片，直接展示结果页
   const st = reviewState, cur = st.pool[st.idx];
+  if (st.at !== 'card') { st.at = 'card'; saveReviewState(); }   // 记住所在步骤（卡片页），刷新后回到同一张卡
   if (!cur) { return renderCheck(); }
   const isLast = st.idx >= st.pool.length - 1;
   const stepbar = `<div class="stepbar"><span>第 ${st.idx + 1} / ${st.pool.length} 个</span><span class="tag">${esc(cur.bank)}</span></div>`;
@@ -1289,7 +1323,9 @@ function markWrongNow(r) {
 // 本轮判定后不可回退修改；全部判完自动提交并进入情境填词巩固
 function renderRecall() {
   const box = $('#reviewBox'); if (!box) return;
+  if (reviewRoundFinished()) return renderSummary();     // 本轮已结算：不重复判定、不重复结算
   const st = reviewState;
+  if (st.at !== 'recall') { st.at = 'recall'; saveReviewState(); }   // 记住所在步骤，刷新后回到同一页
   if (st.idx === undefined) st.idx = 0;
   while (st.idx < st.pool.length && st.pool[st.idx].recallOk === true) st.idx++;   // 已判"认识"的不停留
   const cur = st.pool[st.idx];
@@ -1323,19 +1359,21 @@ function renderRecall() {
 // 全部判定完毕：提交本轮结果（推进复习节奏 / 错词进入 1、2、3、20、40 天），进入结果页（不再自动跳进下一轮）
 function submitRecall() {
   const st = reviewState;
+  if (!st) return;
+  if (reviewRoundFinished()) return renderSummary();     // 已结算过（刷新/重入触发）→ 不再重复结算，直接回结果页
   st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
   confirmCheck();
 }
 // 单词复习收尾后进入情境填词：同一批词二次巩固（有例句走填词，无例句降级听写）
 function startSentenceRound(srcPool) {
   settings.reviewType = 'sentence'; saveAll();
-  reviewState = { pool: makeTypedQueue(srcPool, 'sentence'), idx: 0 };
+  reviewState = { pool: makeTypedQueue(srcPool, 'sentence'), idx: 0, day: dayOf() };
   $('#reviewBox').innerHTML = ''; renderReviewCard();
 }
 // 补齐「单词复习」轮：同一批词逐词判定认识/不认识（听中文听写视作单词轮）
 function startRecallRound(srcPool) {
   settings.reviewType = 'recall'; saveAll();
-  reviewState = { pool: shuffle(srcPool.map(e => ({ ...e, type: 'recall', recallOk: undefined }))), idx: 0, mode: 'recall' };
+  reviewState = { pool: shuffle(srcPool.map(e => ({ ...e, type: 'recall', recallOk: undefined }))), idx: 0, mode: 'recall', day: dayOf() };
   $('#reviewBox').innerHTML = ''; renderRecall();
 }
 // 核对页：自行勾选对错，错误入错题本
@@ -1343,6 +1381,7 @@ function renderCheck() {
   const st = reviewState;
   const box = $('#reviewBox'); if (!box) return;
   if (!st.check) st.check = st.pool.map(c => ({ ...c, ok: true }));
+  if (st.at !== 'check') { st.at = 'check'; saveReviewState(); }   // 记住所在步骤（批改页），刷新/同步后仍回到批改页
   const list = document.createElement('div'); list.className = 'list'; list.id = 'chkList'; list.style.marginTop = '10px';
   const wrongCount = () => st.check.filter(r => !r.ok).length;
   const head = document.createElement('div');
@@ -1373,6 +1412,7 @@ function renderCheck() {
       it.querySelector('.check').classList.toggle('on', r.ok);
       it.querySelector('.check').textContent = r.ok ? '✓' : '✗';
       $('#chkOk').textContent = `确认提交（错 ${wrongCount()}）`;
+      saveReviewState();          // 立即落盘勾选结果：中途刷新不丢批改内容
     };
     list.appendChild(it);
   });
@@ -1387,19 +1427,24 @@ function renderCheck() {
 }
 function confirmCheck() {
   const st = reviewState;
-  const wrong = st.check.filter(r => !r.ok);
+  if (!st) return;
+  if (reviewRoundFinished()) { renderSummary(); return; }   // 幂等：防双击/回退重入导致重复结算
+  if (!st.check) st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
+  const rday = REVIEW_DAY || dayOf();
+  // 先把「本轮已结算」标记写进 reviewState 再落盘：刷新页面 / 云端同步合并 / 重开 App 后
+  // renderBox 才能继续停在结果页，而不是退回最后一张卡片（历史上 done 写在 saveAll 之后，故从未落盘）
+  st.settled = true; st.done = true; st.day = rday;
   st.check.forEach(r => settleReview(r, r.ok, dayOf()));
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
   // 复习完成 = 「单词复习（或听中文听写）」一轮 + 「情境填词」一轮，各自独立记一轮，两轮都完成才算复习完成
   // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
-  const rday = REVIEW_DAY || dayOf();
   if (settings.reviewType === 'sentence') markReviewDone('sentence', rday);
   else markReviewDone('recall', rday);
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();
   // 不再自动跳进另一轮：停留在结果页，由用户选择是否继续「第2轮」，避免「核对答案后突然跳转」的突兀感
-  st.done = true; renderSummary();
+  renderSummary();
 }
 function renderSummary() {
   const st = reviewState;

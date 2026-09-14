@@ -967,7 +967,7 @@ function learn() {
 
     <div class="card lemon" style="margin-top:14px">
       <h2>今日学习计划</h2>
-      <div class="sb-line"><span class="sb-name">学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
+      <div class="sb-line sb-total"><span class="sb-name">学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
       ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1' : (i === 1 ? '词库2' : '词库'); return `<div class="sb-line"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">每日 ${b.count} 个 ｜ 已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
       ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（占用总词数名额）</div>` : ''}
       <div class="sub-tip" style="margin-top:6px">新词计划共 <b>${totalPlanned}</b> 个（受总词数上限约束）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>

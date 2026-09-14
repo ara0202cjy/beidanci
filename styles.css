@@ -396,3 +396,6 @@ input[type=range] { accent-color: var(--brand); }
 .sb-line .sb-bar { flex: 1; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .sb-line .sb-bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
 .sb-line .sb-txt { color: var(--sub); font-size: 13px; white-space: nowrap; }
+.sb-line.sb-total { gap: 8px; }
+.sb-line.sb-total .sb-name { width: auto; flex: 0 0 auto; }
+.sb-line.sb-total .sb-txt { margin-left: auto; }

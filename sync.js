@@ -54,16 +54,24 @@ const Sync = (function () {
   let retryTimer = null;
   function transientErr(e) {
     const m = (e && e.message) || '';
-    return /rate limit|timeout|timed out|network|Failed to fetch|aborted|ECONN|socket|503|502/i.test(m) || (e && e.status === 403);
+    return /rate limit|timeout|timed out|network|Failed to fetch|aborted|ECONN|socket|503|502/i.test(m) || (e && (e.status === 403 || e.status === 429));
   }
   function handleSyncError(e, verb) {
     if (transientErr(e)) {
-      setToast('同步暂未成功（接口限流或网络波动），本地进度已保存，将自动重试');
-      // 限流/抖动通常很快恢复：1 分钟后自动补一次，避免反复弹窗
-      if (!retryTimer) retryTimer = setTimeout(() => {
-        retryTimer = null;
-        if (on()) push().then(() => scheduleRefresh()).catch(err => handleSyncError(err, verb));
-      }, 60000);
+      let extra = '将自动重试';
+      if (e && e.retryAfter && e.retryAfter > 0) {
+        const min = Math.ceil(e.retryAfter / 60);
+        extra = (min > 1 ? ('约 ' + min + ' 分钟后') : '约 1 分钟后') + '自动重试';
+      }
+      setToast('同步暂未成功（GitHub 接口限流或网络波动），本地进度已保存，' + extra);
+      // 限流/抖动通常很快恢复：按 GitHub 返回的 X-RateLimit-Reset 等待后自动补一次，避免反复弹窗
+      if (!retryTimer) {
+        const wait = (e && e.retryAfter) ? Math.min(Math.max(e.retryAfter, 60), 1800) * 1000 : 60000;
+        retryTimer = setTimeout(() => {
+          retryTimer = null;
+          if (on()) push().then(() => scheduleRefresh()).catch(err => handleSyncError(err, verb));
+        }, wait);
+      }
     } else {
       setToast('同步失败（' + verb + '）：' + e.message);
     }
@@ -188,7 +196,7 @@ const Sync = (function () {
       method: 'POST', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ description: '背单词工作台 · 进度同步', public: false, files: { [FILE]: { content: JSON.stringify(localState()) } } }),
     });
-    if (!r.ok) throw new Error('创建 Gist 失败 (' + r.status + ')');
+    if (!r.ok) { const e = new Error('创建 Gist 失败 (' + r.status + ')'); e.status = r.status; throw e; }
     const d = await r.json();
     t.gistId = d.id; saveTargets();
     return d.id;
@@ -196,8 +204,8 @@ const Sync = (function () {
   async function gistPull(t) {
     if (!t.gistId) return null;
     const r = await fetch(GH + '/' + t.gistId, { headers: ghHeaders(t), signal: AbortSignal.timeout(30000) });
-    if (r.status === 404) throw new Error('云端存档不存在，请检查 Gist ID');
-    if (!r.ok) throw new Error('读取失败 (' + r.status + ')');
+    if (r.status === 404) { const e = new Error('云端存档不存在，请检查 Gist ID'); e.status = 404; throw e; }
+    if (!r.ok) { const e = new Error('读取失败 (' + r.status + ')'); e.status = r.status; throw e; }
     const d = await r.json();
     const f = d.files && d.files[FILE];
     if (!f) return null;
@@ -211,13 +219,17 @@ const Sync = (function () {
       method: 'PATCH', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(state) } } }),
     });
-    if (!r.ok) throw new Error('写入失败 (' + r.status + ')');
+    if (!r.ok) {
+      const e = new Error('写入失败 (' + r.status + ')'); e.status = r.status;
+      if (r.status === 403) { const reset = r.headers.get('X-RateLimit-Reset'); if (reset) { const secs = (+reset) - Math.floor(Date.now() / 1000); if (secs > 0) e.retryAfter = secs; } }
+      throw e;
+    }
   }
 
   /* ---------- 通用 HTTP 后端 ---------- */
   async function httpPull(t) {
     const r = await fetch(t.apiUrl, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
-    if (!r.ok) throw new Error('读取失败 (' + r.status + ')');
+    if (!r.ok) { const e = new Error('读取失败 (' + r.status + ')'); e.status = r.status; throw e; }
     return await r.json();
   }
   async function httpPush(state, t) {
@@ -227,7 +239,7 @@ const Sync = (function () {
     if (!r.ok && r.status !== 200) { // 部分服务只接受 POST
       r = await fetch(t.apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
     }
-    if (!r.ok) throw new Error('写入失败 (' + r.status + ')');
+    if (!r.ok) { const e = new Error('写入失败 (' + r.status + ')'); e.status = r.status; throw e; }
   }
 
   function pullFn(t) { return t.backend === 'http' ? httpPull(t) : gistPull(t); }

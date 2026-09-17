@@ -26,6 +26,7 @@ const WRONG_INTERVALS = [1, 2, 3, 20, 40];
 // 期间答错则该词退出第二轮、转由错题节奏（WRONG_INTERVALS）继续推送。
 const SECOND_INTERVAL = 10;
 const SELFBANK_ID = '自建';
+const LEARN_PLAN_VER = 3;   // 选词/排序逻辑版本：变更（字母序兜底→strHash→同档按当日确定性乱序）后，旧「粘性批次」失效并重生成当日批次
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
@@ -746,19 +747,33 @@ function reconcileSecondRound() {
   if (n) saveAll();
   return n;
 }
-// 单库的未学候选（稳定排序：共有词优先 → 词频 → 原序号），不含已学词
+// 单库的未学候选（常用词优先 → 词频高优先 → 同档按当日确定性乱序），不含已学词
 function candidatesForBank(bankId, exclude) {
   const ex = new Set(exclude || []);
   const idx = {};
   (BANK_DATA[bankId]?.words || []).forEach((w, i) => { idx[wnorm(w.word)] = i; });
-  const out = [];
+  let out = [];
   (BANK_DATA[bankId]?.words || []).forEach(w => {
     const key = bankKey(bankId, w.word);
     if (ex.has(key)) return;
     if (progress[key] && progress[key].firstLearned) return;
     out.push({ ...w, bank: bankId, _i: idx[wnorm(w.word)] ?? 0, _c: isCommon(w.word) ? 0 : 1 });
   });
-  out.sort((a, b) => a._c - b._c || (FREQ[wnorm(a.word)] ?? 5) - (FREQ[wnorm(b.word)] ?? 5) || a._i - b._i);
+  // 主排序：常用词优先(_c 升序) → 词频高优先(FREQ 升序)。
+  out.sort((a, b) => a._c - b._c || (FREQ[wnorm(a.word)] ?? 5) - (FREQ[wnorm(b.word)] ?? 5));
+  // 同档（_c 与 FREQ 均相同）内用「按当日日期播种的确定性乱序」打散：
+  // 观感随机、但同一天各设备生成顺序完全一致（多端同步），且不会退回字母顺序。
+  const day = todayStr();
+  const groups = []; const gmap = new Map();
+  out.forEach(w => {
+    const f = FREQ[wnorm(w.word)] ?? 5;
+    const gk = w._c + '|' + f;
+    let g = gmap.get(gk);
+    if (!g) { g = { c: w._c, f: f, list: [] }; gmap.set(gk, g); groups.push(g); }
+    g.list.push(w);
+  });
+  groups.sort((a, b) => a.c - b.c || a.f - b.f);
+  out = groups.flatMap(g => dayShuffle(g.list, w => w.word, day));
   return out;
 }
 // 组合当日待学批次（新学习总数模型）：
@@ -822,6 +837,14 @@ function resolveWord(bank, word) {
 //  • 新学习总词数/词库1 改变（或 forceResize）⇒ 立即按新目标增/删：不够由词库1 补，富余把已选词退回未学词库。
 // 当日上限为单一「新学习总词数」：今日已学新词数达到该上限后，当天不再出新词（明日再学下一批）。
 function reconcileLearnPlan(forceResize) {
+  // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。
+  // 例：strHash 兜底替代字母序后，已锁定的今日批次若保留仍是旧顺序，故版本不符时清空重排。
+  // 仅当存档版本 ≠ 当前版本才触发（升级后首帧一次）；日常调用版本已一致、不影响「学完才出下一批」的粘性。
+  if (settings.learnPlanVer !== LEARN_PLAN_VER) {
+    pendingPlan = [];
+    planTarget = 0;
+    settings.learnPlanVer = LEARN_PLAN_VER;
+  }
   const banks = studyBanks();
   const total = studyTotal();
   const today = todayStr();

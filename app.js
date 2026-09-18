@@ -882,7 +882,24 @@ function resetWordForSelf(word) {
   let reset = false;
   if (progress[key]) { delete progress[key]; reset = true; }
   if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
+  // 迁移后，自建词学完的进度落在「原词库」key；重学需同时清掉，使其真正回到未背诵
+  // （原词库不再显示已背，直到再次学完；也避免「已学」状态阻碍重新推送）
+  const src = primarySourceBank(word);
+  if (src) {
+    const ok = bankKey(src, word);
+    if (progress[ok]) { delete progress[ok]; reset = true; }
+    if (wrongBook[ok]) { delete wrongBook[ok]; reset = true; }
+  }
   return reset;
+}
+// 判断某词是否已学习（任意正式词库、或自建 key 有 firstLearned 记录）
+function wordIsLearned(word) {
+  for (const id of Object.keys(BANK_DATA)) {
+    const p = progress[bankKey(id, word)];
+    if (p && p.firstLearned) return true;
+  }
+  if (progress[bankKey(SELFBANK_ID, word)] && progress[bankKey(SELFBANK_ID, word)].firstLearned) return true;
+  return false;
 }
 // 一次性（幂等）迁移：此前「自建词库推送并学完」的词只记在「自建::word」进度，
 // 导致①原词库不显示已背、②原词库还会重复推送它、③复习池按 key 去重会漏掉它。
@@ -981,6 +998,17 @@ document.addEventListener('click', e => { if (e.target.closest('#settingsBtn')) 
 
 function openModal(html) { $('#modal').innerHTML = html; $('#mask').classList.add('show'); }
 function closeModal() { $('#mask').classList.remove('show'); }
+// 「该单词已学习，是否重新学习」确认弹窗（加入自建词库时，对已学单词触发）
+function confirmRelearn(word, onYes, onNo) {
+  openModal(`<h3>该单词已学习</h3>
+    <div class="sub-tip" style="line-height:1.6">「<b>${esc(word)}</b>」已经学习过。是否重新学习并重新推送？</div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end;gap:10px">
+      <button class="btn ghost" id="rrNo">否</button>
+      <button class="btn primary" id="rrYes">是，重新学习</button>
+    </div>`);
+  $('#rrYes').onclick = () => { closeModal(); if (onYes) onYes(); };
+  $('#rrNo').onclick = () => { closeModal(); if (onNo) onNo(); };
+}
 $('#mask').addEventListener('click', e => { if (e.target.id === 'mask') closeModal(); });
 function topbar(title) {
   return `<div class="topbar"><div><h1>${title}</h1><div class="date">${todayStr()}</div></div>
@@ -1981,19 +2009,43 @@ orange"></textarea>
         <div class="bulk-list" id="bulkRows">${body}</div>
         <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" id="bulkOk">加入自建词库</button></div>`);
       $('#bulkOk').onclick = () => {
-        let added = 0, dup = 0, reset = 0;
+        let dup = 0, reset = 0;
+        const toAdd = [];
+        const learnedList = [];
         rows.forEach(r => {
           // 已存在的词也算"再次加入"：若此前已背过则重置为未背诵，重新推送
           if (r.inSelf) { dup++; if (resetWordForSelf(r.w)) reset++; return; }
           let meaning = '', pu = '', pk = '';
           if (r.m) { meaning = r.m.meaning; pu = r.m.phonetic_us; pk = r.m.phonetic_uk; }
           else { const inp = document.querySelector(`#bulkRows .bulk-row[data-i="${r.idx}"] [data-meaning]`); meaning = inp ? inp.value.trim() : ''; }
-          selfBank.push({ word: r.w, phonetic_us: pu, phonetic_uk: pk, meaning: meaning || '（未填释义）', added: todayStr() });
-          if (resetWordForSelf(r.w)) reset++;
-          added++;
+          const learned = wordIsLearned(r.w);
+          toAdd.push({ w: r.w, meaning, pu, pk, learned });
+          if (learned) learnedList.push(r.w);
         });
-        saveAll(); closeModal(); banks();
-        toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}`);
+        const commit = (includeLearned) => {
+          let added = 0;
+          toAdd.forEach(a => {
+            if (a.learned && !includeLearned) return;   // 选择「否」：跳过已学单词
+            selfBank.push({ word: a.w, phonetic_us: a.pu, phonetic_uk: a.pk, meaning: a.meaning || '（未填释义）', added: todayStr() });
+            if (a.learned) { resetWordForSelf(a.w); reset++; }
+            added++;
+          });
+          saveAll(); closeModal(); banks();
+          toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}`);
+        };
+        if (learnedList.length) {
+          // 已学习过的词弹窗确认：是→重置并加入；否→仅加入未学过的词
+          openModal(`<h3>部分单词已学习</h3>
+            <div class="sub-tip" style="line-height:1.6">有 <b>${learnedList.length}</b> 个词已学习过：${esc(learnedList.slice(0, 6).join('、'))}${learnedList.length > 6 ? ' 等' : ''}。<br>是否重新学习并重新推送？选择「是」将重置为未背诵并加入；选择「否」仅加入未学习过的词。</div>
+            <div class="row" style="margin-top:14px;justify-content:flex-end;gap:10px">
+              <button class="btn ghost" id="reNo">否（跳过已学）</button>
+              <button class="btn primary" id="reYes">是，重新学习</button>
+            </div>`);
+          $('#reYes').onclick = () => { closeModal(); commit(true); };
+          $('#reNo').onclick = () => { closeModal(); commit(false); };
+        } else {
+          commit(true);
+        }
       };
     };
   };
@@ -2230,16 +2282,26 @@ function dict() {
       const sb = it.querySelector('.self-btn');
       sb.onclick = (e) => {
         e.stopPropagation();
-        if (inSelf) {
-          // 再次点击已存在的词：若已背过则重置为未背诵，使其重新推送
-          if (resetWordForSelf(x.word)) { saveAll(); toast('已重置为未背诵，将重新推送'); }
+        const word = x.word;
+        // 已在自建词库：点击用于「再次重新学习」（已背过则重置为未背诵，重新推送）
+        if (selfBank.some(s => s.word.toLowerCase() === word.toLowerCase())) {
+          if (resetWordForSelf(word)) { saveAll(); toast('已重置为未背诵，将重新推送'); }
           else toast('已在自建词库');
           return;
         }
-        selfBank.push({ word: x.word, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning, added: todayStr() });
-        const wasLearned = resetWordForSelf(x.word);
-        saveAll(); sb.textContent = '已加';
-        toast(wasLearned ? '已加入自建词库（该词已重置为未背诵）' : '已加入自建词库');
+        const doAdd = () => {
+          selfBank.push({ word, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning, added: todayStr() });
+          saveAll(); sb.textContent = '已加';
+        };
+        if (wordIsLearned(word)) {
+          // 已学习过的词：弹窗确认是否重新学习 —— 是→加入并重置重新推送；否→不加
+          confirmRelearn(word,
+            () => { doAdd(); resetWordForSelf(word); toast('已加入自建词库（该词已重置为未背诵，将重新推送）'); },
+            () => { toast('已取消加入'); });
+        } else {
+          doAdd();
+          toast('已加入自建词库');
+        }
       };
       list.appendChild(it);
     });

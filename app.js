@@ -129,6 +129,7 @@ window.WB = {
   secondRoundBank, secondRoundQuota, secondRoundStat, reconcileSecondRound,
   cleanupProbeData,
   nextReviewRoundNeeded,
+  markLearned, bankStat, buildReviewPool, primarySourceBank, migrateSelfBankToOrigin,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -309,6 +310,15 @@ function loadBanksBg() {
 const $ = sel => document.querySelector(sel);
 const app = () => document.getElementById('app');
 function bankKey(bank, word) { return bank + '::' + word.toLowerCase(); }
+// 返回该词所属的「正式词库」id（取第一个包含它的；无则 null）。用于「自建词库学完」时把进度同步到原词库。
+function primarySourceBank(word) {
+  const lc = wnorm(word);
+  for (const b of BANKS) {
+    if (b.id === SELFBANK_ID) continue;
+    if ((BANK_DATA[b.id]?.words || []).some(x => wnorm(x.word) === lc)) return b.id;
+  }
+  return null;
+}
 function todayStr(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function addDays(s, n) { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return todayStr(d); }
 function daysBetween(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
@@ -874,6 +884,50 @@ function resetWordForSelf(word) {
   if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
   return reset;
 }
+// 一次性（幂等）迁移：此前「自建词库推送并学完」的词只记在「自建::word」进度，
+// 导致①原词库不显示已背、②原词库还会重复推送它、③复习池按 key 去重会漏掉它。
+// 迁移：把这类进度同步到「原词库::word」并清除「自建::word」；同时把错词本/复习状态/待学批次里的 自建 引用一并改到原词库，
+// 保证复习不重复、原词库显示已背且不再推送。无原词库的自由词（字典随手加）保留 自建 记录。
+// 词库数据（BANK_DATA）就绪后才执行；需 BANKS/BANK_DATA，故在 loadBanksBg 之后调用，而非 startup 顶部。
+function migrateSelfBankToOrigin() {
+  if (!Object.keys(BANK_DATA || {}).length) return;          // 词库未就绪不迁移（幂等，下次再跑）
+  // 1) 进度：自建::word → 原词库::word
+  Object.keys(progress).forEach(k => {
+    const p = progress[k];
+    if (!p || p.bank !== SELFBANK_ID) return;
+    const src = primarySourceBank(p.word);
+    if (!src) return;                                          // 自由词保留 自建 记录
+    const sk = bankKey(src, p.word);
+    if (!progress[sk]) progress[sk] = { ...p, bank: src };
+    delete progress[k];
+  });
+  // 2) 错词本
+  Object.keys(wrongBook).forEach(k => {
+    const w = wrongBook[k];
+    if (!w || w.bank !== SELFBANK_ID) return;
+    const src = primarySourceBank(w.word);
+    if (!src) return;
+    const nk = bankKey(src, w.word);
+    wrongBook[nk] = { ...w, bank: src, key: nk };
+    delete wrongBook[k];
+  });
+  // 3) 复习状态里的 自建 引用改到原词库（避免 settle 时按 key 找回进度失败、重建出 自建 记录，造成重复复习）
+  if (reviewState && Array.isArray(reviewState.pool)) {
+    reviewState.pool.forEach(r => {
+      if (r && r.bank === SELFBANK_ID) {
+        const src = primarySourceBank(r.word);
+        if (src) { r.bank = src; r.key = bankKey(src, r.word); }
+      }
+    });
+  }
+  // 4) 待学批次：移除已在其原词库学过的「自建」待学项
+  pendingPlan = (pendingPlan || []).filter(p => {
+    if (p.bank !== SELFBANK_ID) return true;
+    const src = primarySourceBank(p.word);
+    return !(src && progress[bankKey(src, p.word)] && progress[bankKey(src, p.word)].firstLearned);
+  });
+  saveAll();
+}
 // 一次性校准：改为"按学习日 / 答错日排档期"后，把既有单词的下次复习日统一重排
 // 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
 // 一次性校准：改为「双锚点」后，把既有单词的学习日/错题日两个锚点字段补全并重排
@@ -1300,17 +1354,29 @@ function startLearning() {
 }
 function markLearned(w) {
   const key = bankKey(w.bank, w.word);
-  if (progress[key]) return;
-  progress[key] = {
-    word: w.word, bank: w.bank, meaning: w.meaning,
-    phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk,
-    firstLearned: todayStr(), stage: 0, lastLearnReview: todayStr(), nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
-  };
-  // 自建词库的词学完后即从自建词库移除（进度已写入 progress，继续走正常复习计划）
-  if (w.bank === SELFBANK_ID) selfBank = selfBank.filter(x => x.word !== w.word);
-  recordHistory('new', { key, word: w.word, bank: w.bank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
-  // 学完一个即从待学批次移除：批次随之收缩；全部学完才会在 reconcile 时生成下一批
-  pendingPlan = (pendingPlan || []).filter(p => bankKey(p.bank, p.word) !== key);
+  if (w.bank !== SELFBANK_ID && progress[key]) return;   // 正式词库：已学则直接返回（自建词库见下方分支）
+  let learnedKey = key, learnedBank = w.bank;
+  if (w.bank === SELFBANK_ID) {
+    // 自建词库的词：学完后从自建词库移除；并把进度记到它的「原词库」key 上，
+    // 使该词在原词库显示已背、不再被原词库重复推送（除非用户再次加入自建词库、重新推送）。
+    selfBank = selfBank.filter(x => x.word !== w.word);
+    const src = primarySourceBank(w.word);
+    learnedKey = src ? bankKey(src, w.word) : key;
+    learnedBank = src || SELFBANK_ID;
+  }
+  if (progress[learnedKey]) {
+    // 该词在原词库已记过（如「再次加入自建词库」后重练）：仅刷新复习锚点，不重复占用原词库「已背」计数
+    progress[learnedKey].lastLearnReview = todayStr();
+  } else {
+    progress[learnedKey] = {
+      word: w.word, bank: learnedBank, meaning: w.meaning,
+      phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk,
+      firstLearned: todayStr(), stage: 0, lastLearnReview: todayStr(), nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
+    };
+  }
+  recordHistory('new', { key: learnedKey, word: w.word, bank: learnedBank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
+  // 学完即从待学批次移除：按「词」移除，兼容「自建/原词库」两种进度写法，避免待学批次残留已学词
+  pendingPlan = (pendingPlan || []).filter(p => wnorm(p.word) !== wnorm(w.word));
   saveAll();
 }
 
@@ -2209,11 +2275,12 @@ function dict() {
         <div class="pos"><span class="pt">②</span>访问 http://localhost:8000/</div></div>`;
       return;
     }
+    migrateSelfBankToOrigin();   // 自建词库学完的词同步到原词库进度（幂等；需在 BANK_DATA 就绪后）
     // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
     if (window.Sync && Sync.on()) {
       Sync.sync()
         .catch(() => { })
-        .then(() => { calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
+        .then(() => { migrateSelfBankToOrigin(); calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
     } else {
       try { WB.refresh(); } catch (e) { }   // 词库就绪后刷新当前页，补全学习/词库/查词
     }

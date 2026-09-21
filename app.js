@@ -1440,23 +1440,36 @@ function review() {
   renderSetup(); renderBox();
   function renderSetup() {
     const pool = buildReviewPool();
+    const resuming = reviewState && !reviewRoundFinished();   // 存在未完成的中途复习 → 提供「继续」
+    // 用「还差哪一轮」决定本轮应启动的题型，避免残留的 reviewType 让用户反复重做已完成的那一轮、
+    // 而另一轮永远不标记，导致「单词复习×1+情境×1 后仍显示未复习完成」的死循环。
+    const need = nextReviewRoundNeeded(todayStr());
+    const needKind = need === 'sentence' ? 'sentence' : (need === 'recall' ? 'recall' : null);
+    if (!resuming && needKind) {
+      // recall 轮允许用户在「单词复习 / 听中文听写」间自选；sentence 轮固定情境填词
+      if (need === 'sentence') settings.reviewType = 'sentence';
+      else if (settings.reviewType !== 'word') settings.reviewType = 'recall';
+    }
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
-    const resuming = reviewState && !reviewRoundFinished();   // 存在未完成的中途复习 → 提供「继续」
     // 三种题型下方的提示统一为「复习节奏」，未开始复习前不暴露任何待复习单词
     $('#reviewSetup').innerHTML = `
       <h2>今日复习 <span class="r">${pool.length} 词</span></h2>
       <div class="seg" id="rvType" style="margin-bottom:8px">
-        <div class="${isRecall ? 'on' : ''}" data-t="recall">单词复习</div>
-        <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
-        <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
+        <div class="${isRecall ? 'on' : ''}" data-t="recall" style="${needKind && needKind !== 'recall' ? 'opacity:.4' : ''}">单词复习</div>
+        <div class="${isSent ? 'on' : ''}" data-t="sentence" style="${needKind && needKind !== 'sentence' ? 'opacity:.4' : ''}">情境填词</div>
+        <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word" style="${needKind && needKind !== 'recall' ? 'opacity:.4' : ''}">听中文听写</div>
       </div>
+      ${needKind ? `<div class="sub-tip" style="margin-top:2px;color:var(--brand)">本轮需完成：<b>${needKind === 'sentence' ? '情境填词' : '单词复习'}${settings.reviewType === 'word' ? '（听中文听写）' : ''}</b>${resuming ? '（继续上次未完成的复习）' : ''}</div>` : ''}
       <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。<br><b>第二轮（词库2 ＝ 复习词库）</b>：${sec2Desc()}<br><b style="color:var(--brand)">打卡完成需「单词复习 + 情境填词」各完成一轮</b>（听中文听写视作单词轮）；系统会在你完成一轮后自动引导进入另一轮。</div>
       ${resuming ? `<div class="sub-tip" style="margin-bottom:8px">检测到上次未完成的复习（第 ${reviewState.idx + 1}/${reviewState.pool.length} 个），可继续或重新开始。</div>` : ''}
       <div><button class="btn primary" id="startReview" ${pool.length || resuming ? '' : 'disabled'}>${resuming ? '▶ 继续复习（剩 ' + (reviewState.pool.length - reviewState.idx) + '）' : '▶ 开始复习' + (pool.length ? '（' + pool.length + '）' : '')}</button></div>
       ${resuming ? '<div style="margin-top:8px"><button class="btn ghost sm" id="restartReview">↺ 重新开始今日复习</button></div>' : ''}
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
-    document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => { settings.reviewType = d.dataset.t; saveAll(); renderSetup(); });
+    document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => {
+      if (d.style.opacity === '0.4') { toast('请先完成当前需要的轮次：' + (needKind === 'sentence' ? '情境填词' : '单词复习')); return; }
+      settings.reviewType = d.dataset.t; saveAll(); renderSetup();
+    });
     $('#startReview').onclick = () => {
       if (resuming) { review(); return; }            // 续接上次中途复习
       REVIEW_DAY = null; startReview(pool);
@@ -1550,11 +1563,18 @@ function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
   const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
-  if (settings.reviewType === 'recall') {
+  // 本轮题型由「还差哪一轮」决定（而非残留的 reviewType），保证两轮都会被推进、不会反复重做同一轮
+  const need = nextReviewRoundNeeded(d);
+  if (!need) { toast('今日复习已完成 🎉'); return; }
+  // recall 轮允许用户在「单词复习 / 听中文听写」间自选（二者都记 recallDone）
+  let type = (need === 'recall' && settings.reviewType === 'word') ? 'word' : need;
+  settings.reviewType = type; saveAll();
+  if (type === 'recall') {
     reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d };
     saveAll(); review(); return;
   }
-  reviewState = { pool: makeTypedQueue(queue, settings.reviewType, d), idx: 0, day: d };
+  // type === 'word'（听中文听写）或 'sentence'（情境填词）都走纸质卡片（paper-prompt + 上下翻页）
+  reviewState = { pool: makeTypedQueue(queue, type, d), idx: 0, day: d };
   saveAll(); review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页
@@ -1649,15 +1669,15 @@ function submitRecall() {
 function startSentenceRound(srcPool) {
   const d = dayOf();
   settings.reviewType = 'sentence'; saveAll();
-  // 第 2 轮用「#r2」盐做确定性洗牌：与第 1 轮顺序不同（利于二次巩固），但各端仍完全一致
-  reviewState = { pool: makeTypedQueue(dayShuffle(srcPool, e => e.key + '#r2', d), 'sentence', d), idx: 0, day: d };
+  // 第 2 轮沿用第 1 轮同一批词、且顺序完全一致（固定顺序，便于记忆；各端仍完全一致）
+  reviewState = { pool: makeTypedQueue(srcPool, 'sentence', d), idx: 0, day: d };
   $('#reviewBox').innerHTML = ''; renderReviewCard();
 }
 // 补齐「单词复习」轮：同一批词逐词判定认识/不认识（听中文听写视作单词轮）
 function startRecallRound(srcPool) {
   const d = dayOf();
   settings.reviewType = 'recall'; saveAll();
-  reviewState = { pool: dayShuffle(srcPool, e => e.key + '#r2', d).map(e => ({ ...e, type: 'recall', recallOk: undefined })), idx: 0, mode: 'recall', day: d };
+  reviewState = { pool: srcPool.map(e => ({ ...e, type: 'recall', recallOk: undefined })), idx: 0, mode: 'recall', day: d };
   $('#reviewBox').innerHTML = ''; renderRecall();
 }
 // 核对页：自行勾选对错，错误入错题本
@@ -1766,7 +1786,7 @@ function renderSummary() {
   };
   if ($('#reWrong')) $('#reWrong').onclick = () => {
     const d = dayOf();
-    const wq = dayShuffle(wrong, r => r.key + '#rw', d).map(r => ({ ...r, ok: true }));
+    const wq = dayShuffle(wrong, r => r.key, d).map(r => ({ ...r, ok: true }));
     reviewState = { pool: wq, idx: 0, day: d };
     review(); renderReviewCard();
   };

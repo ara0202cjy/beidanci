@@ -1,7 +1,7 @@
 /* 离线缓存：加到主屏幕后，断网也能背（词库约 4MB，首次用后即缓存） */
 /* 采用「网络优先 + 缓存兜底」：每次都先拉最新代码，断网才回退缓存，避免部署后一直跑旧版 */
 /* 核心脚本每次强制从网络取最新（cache:'reload'），词库 JSON 首次后常驻缓存，避免每次更新都重拉 4MB */
-const C = 'wb-v12';
+const C = 'wb-v14';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
   e.waitUntil(

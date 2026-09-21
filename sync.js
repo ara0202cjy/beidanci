@@ -25,6 +25,10 @@ const Sync = (function () {
   if (window.store) store.set('wb_device', device);
   let targets = [];               // 当前生效的同步端口数组（未登录时用 wb_sync 单端口）
   let pushing = null, timer = null;
+  let rateInfo = { remaining: null, reset: null };   // 最近一次 GitHub 响应里的限流信息
+  let lastSyncAt = 0;                                 // 上次全量 sync 时间（启动去重）
+  let pullTimer = null;                               // 定时拉取定时器
+  let visBound = false;                               // 可见性监听器是否已绑定
 
   /* ---------- 账号感知 ---------- */
   function acctName() { return (window.WB && window.WB.currentAccount) || ''; }
@@ -51,33 +55,20 @@ const Sync = (function () {
   function setToast(m) { if (window.toast) toast(m); }
   // 是否「可重试的瞬时错误」：限流 / 超时 / 网络中断。这类不影响本地数据，稍后自动重试即可，
   // 不应弹成吓人的「同步失败」。
-  let retryTimer = null;
   function transientErr(e) {
     const m = (e && e.message) || '';
     return /rate limit|timeout|timed out|network|Failed to fetch|aborted|ECONN|socket|503|502/i.test(m) || (e && (e.status === 403 || e.status === 429));
   }
   function handleSyncError(e, verb) {
     if (transientErr(e)) {
-      let extra = '将自动重试';
-      if (e && e.retryAfter && e.retryAfter > 0) {
-        const min = Math.ceil(e.retryAfter / 60);
-        extra = (min > 1 ? ('约 ' + min + ' 分钟后') : '约 1 分钟后') + '自动重试';
-      }
-      setToast('同步暂未成功（GitHub 接口限流或网络波动），本地进度已保存，' + extra);
-      // 限流/抖动通常很快恢复：按 GitHub 返回的 X-RateLimit-Reset 等待后自动补一次，避免反复弹窗
-      if (!retryTimer) {
-        const wait = (e && e.retryAfter) ? Math.min(Math.max(e.retryAfter, 60), 1800) * 1000 : 60000;
-        retryTimer = setTimeout(() => {
-          retryTimer = null;
-          if (on()) push().then(() => scheduleRefresh()).catch(err => handleSyncError(err, verb));
-        }, wait);
-      }
+      // 上传路径由 push() 内部的指数退避负责静默重试（不弹窗）；此处仅对 pull/setup 等给出轻提示
+      if (verb !== '上传') setToast('同步暂未成功（GitHub 接口限流或网络波动），本地进度已保存，将自动重试');
     } else {
       setToast('同步失败（' + verb + '）：' + e.message);
     }
   }
 
-  function reload() { loadTargets(); }
+  function reload() { loadTargets(); if (on()) startPeriodicPull(); else stopPeriodicPull(); }
 
   /* ---------- 本地快照（通过 window.WB 读写 app.js 的内部状态） ---------- */
   function A() { return window.WB; }
@@ -170,18 +161,33 @@ const Sync = (function () {
     const sa = (a.settings && a.settings._at) || 0;
     const sb = (b.settings && b.settings._at) || 0;
     out.settings = Object.assign({}, a.settings || {}, (sb > sa ? (b.settings || {}) : (a.settings || {})));
-    // 进行中的学习/复习会话：取「最近一次活动时间」较新的一端（savedAt 后者胜出，含 null）。
-    // 同一人在不同端口各学各的，以最后操作的端口为准，保证所有端口最终一致。
-    const aNewer = (a.savedAt || 0) >= (b.savedAt || 0);
-    out.learnState = (aNewer ? a.learnState : b.learnState) || null;
-    out.reviewState = (aNewer ? a.reviewState : b.reviewState) || null;
-    // 待学批次：同样取「最近一次活动」较新的一端，保证所有端口的待学词一致
-    out.pendingPlan = (aNewer ? a.pendingPlan : b.pendingPlan) || [];
-    out.planTarget = (aNewer ? a.planTarget : b.planTarget) || 0;
+    // 进行中的学习/复习会话 / 待学批次：
+    // 旧逻辑按 savedAt「后写覆盖整段」——空闲设备（savedAt=现在）会把活跃设备进行中的会话整体冲掉并写回云端，
+    // 导致另一台进度“丢失”。改为「本地非空则保留本地，仅当本地为空才采纳远端」，避免空闲端抹掉活跃端。
+    // （两端都非空时保留本地，符合“以当前正在操作的这台为准”的预期。）
+    const pick = (av, bv, empty) => {
+      const aE = av === undefined || av === null || av === empty;
+      const bE = bv === undefined || bv === null || bv === empty;
+      if (!aE) return av;
+      if (!bE) return bv;
+      return empty;
+    };
+    out.learnState = pick(a.learnState, b.learnState, null);
+    out.reviewState = pick(a.reviewState, b.reviewState, null);
+    out.pendingPlan = pick(a.pendingPlan, b.pendingPlan, []);
+    out.planTarget = (a.planTarget && a.planTarget !== 0) ? a.planTarget : (b.planTarget || 0);
     return out;
   }
 
   /* ---------- Gist 后端 ---------- */
+  function noteRate(r) {
+    try {
+      const rem = r.headers.get('X-RateLimit-Remaining');
+      const res = r.headers.get('X-RateLimit-Reset');
+      if (rem !== null && rem !== undefined) rateInfo.remaining = +rem;
+      if (res !== null && res !== undefined) rateInfo.reset = +res;
+    } catch (e) { }
+  }
   const GH = 'https://api.github.com/gists';
   function ghHeaders(t) {
     return {
@@ -197,6 +203,7 @@ const Sync = (function () {
       body: JSON.stringify({ description: '背单词工作台 · 进度同步', public: false, files: { [FILE]: { content: JSON.stringify(localState()) } } }),
     });
     if (!r.ok) { const e = new Error('创建 Gist 失败 (' + r.status + ')'); e.status = r.status; throw e; }
+    noteRate(r);
     const d = await r.json();
     t.gistId = d.id; saveTargets();
     return d.id;
@@ -204,6 +211,7 @@ const Sync = (function () {
   async function gistPull(t) {
     if (!t.gistId) return null;
     const r = await fetch(GH + '/' + t.gistId, { headers: ghHeaders(t), signal: AbortSignal.timeout(30000) });
+    noteRate(r);
     if (r.status === 404) { const e = new Error('云端存档不存在，请检查 Gist ID'); e.status = 404; throw e; }
     if (!r.ok) { const e = new Error('读取失败 (' + r.status + ')'); e.status = r.status; throw e; }
     const d = await r.json();
@@ -214,11 +222,23 @@ const Sync = (function () {
     try { return JSON.parse(txt); } catch (e) { return null; }
   }
   async function gistPush(state, t) {
-    let id = t.gistId || await gistCreate(t);
-    const r = await fetch(GH + '/' + id, {
+    let id = t.gistId;
+    if (!id) id = await gistCreate(t);
+    let r = await fetch(GH + '/' + id, {
       method: 'PATCH', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(state) } } }),
     });
+    noteRate(r);
+    if (r.status === 404) {
+      // gist 已被删/失权：自动重建后重试一次（自愈，避免硬失败）
+      t.gistId = '';
+      id = await gistCreate(t);
+      r = await fetch(GH + '/' + id, {
+        method: 'PATCH', headers: ghHeaders(t), signal: AbortSignal.timeout(30000),
+        body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(state) } } }),
+      });
+      noteRate(r);
+    }
     if (!r.ok) {
       const e = new Error('写入失败 (' + r.status + ')'); e.status = r.status;
       if (r.status === 403) { const reset = r.headers.get('X-RateLimit-Reset'); if (reset) { const secs = (+reset) - Math.floor(Date.now() / 1000); if (secs > 0) e.retryAfter = secs; } }
@@ -248,12 +268,28 @@ const Sync = (function () {
   /* ---------- 对外动作（遍历所有端口） ---------- */
   async function push() {
     if (!on()) return;
+    // 限流额度见底：延后到 reset 再补推，避免无意义的 403 风暴
+    if (rateInfo.remaining !== null && rateInfo.remaining <= 2 && rateInfo.reset) {
+      const wait = Math.min(Math.max(0, (rateInfo.reset * 1000) - Date.now()) + 3000, 1800000);
+      setTimeout(() => { rateInfo.remaining = null; push().then(() => scheduleRefresh()).catch(() => {}); }, wait);
+      return;
+    }
     const st = localState();
     for (const t of targets) {
-      try { await pushFn(st, t); t.lastSync = new Date().toLocaleString('zh-CN'); }
-      catch (e) { handleSyncError(e, '上传'); }
+      await pushOne(st, t, 0);
     }
     saveTargets();
+  }
+  // 单端口上传；瞬时错误（限流/网络抖动）指数退避静默重试（1m,2m,4m…最长30m），不弹窗、不阻塞调用方
+  function pushOne(st, t, attempt) {
+    return pushFn(st, t).then(() => { t.lastSync = new Date().toLocaleString('zh-CN'); })
+      .catch(e => {
+        if (transientErr(e) && attempt < 5) {
+          const wait = Math.min(60000 * Math.pow(2, attempt), 1800000);
+          return new Promise(r => setTimeout(r, wait)).then(() => pushOne(st, t, attempt + 1));
+        }
+        handleSyncError(e, '上传');
+      });
   }
   async function pull() {
     if (!on()) return;
@@ -267,7 +303,30 @@ const Sync = (function () {
     applyState(merged);
     saveTargets();
   }
-  async function sync() { if (!on()) return; await pull(); await push(); }
+  async function sync() {
+    if (!on()) return;
+    const now = Date.now();
+    if (now - lastSyncAt < 8000) return;   // 启动去重：8s 内不重复全量同步（seedAccounts 与 loadBanks 两次调用合并为一次）
+    lastSyncAt = now;
+    await pull(); await push();
+  }
+  function startPeriodicPull() {
+    if (pullTimer || !on()) return;
+    pullTimer = setInterval(() => {
+      if (on() && document.visibilityState !== 'hidden') {
+        pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取'));
+      }
+    }, 5 * 60 * 1000);
+    if (!visBound) {
+      visBound = true;
+      document.addEventListener('visibilitychange', () => {
+        if (on() && document.visibilityState === 'visible') {
+          pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取'));
+        }
+      });
+    }
+  }
+  function stopPeriodicPull() { if (pullTimer) { clearInterval(pullTimer); pullTimer = null; } }
   async function setup() {
     try {
       for (const t of targets) if (t.backend === 'gist' && t.token && !t.gistId) await gistCreate(t);
@@ -275,6 +334,7 @@ const Sync = (function () {
       setToast('已同步到云端');
     } catch (e) { handleSyncError(e, '同步'); }
     scheduleRefresh();
+    startPeriodicPull();
   }
 
   function schedulePush() {
@@ -382,7 +442,7 @@ const Sync = (function () {
       catch (e) { prompt('复制这段链接发给别人，对方数据只会存在他自己的手机上：', link); }
     };
     if (g('#syOff')) g('#syOff').onclick = () => {
-      targets = []; saveTargets(); render(host); setToast('已关闭云同步');
+      targets = []; saveTargets(); stopPeriodicPull(); render(host); setToast('已关闭云同步');
     };
   }
 

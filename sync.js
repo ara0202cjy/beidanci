@@ -103,6 +103,11 @@ const Sync = (function () {
     if (typeof s.planTarget === 'number') a.planTarget = s.planTarget;
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
+    // 关键：拉取合并后，用「最新进度」重新校正本地待学批次 pendingPlan。
+    // 否则另一台已学完的词仍留在本机 pendingPlan 里 → 首页显示"尚未学习"，与"学习完成"矛盾。
+    // pendingPlan 是「按日待学清单」（可从 progress 推导），不是进行中的会话；必须跨端收敛，
+    // 而 learnState/reviewState（真正在做的会话）由 merge 的 pick 规则保留、不在此处打扰。
+    if (window.WB && window.WB.reconcileLearnPlan) { try { window.WB.reconcileLearnPlan(); } catch (e) { } }
     if (window.saveAll) saveAll();
   }
 

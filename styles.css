@@ -160,7 +160,6 @@ mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; 
 .afx-s b { color: var(--ink); }
 .afx-s { font-weight: 600; color: var(--ink); }
 .afx-plus { color: var(--brand); font-weight: 700; font-size: 14px; }
-.affix-foot { margin-top: 8px; font-size: 11px; color: var(--sub); opacity: .85; }
 /* 词根词源字典的真实拆解（如「a 不+ban+don 给予=不禁止给出去=放弃」） */
 /* 拆解文本着色：英文字母/符号＝深灰（默认色），中文＝棕色，最后「结论」深灰加粗；字号略小更易读 */
 .afx-break { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; font-size: 13px; line-height: 1.7; color: #5F5952; font-weight: 600; letter-spacing: .2px; }

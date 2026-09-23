@@ -680,12 +680,11 @@ function affixHtml(w) {
   const r = (typeof ROOTS !== 'undefined' && ROOTS && ROOTS[lc]) || null;
   const brk = r && r[0];
   const rootNote = r && r[3];
-  let rowHtml = '', foot = '';
+  let rowHtml = '';
   if (brk) {                                     // ① 优先：词根词源字典的真实拆解
     const rows = [`<div class="affix-row"><span class="afx-break">${breakHtml(brk)}</span></div>`];
     if (rootNote) rows.push(`<div class="affix-root">词根：<b>${esc(rootNote)}</b></div>`);
     rowHtml = rows.join('');
-    foot = '词根词缀来自词根词源字典，仅供记忆参考';
   } else {                                       // ② 回退：机械词缀拆解（离线词典校验词根）
     const d = detectAffix(w.word);
     if (d) {
@@ -698,14 +697,12 @@ function affixHtml(w) {
       }
       if (d.suf) seg.push(`<span class="afx afx-x"><b>-${esc(d.suf)}</b><i>${esc(d.sufM)}</i></span>`);
       rowHtml = `<div class="affix-row">${seg.join('<span class="afx-plus">+</span>')}</div>`;
-      foot = '词缀仅作记忆提示，非严格词源';
     }
   }
   if (!rowHtml) return '';                       // 无拆解 → 不渲染（词频不再展示，仅用于推送顺序判定）
   return `<div class="affix-box">
     <div class="affix-head">🔤 词根词缀 · 记忆提示</div>
     ${rowHtml}
-    <div class="affix-foot">${foot}</div>
   </div>`;
 }
 

@@ -797,13 +797,6 @@ function buildBatch(plan, maxSize, banks) {
   const learn = (banks || []).slice(0, 1);                 // 只取词库1
   const learnIds = new Set(learn.map(b => b.id));
   const add = (bankId, word) => { out.push({ bank: bankId, word }); used.add(bankKey(bankId, word)); };
-  (plan || []).forEach(p => {                              // 已选未学词先保留（粘性批次）
-    if (p.bank !== SELFBANK_ID && !learnIds.has(p.bank)) return;   // 复习词库不再产生新词
-    const key = bankKey(p.bank, p.word);
-    if (progress[key] && progress[key].firstLearned) return;
-    if (out.length >= maxSize) return;
-    add(p.bank, p.word);
-  });
   const pullBank = (bankId) => {                           // 正式词库走 BANK_DATA；无单独额度，补足到上限
     if (out.length >= maxSize) return;
     const ex = new Set(used);
@@ -814,7 +807,15 @@ function buildBatch(plan, maxSize, banks) {
       add(bankId, c.word);
     }
   };
-  // 自建词库：优先、占额（直接遍历 selfBank，不走 BANK_DATA）
+  // ① 先保留已选中的「自建」词（粘性且优先）
+  (plan || []).forEach(p => {
+    if (p.bank !== SELFBANK_ID) return;
+    const key = bankKey(p.bank, p.word);
+    if (progress[key] && progress[key].firstLearned) return;
+    if (out.length >= maxSize) return;
+    add(p.bank, p.word);
+  });
+  // ② 再加入尚未在批次里的「新」自建词（优先占额，直接遍历 selfBank）
   if (out.length < maxSize) {
     for (const w of selfBank) {
       if (out.length >= maxSize) break;
@@ -824,6 +825,14 @@ function buildBatch(plan, maxSize, banks) {
       add(SELFBANK_ID, w.word);
     }
   }
+  // ③ 保留已选中的「词库1」粘性词（自建优先占完名额后，词库1 词让位）
+  (plan || []).forEach(p => {
+    if (p.bank === SELFBANK_ID || !learnIds.has(p.bank)) return;   // 复习词库/非学习库不再产生新词
+    const key = bankKey(p.bank, p.word);
+    if (progress[key] && progress[key].firstLearned) return;
+    if (out.length >= maxSize) return;
+    add(p.bank, p.word);
+  });
   learn.forEach(b => pullBank(b.id));                      // 词库1 补足剩余名额（不含词库2）
   return out;
 }
@@ -865,7 +874,11 @@ function reconcileLearnPlan(forceResize) {
     const key = bankKey(p.bank, p.word);
     return !(progress[key] && progress[key].firstLearned);
   });
-  const sig = JSON.stringify({ total, banks: learnBanks() });   // 只有影响新词的配置（总数/词库1）变化才重排批次
+  // 影响新词批次的配置变化才重排批次：新学习总数 / 词库1 / 自建词库成员（加入或学完自建词都会改 selfBank）。
+  // 注意必须纳入自建词：否则「先生成了不含自建的粘性批次、之后才加自建词」时 sig 不变、批次永不重建，
+  // 自建词既不优先、也不触发词库1 补足（表现为「自建单词不足时词库未自动补足」）。
+  const selfSig = JSON.stringify((selfBank || []).map(w => w.word));
+  const sig = JSON.stringify({ total, banks: learnBanks(), self: selfSig });
   const changed = forceResize || sig !== planTarget;
   if (changed || plan.length === 0) {            // 配置变化，或批次已耗尽 → 重新组合（受 maxSize 约束）
     planTarget = sig;

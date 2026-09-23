@@ -562,6 +562,123 @@ function extraHtml(lc) {
   }
   return h;
 }
+
+/* ---------- 前后缀（词缀）构词拆解 · 记忆提示 ---------- */
+// 仅当「去掉词缀后的词根本身是已知单词（在 DICT 中）」才展示，避免误拆误导
+const AFFIX_PRE = [
+  ['anti', '反对；对抗'], ['counter', '反；对抗'], ['de', '去除；向下；相反'],
+  ['dis', '不；相反；分离'], ['en', '使…；进入'], ['em', '使…；进入'],
+  ['ex', '前任；向外'], ['fore', '在前；预先'], ['hyper', '超过；过度'],
+  ['hypo', '在下；不足'], ['il', '不（接 l）'], ['im', '不；向内'],
+  ['in', '不；向内'], ['inter', '在…之间'], ['intra', '在…内部'],
+  ['ir', '不（接 r）'], ['mal', '坏；错误'], ['mis', '错误'],
+  ['mono', '单；一'], ['multi', '多'], ['non', '不；非'], ['out', '超过；向外'],
+  ['over', '过于；在…上方'], ['post', '在…之后'], ['pre', '在…之前'],
+  ['pro', '向前；支持'], ['re', '再；重新；回'], ['semi', '半'],
+  ['sub', '在…下；亚'], ['super', '超；在上'], ['tele', '远'], ['trans', '跨越；转移'],
+  ['tri', '三'], ['un', '不；相反；去除'], ['under', '不足；在下'], ['bi', '二'],
+  ['co', '共同；一起'], ['com', '共同；一起'], ['con', '共同；一起'],
+  ['col', '共同；一起'], ['cor', '共同；一起'], ['extra', '额外'], ['micro', '微小'],
+  ['mini', '小'], ['neo', '新'], ['auto', '自己；自动'], ['geo', '地球；土地'],
+  ['bio', '生命'], ['photo', '光'], ['psycho', '心理'], ['socio', '社会'],
+  ['hydro', '水'], ['aero', '空气；飞行'], ['astro', '星'], ['cent', '百'],
+  ['dec', '十'], ['poly', '多'], ['syn', '共同；一起'], ['sym', '共同；一起'],
+  ['vice', '副'], ['circum', '环绕'], ['peri', '周围'], ['ultra', '极端；超'],
+  ['up', '向上'], ['down', '向下']
+];
+const AFFIX_SUF = [
+  ['tion', '名词：动作/状态'], ['sion', '名词：动作/状态'], ['ation', '名词：动作/状态'],
+  ['ition', '名词：动作/状态'], ['ment', '名词：结果/状态'], ['ness', '名词：性质/状态'],
+  ['ity', '名词：性质'], ['ty', '名词：性质'], ['ance', '名词：性质/动作'], ['ence', '名词：性质/动作'],
+  ['ant', '形/名：…的/人'], ['ent', '形/名：…的/人'], ['er', '名词：做…的人/物'],
+  ['or', '名词：做…的人/物'], ['ar', '名词：做…的人/物'], ['ist', '名词：…家/主义者'],
+  ['ism', '名词：主义/学说'], ['ship', '名词：状态/身份'], ['hood', '名词：状态/时期'],
+  ['dom', '名词：领域/状态'], ['age', '名词：集合/结果'], ['cy', '名词：状态/性质'],
+  ['ary', '形/名：与…有关'], ['ory', '形/名：与…有关'], ['al', '形容词：…的'],
+  ['ial', '形容词：…的'], ['ical', '形容词：…的'], ['ful', '形容词：充满…的'],
+  ['less', '形容词：无…的'], ['ous', '形容词：多…的'], ['ious', '形容词：多…的'],
+  ['ive', '形容词：有…性质的'], ['ative', '形容词：有…性质的'], ['itive', '形容词：有…性质的'],
+  ['able', '形容词：可…的'], ['ible', '形容词：可…的'], ['ic', '形容词：…的'],
+  ['ish', '形容词：有点…的'], ['en', '动/形：使…/由…制'], ['ize', '动词：使…化'],
+  ['ise', '动词：使…化'], ['ify', '动词：使…化'], ['fy', '动词：使…化'],
+  ['ate', '动/形：使…'], ['y', '形容词：有…性质'], ['ly', '副词：…地'],
+  ['ward', '副/形：向…方向'], ['wise', '副/形：以…方式'], ['ese', '形/名：…国的/语言'],
+  ['let', '名词：小'], ['ling', '名词：小；幼'], ['eer', '名词：从事…的人'],
+  ['ess', '名词：女性'], ['some', '形容词：有…倾向']
+];
+function firstSense(m) {
+  if (!m) return '';
+  const s = String(m);
+  let t = '';
+  // 取首个全角括号作为中文释义（支持嵌套：按深度配平，去掉内层括号内容）
+  const start = s.indexOf('（');
+  if (start >= 0) {
+    let depth = 0, end = -1;
+    for (let i = start; i < s.length; i++) {
+      const ch = s[i];
+      if (ch === '（' || ch === '(') depth++;
+      else if (ch === '）' || ch === ')') { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end > start) t = s.slice(start + 1, end).replace(/[（(][^（）()]*[)）]/g, '');
+  }
+  if (!/[\u4e00-\u9fa5]/.test(t)) t = (s.match(/[\u4e00-\u9fa5][^；;，,、（(]*/) || [''])[0];   // 无括号则退取首个中文片段
+  t = t.split(/[；;，,、]/)[0].trim();
+  if (t.length > 12) t = t.slice(0, 12) + '…';
+  return t;
+}
+// 返回 {pre,preM,stem,suf,sufM} | {base,suf,sufM} | {pre,preM,base} | null
+function detectAffix(word) {
+  const w = (word || '').toLowerCase();
+  if (w.length < 4) return null;
+  const D = (typeof DICT !== 'undefined') ? DICT : null;
+  if (!D) return null;
+  // 优先级：①仅后缀 ②仅前缀 ③前缀+后缀（让更干净的单一拆解胜出，避免 information 误拆为 in+form+ation）
+  // 1) 仅后缀：去掉后缀后的基础词在词典中
+  for (const [suf, sufM] of AFFIX_SUF) {
+    if (w.endsWith(suf) && w.length > suf.length + 2) {
+      const base = w.slice(0, -suf.length);
+      if (base.length >= 2 && D[base]) return { base, suf, sufM };
+    }
+  }
+  // 2) 仅前缀：去掉前缀后的基础词在词典中
+  for (const [pre, preM] of AFFIX_PRE) {
+    if (w.startsWith(pre) && w.length > pre.length + 2) {
+      const base = w.slice(pre.length);
+      if (base.length >= 3 && D[base]) return { pre, preM, base };
+    }
+  }
+  // 3) 前缀 + 后缀：去掉两端后词根在词典中（兜底，处理 un+lock+able 这类无单一拆解的复合词）
+  for (const [pre, preM] of AFFIX_PRE) {
+    if (w.startsWith(pre) && w.length > pre.length + 3) {
+      const mid = w.slice(pre.length);
+      for (const [suf, sufM] of AFFIX_SUF) {
+        if (mid.endsWith(suf) && mid.length > suf.length + 1) {
+          const stem = mid.slice(0, -suf.length);
+          if (stem.length >= 2 && D[stem]) return { pre, preM, stem, suf, sufM };
+        }
+      }
+    }
+  }
+  return null;
+}
+function affixHtml(w) {
+  const d = detectAffix(w && w.word);
+  if (!d) return '';
+  const seg = [];
+  if (d.pre) seg.push(`<span class="afx afx-p"><b>${esc(d.pre)}-</b><i>${esc(d.preM)}</i></span>`);
+  const stem = d.stem || d.base;
+  if (stem) {
+    const sm = firstSense(DICT[stem] && DICT[stem].meaning);
+    seg.push(`<span class="afx afx-s"><b>${esc(stem)}</b>${sm ? `<i>${esc(sm)}</i>` : ''}</span>`);
+  }
+  if (d.suf) seg.push(`<span class="afx afx-x"><b>-${esc(d.suf)}</b><i>${esc(d.sufM)}</i></span>`);
+  return `<div class="affix-box">
+    <div class="affix-head">🔤 构词拆解 · 记忆提示</div>
+    <div class="affix-row">${seg.join('<span class="afx-plus">+</span>')}</div>
+    <div class="affix-foot">词缀仅作记忆提示，非严格词源</div>
+  </div>`;
+}
+
 // 统一构建词语详情（查词/词库共用）：w = {word,bank,phonetic_us,phonetic_uk,meaning}
 function detailInner(w) {
   const lc = (w.word || '').toLowerCase();
@@ -577,6 +694,7 @@ function detailInner(w) {
   if (us || uk) h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','us')">美音 ${esc(us || '')}</span><span class="p" onclick="pron('${jsAttr(w.word)}','gb')">英音 ${esc(uk || '')}</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
   else h += `<div class="learn-phon"><span class="p" onclick="pron('${jsAttr(w.word)}','')">${icon('i-sound')} 朗读</span><span class="p slow" onclick="pron('${jsAttr(w.word)}','slow')">${icon('i-slow')} 慢速</span></div>`;
   if (meaning) h += `<div class="mean-list">${renderMeaning(meaning)}</div>`;
+  h += affixHtml(w);
   h += exampleHtml(w, 2);
   h += obscureHtml(w);
   h += extraHtml(lc);
@@ -793,10 +911,11 @@ function candidatesForBank(bankId, exclude) {
 // 词库2（复习词库）不参与新词学习，它只推送已背词做第二轮复习（单列计数、不计入新学习总数）。
 function buildBatch(plan, maxSize, banks) {
   const out = [];
-  const used = new Set();
+  const used = new Set();                                  // 库内 key（bank#word）
+  const usedWords = new Set();                             // 跨库词形（wnorm(word)）：自建词若也在词库1，补足时跳过，避免同词重复占额
   const learn = (banks || []).slice(0, 1);                 // 只取词库1
   const learnIds = new Set(learn.map(b => b.id));
-  const add = (bankId, word) => { out.push({ bank: bankId, word }); used.add(bankKey(bankId, word)); };
+  const add = (bankId, word) => { out.push({ bank: bankId, word }); used.add(bankKey(bankId, word)); usedWords.add(wnorm(word)); };
   const pullBank = (bankId) => {                           // 正式词库走 BANK_DATA；无单独额度，补足到上限
     if (out.length >= maxSize) return;
     const ex = new Set(used);
@@ -804,6 +923,7 @@ function buildBatch(plan, maxSize, banks) {
       if (out.length >= maxSize) break;
       const key = bankKey(bankId, c.word);
       if (used.has(key)) continue;
+      if (usedWords.has(wnorm(c.word))) continue;          // 跨库去重：该词已作为自建收录 → 不再重复占额
       add(bankId, c.word);
     }
   };
@@ -831,6 +951,7 @@ function buildBatch(plan, maxSize, banks) {
     const key = bankKey(p.bank, p.word);
     if (progress[key] && progress[key].firstLearned) return;
     if (out.length >= maxSize) return;
+    if (usedWords.has(wnorm(p.word))) return;                      // 该词已作为自建收录 → 跳过，避免同词重复占额
     add(p.bank, p.word);
   });
   learn.forEach(b => pullBank(b.id));                      // 词库1 补足剩余名额（不含词库2）
@@ -880,9 +1001,20 @@ function reconcileLearnPlan(forceResize) {
   const selfSig = JSON.stringify((selfBank || []).map(w => w.word));
   const sig = JSON.stringify({ total, banks: learnBanks(), self: selfSig });
   const changed = forceResize || sig !== planTarget;
-  if (changed || plan.length === 0) {            // 配置变化，或批次已耗尽 → 重新组合（受 maxSize 约束）
+  const maxSize = Math.max(0, total - learnedTotal);
+  // 内容级校验：仅比对 sig 会漏掉「sig 未变、但批次内容已过期」的情况
+  // （旧粘性残留、多端合并后本机批次不含自建词等），表现为「自建不足时词库未自动补足、
+  // 批次里看不到补足词」。故额外校验两项：
+  //   ① 批次长度应达「可达名额」expected（不足则补、富余则缩）；
+  //   ② 批次内自建词数应达「自建应占名额」selfShould（保证自建优先、不足由词库1 补足）。
+  const selfAvail = (selfBank || []).filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
+  let libAvail = 0; learnBanks().forEach(b => { libAvail += unlearned(b.id).length; });
+  const expected = Math.min(maxSize, selfAvail + libAvail);
+  const selfInPlan = plan.filter(p => p.bank === SELFBANK_ID).length;
+  const selfShould = Math.min(selfAvail, maxSize);
+  const stale = plan.length !== expected || selfInPlan < selfShould;
+  if (changed || plan.length === 0 || stale) {   // 配置变化 / 批次耗尽 / 批次内容过期 → 重新组合（受 maxSize 约束）
     planTarget = sig;
-    const maxSize = Math.max(0, total - learnedTotal);
     plan = buildBatch(plan, maxSize, banks);
   }
   pendingPlan = plan;
@@ -1212,6 +1344,11 @@ function learn() {
   const totalPlanned = studyTotal();
   const selfLeft = selfBank.filter(w => !progress[bankKey(SELFBANK_ID, w.word)]).length;
   const due = Object.values(progress).filter(p => p.nextReview && p.nextReview <= todayStr()).length;
+  // 用最新批次（含「自建不足→词库1 补足」的结果）展示首页拆分，避免首页只显示总数、看不出补足
+  reconcileLearnPlan();
+  const selfPending = pendingPlan.filter(p => p.bank === SELFBANK_ID).length;
+  const libPending = pendingPlan.filter(p => p.bank !== SELFBANK_ID).length;
+  const lib1 = banks[0];
   let bars = '';
   const d = new Date(); d.setDate(d.getDate() - 6);
   for (let i = 0; i < 7; i++) {
@@ -1242,6 +1379,7 @@ function learn() {
       ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（占用新学习名额）</div>` : ''}
       ${sec2Html()}
       <div class="sub-tip" style="margin-top:6px">新词计划：自建优先 ＋ 词库1 补足共 <b>${totalPlanned}</b> 个（词库2 的复习推送单列，不计入）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
+      ${(selfPending || libPending) ? `<div class="sb-line sb-split"><span class="sb-name">今日待学（新建）</span><span class="sb-txt">自建 <b>${selfPending}</b> ＋ ${lib1 ? esc(lib1.id) : '词库1'} <b>${libPending}</b> ＝ <b>${selfPending + libPending}</b></span></div>` : ''}
     </div>
 
     <div class="card mint"><h2>近 7 天学习量</h2><div style="display:flex;gap:6px;align-items:flex-end">${bars}</div></div>
@@ -1334,6 +1472,7 @@ function renderLearnBox() {
       <span class="p" onclick="speak('${jsAttr(w.word)}','en-GB')">英音 ${esc(w.phonetic_uk || '—')}</span>
     </div>
     <div class="mean-list">${renderMeaning(w.meaning)}</div>
+    ${affixHtml(w)}
     ${obscureHtml(w)}
     ${exampleHtml(w, 1)}
     <div class="row" style="margin-top:18px">

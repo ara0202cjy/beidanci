@@ -150,6 +150,18 @@ mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; 
 .obs-rare { color: var(--obs-head); font-weight: 700; }
 .obs-eg { margin-top: 10px; background: #fff; }
 
+/* 前后缀（词缀）构词拆解 */
+.affix-box { margin-top: 14px; border: 1.5px solid var(--brand-soft); background: #F3ECE6; border-radius: 14px; padding: 12px 14px; }
+.affix-head { font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 9px; letter-spacing: .3px; }
+.affix-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 7px; font-size: 14px; line-height: 1.5; }
+.afx { display: inline-flex; align-items: baseline; gap: 5px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px 9px; }
+.afx b { color: var(--brand); font-weight: 700; font-size: 15px; }
+.afx i { color: var(--sub); font-style: normal; font-size: 12px; }
+.afx-s b { color: var(--ink); }
+.afx-s { font-weight: 600; color: var(--ink); }
+.afx-plus { color: var(--brand); font-weight: 700; font-size: 14px; }
+.affix-foot { margin-top: 8px; font-size: 11px; color: var(--sub); opacity: .85; }
+
 /* 复习/听写 */
 .dict-play { font-size: 15px; color: var(--brand); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
 .hint-word { font-size: 30px; letter-spacing: 8px; font-weight: 600; color: var(--ink); margin: 10px 0; }
@@ -404,3 +416,8 @@ input[type=range] { accent-color: var(--brand); }
 .sb-line.sb-bank .sb-name { width: auto; flex: 0 0 auto; min-width: 112px; font-size: 12px; white-space: nowrap; }
 .sb-line.sb-bank .sb-bar { margin-left: 2px; }
 .sb-line.sb-bank .sb-txt { font-size: 12px; }
+/* 「今日待学（新建）：自建 X ＋ 词库1 Y ＝ N」拆分行：名称单行、数值右对齐 */
+.sb-line.sb-split { gap: 8px; }
+.sb-line.sb-split .sb-name { width: auto; flex: 0 0 auto; white-space: nowrap; font-size: 12px; }
+.sb-line.sb-split .sb-txt { margin-left: auto; font-size: 12px; white-space: nowrap; }
+.sb-line.sb-split .sb-txt b { color: var(--brand); }

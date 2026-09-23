@@ -268,7 +268,8 @@ window.seedAccounts = seedAccounts;
 let BANK_DATA = {};
 let ALL_INDEX = [];
 let EXAMPLES = {};
-let FREQ = {};
+let FREQ = {};      // 朗文词频等级（0 最常用 → 5 未收录），用于出词排序
+let ROOTS = {};     // 词根词缀 + 词频（灵格斯词根词源字典）：{ word: [拆解, 柯林斯★, COCA排名, 词根说明] }
 let OBSCURE = {};   // 熟词僻义（中考/高考）
 let BANK_MAP = {};  // 单词 → 词库数据（批量添加时自动匹配）
 let DICT = {};      // 离线查词词典（牛津8版抽取：{uk,us,meaning}）
@@ -290,6 +291,7 @@ function loadBanksBg() {
   const small = [
     ['examples.json', v => EXAMPLES = v], ['freq.json', v => FREQ = v],
     ['obscure.json', v => OBSCURE = v], ['dict.json', v => DICT = v],
+    ['roots.json', v => ROOTS = v],
     ['collocation.json', v => COLLOC = v], ['thesaurus.json', v => THES = v],
     ['phrasal.json', v => PHRASE = v],
   ];
@@ -661,21 +663,63 @@ function detectAffix(word) {
   }
   return null;
 }
-function affixHtml(w) {
-  const d = detectAffix(w && w.word);
-  if (!d) return '';
-  const seg = [];
-  if (d.pre) seg.push(`<span class="afx afx-p"><b>${esc(d.pre)}-</b><i>${esc(d.preM)}</i></span>`);
-  const stem = d.stem || d.base;
-  if (stem) {
-    const sm = firstSense(DICT[stem] && DICT[stem].meaning);
-    seg.push(`<span class="afx afx-s"><b>${esc(stem)}</b>${sm ? `<i>${esc(sm)}</i>` : ''}</span>`);
+// 词频展示：优先用词典的「柯林斯★ + COCA 排名」，无则回退朗文词频等级
+// （朗文等级全体 13743 词都有值 → 保证「所有词都能看到词频」，柯林斯/COCA 更精确）
+function freqLineHtml(word) {
+  const lc = wnorm(word);
+  const r = (typeof ROOTS !== 'undefined' && ROOTS && ROOTS[lc]) || null;
+  const collins = r && r[1];
+  const coca = r && r[2];
+  const parts = [];
+  if (collins) parts.push(`柯林斯 <b>${'★'.repeat(collins)}</b>`);
+  if (coca) parts.push(`COCA <b>${coca}</b>`);
+  if (parts.length) {
+    return `<div class="affix-freq">📊 词频：${parts.join('<span class="afx-sep">｜</span>')}<span class="fx-note">COCA 数值越小越常用</span></div>`;
   }
-  if (d.suf) seg.push(`<span class="afx afx-x"><b>-${esc(d.suf)}</b><i>${esc(d.sufM)}</i></span>`);
+  const lv = (typeof FREQ !== 'undefined' && FREQ) ? FREQ[lc] : undefined;
+  if (typeof lv === 'number' && lv < 5) {          // 5 = 朗文未收录，不展示
+    const t = lv <= 1.6 ? '高频' : lv <= 2.6 ? '常用' : lv <= 3.6 ? '一般' : '低频';
+    return `<div class="affix-freq">📊 词频：朗文 <b>${t}</b><span class="fx-note">据朗文当代词频等级</span></div>`;
+  }
+  return '';
+}
+
+function affixHtml(w) {
+  if (!w || !w.word) return '';
+  const lc = wnorm(w.word);
+  const r = (typeof ROOTS !== 'undefined' && ROOTS && ROOTS[lc]) || null;
+  const brk = r && r[0];
+  const rootNote = r && r[3];
+  const collins = r && r[1];
+  const coca = r && r[2];
+  let rowHtml = '', foot = '';
+  if (brk) {                                     // ① 优先：词根词源字典的真实拆解
+    const rows = [`<div class="affix-row"><span class="afx-break">${esc(brk)}</span></div>`];
+    if (rootNote) rows.push(`<div class="affix-root">词根：<b>${esc(rootNote)}</b></div>`);
+    rowHtml = rows.join('');
+    foot = '词根词缀/柯林斯★/COCA 来自灵格斯词根词源字典，仅供记忆参考';
+  } else {                                       // ② 回退：机械词缀拆解（离线词典校验词根）
+    const d = detectAffix(w.word);
+    if (d) {
+      const seg = [];
+      if (d.pre) seg.push(`<span class="afx afx-p"><b>${esc(d.pre)}-</b><i>${esc(d.preM)}</i></span>`);
+      const stem = d.stem || d.base;
+      if (stem) {
+        const sm = firstSense(DICT[stem] && DICT[stem].meaning);
+        seg.push(`<span class="afx afx-s"><b>${esc(stem)}</b>${sm ? `<i>${esc(sm)}</i>` : ''}</span>`);
+      }
+      if (d.suf) seg.push(`<span class="afx afx-x"><b>-${esc(d.suf)}</b><i>${esc(d.sufM)}</i></span>`);
+      rowHtml = `<div class="affix-row">${seg.join('<span class="afx-plus">+</span>')}</div>`;
+      foot = '词缀仅作记忆提示，非严格词源';
+    }
+  }
+  // 无拆解、且无词典精确词频（柯林斯★/COCA）→ 不渲染（避免给所有基础词都加噪音面板）
+  if (!rowHtml && !collins && !coca) return '';
   return `<div class="affix-box">
-    <div class="affix-head">🔤 构词拆解 · 记忆提示</div>
-    <div class="affix-row">${seg.join('<span class="afx-plus">+</span>')}</div>
-    <div class="affix-foot">词缀仅作记忆提示，非严格词源</div>
+    <div class="affix-head">🔤 词根词缀 · 记忆提示</div>
+    ${rowHtml}
+    ${freqLineHtml(w.word)}
+    <div class="affix-foot">${foot || '词频据词频词典，仅供记忆参考'}</div>
   </div>`;
 }
 

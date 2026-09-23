@@ -161,6 +161,16 @@ mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; 
 .afx-s { font-weight: 600; color: var(--ink); }
 .afx-plus { color: var(--brand); font-weight: 700; font-size: 14px; }
 .affix-foot { margin-top: 8px; font-size: 11px; color: var(--sub); opacity: .85; }
+/* 词根词源字典的真实拆解（如「a 不+ban+don 给予=不禁止给出去=放弃」） */
+.afx-break { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; font-size: 14px; line-height: 1.65; color: var(--ink); font-weight: 600; letter-spacing: .2px; }
+/* 词根说明（如「ban=prohibit,表示“禁止”」） */
+.affix-root { margin-top: 7px; font-size: 12.5px; color: var(--sub); }
+.affix-root b { color: var(--brand); font-weight: 700; }
+/* 词频行（柯林斯★ / COCA / 朗文回退） */
+.affix-freq { margin-top: 8px; font-size: 13px; color: var(--ink); }
+.affix-freq b { color: var(--brand); letter-spacing: 1px; }
+.afx-sep { color: var(--line); margin: 0 4px; }
+.fx-note { margin-left: 6px; font-size: 11px; color: var(--sub); opacity: .85; }
 
 /* 复习/听写 */
 .dict-play { font-size: 15px; color: var(--brand); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }

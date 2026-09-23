@@ -663,25 +663,15 @@ function detectAffix(word) {
   }
   return null;
 }
-// 词频展示：优先用词典的「柯林斯★ + COCA 排名」，无则回退朗文词频等级
-// （朗文等级全体 13743 词都有值 → 保证「所有词都能看到词频」，柯林斯/COCA 更精确）
-function freqLineHtml(word) {
-  const lc = wnorm(word);
-  const r = (typeof ROOTS !== 'undefined' && ROOTS && ROOTS[lc]) || null;
-  const collins = r && r[1];
-  const coca = r && r[2];
-  const parts = [];
-  if (collins) parts.push(`柯林斯 <b>${'★'.repeat(collins)}</b>`);
-  if (coca) parts.push(`COCA <b>${coca}</b>`);
-  if (parts.length) {
-    return `<div class="affix-freq">📊 词频：${parts.join('<span class="afx-sep">｜</span>')}<span class="fx-note">COCA 数值越小越常用</span></div>`;
-  }
-  const lv = (typeof FREQ !== 'undefined' && FREQ) ? FREQ[lc] : undefined;
-  if (typeof lv === 'number' && lv < 5) {          // 5 = 朗文未收录，不展示
-    const t = lv <= 1.6 ? '高频' : lv <= 2.6 ? '常用' : lv <= 3.6 ? '一般' : '低频';
-    return `<div class="affix-freq">📊 词频：朗文 <b>${t}</b><span class="fx-note">据朗文当代词频等级</span></div>`;
-  }
-  return '';
+// 拆解文本着色：英文字母/符号＝深灰（继承父级色），中文＝棕色；
+// 最后一个「=」之后的「结论」整体用深灰加粗，让最终词义一眼可辨。
+function breakHtml(txt) {
+  const t = String(txt || '');
+  const i = t.lastIndexOf('=');
+  const head = i >= 0 ? t.slice(0, i + 1) : t;
+  const conc = i >= 0 ? t.slice(i + 1) : '';
+  const paint = s => esc(s).replace(/([\u4e00-\u9fa5]+)/g, m => `<span class="brk-zh">${m}</span>`);
+  return paint(head) + (conc ? `<span class="brk-conc">${esc(conc)}</span>` : '');
 }
 
 function affixHtml(w) {
@@ -690,14 +680,12 @@ function affixHtml(w) {
   const r = (typeof ROOTS !== 'undefined' && ROOTS && ROOTS[lc]) || null;
   const brk = r && r[0];
   const rootNote = r && r[3];
-  const collins = r && r[1];
-  const coca = r && r[2];
   let rowHtml = '', foot = '';
   if (brk) {                                     // ① 优先：词根词源字典的真实拆解
-    const rows = [`<div class="affix-row"><span class="afx-break">${esc(brk)}</span></div>`];
+    const rows = [`<div class="affix-row"><span class="afx-break">${breakHtml(brk)}</span></div>`];
     if (rootNote) rows.push(`<div class="affix-root">词根：<b>${esc(rootNote)}</b></div>`);
     rowHtml = rows.join('');
-    foot = '词根词缀/柯林斯★/COCA 来自灵格斯词根词源字典，仅供记忆参考';
+    foot = '词根词缀来自词根词源字典，仅供记忆参考';
   } else {                                       // ② 回退：机械词缀拆解（离线词典校验词根）
     const d = detectAffix(w.word);
     if (d) {
@@ -713,13 +701,11 @@ function affixHtml(w) {
       foot = '词缀仅作记忆提示，非严格词源';
     }
   }
-  // 无拆解、且无词典精确词频（柯林斯★/COCA）→ 不渲染（避免给所有基础词都加噪音面板）
-  if (!rowHtml && !collins && !coca) return '';
+  if (!rowHtml) return '';                       // 无拆解 → 不渲染（词频不再展示，仅用于推送顺序判定）
   return `<div class="affix-box">
     <div class="affix-head">🔤 词根词缀 · 记忆提示</div>
     ${rowHtml}
-    ${freqLineHtml(w.word)}
-    <div class="affix-foot">${foot || '词频据词频词典，仅供记忆参考'}</div>
+    <div class="affix-foot">${foot}</div>
   </div>`;
 }
 
@@ -920,6 +906,21 @@ function reconcileSecondRound() {
   return n;
 }
 // 单库的未学候选（常用词优先 → 词频高优先 → 同档按当日确定性乱序），不含已学词
+// 词频分（越小越常用）：朗文等级(0–5，全体词都有) 为主档，柯林斯★/COCA 在同一档内细化。
+// ⚠️ 仅用于「词库推送顺序」判定，不在界面展示（用户要求：词频只做排序、不展示）。
+function freqScore(word) {
+  const lc = wnorm(word);
+  const lv = (typeof FREQ !== 'undefined' && FREQ) ? FREQ[lc] : undefined;
+  const base = (typeof lv === 'number') ? lv : 5;
+  const r = (typeof ROOTS !== 'undefined' && ROOTS) ? ROOTS[lc] : null;
+  if (!r) return base;
+  const coca = r[2] || 0;
+  const collins = r[1] || 0;
+  let sub = 0;
+  if (coca) sub = Math.min(0.9, Math.log10(coca) / 6);      // COCA 越小越常用（1→0）
+  else if (collins) sub = Math.max(0, 1 - collins / 5);     // 5★→0，1★→0.8
+  return base + sub;
+}
 function candidatesForBank(bankId, exclude) {
   const ex = new Set(exclude || []);
   const idx = {};
@@ -931,14 +932,14 @@ function candidatesForBank(bankId, exclude) {
     if (progress[key] && progress[key].firstLearned) return;
     out.push({ ...w, bank: bankId, _i: idx[wnorm(w.word)] ?? 0, _c: isCommon(w.word) ? 0 : 1 });
   });
-  // 主排序：常用词优先(_c 升序) → 词频高优先(FREQ 升序)。
-  out.sort((a, b) => a._c - b._c || (FREQ[wnorm(a.word)] ?? 5) - (FREQ[wnorm(b.word)] ?? 5));
+  // 主排序：常用词优先(_c 升序) → 词频高优先(freqScore 升序：朗文等级 ＋ 柯林斯★/COCA 细化)。
+  out.sort((a, b) => a._c - b._c || freqScore(a.word) - freqScore(b.word));
   // 同档（_c 与 FREQ 均相同）内用「按当日日期播种的确定性乱序」打散：
   // 观感随机、但同一天各设备生成顺序完全一致（多端同步），且不会退回字母顺序。
   const day = todayStr();
   const groups = []; const gmap = new Map();
   out.forEach(w => {
-    const f = FREQ[wnorm(w.word)] ?? 5;
+    const f = Math.round(freqScore(w.word) * 2) / 2;   // 0.5 档分组：同档内按日乱序（柯林斯/COCA 可改变分档）
     const gk = w._c + '|' + f;
     let g = gmap.get(gk);
     if (!g) { g = { c: w._c, f: f, list: [] }; gmap.set(gk, g); groups.push(g); }

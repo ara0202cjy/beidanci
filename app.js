@@ -1088,6 +1088,17 @@ function wordIsLearned(word) {
   if (progress[bankKey(SELFBANK_ID, word)] && progress[bankKey(SELFBANK_ID, word)].firstLearned) return true;
   return false;
 }
+// 从历史 new 列表里找回某词的「首次学习日」（用于重学时恢复正确的 firstLearned，避免被改写成今天）。
+// 取所有日期中最早出现的那条，使「首次学习日」稳定、不被后续重练覆盖。
+function historyFirstLearned(word) {
+  const lw = wnorm(word);
+  let best = '';
+  for (const d of Object.keys(history)) {
+    const ns = (history[d] && history[d].new) || [];
+    if (ns.some(it => it && wnorm(it.word) === lw) && (!best || d < best)) best = d;
+  }
+  return best;
+}
 // 一次性（幂等）迁移：此前「自建词库推送并学完」的词只记在「自建::word」进度，
 // 导致①原词库不显示已背、②原词库还会重复推送它、③复习池按 key 去重会漏掉它。
 // 迁移：把这类进度同步到「原词库::word」并清除「自建::word」；同时把错词本/复习状态/待学批次里的 自建 引用一并改到原词库，
@@ -1586,17 +1597,25 @@ function markLearned(w) {
     learnedKey = src ? bankKey(src, w.word) : key;
     learnedBank = src || SELFBANK_ID;
   }
-  if (progress[learnedKey]) {
-    // 该词在原词库已记过（如「再次加入自建词库」后重练）：仅刷新复习锚点，不重复占用原词库「已背」计数
-    progress[learnedKey].lastLearnReview = todayStr();
+  // ⚠️ 幂等防护：该词此前已学过（progress 有 firstLearned，或历史 new 列表里出现过）→ 视为复习/重练，
+  // 不再覆盖「首次学习日期」、不再计入「今日新学」，避免 history.new 在多个日期重复、firstLearned 被改写成今天
+  //（表现：某天新词数虚高、近 7 天统计偏大、原本已学的词变成「今天新学」）。
+  const prevFirst = (progress[learnedKey] && progress[learnedKey].firstLearned) || historyFirstLearned(w.word);
+  if (prevFirst) {
+    if (!progress[learnedKey]) {
+      progress[learnedKey] = { word: w.word, bank: learnedBank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk, stage: 0 };
+    }
+    progress[learnedKey].firstLearned = prevFirst;        // 恢复/保留真实首次学习日（不被重练改写为今天）
+    progress[learnedKey].lastLearnReview = todayStr();    // 刷新复习锚点，重练有效
+    // 已学过的词不再 recordHistory('new') —— 不重复占用「今日新学」计数
   } else {
     progress[learnedKey] = {
       word: w.word, bank: learnedBank, meaning: w.meaning,
       phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk,
       firstLearned: todayStr(), stage: 0, lastLearnReview: todayStr(), nextReview: addDays(todayStr(), 1), lastReview: todayStr(),
     };
+    recordHistory('new', { key: learnedKey, word: w.word, bank: learnedBank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
   }
-  recordHistory('new', { key: learnedKey, word: w.word, bank: learnedBank, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk });
   // 学完即从待学批次移除：按「词」移除，兼容「自建/原词库」两种进度写法，避免待学批次残留已学词
   pendingPlan = (pendingPlan || []).filter(p => wnorm(p.word) !== wnorm(w.word));
   saveAll();

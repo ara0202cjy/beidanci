@@ -29,6 +29,7 @@ const Sync = (function () {
   let lastSyncAt = 0;                                 // 上次全量 sync 时间（启动去重）
   let pullTimer = null;                               // 定时拉取定时器
   let visBound = false;                               // 可见性监听器是否已绑定
+  let lastPushedSig = '';                             // 上次成功上传的内容签名（去掉 savedAt 等易变字段）——用于上传去重
 
   /* ---------- 账号感知 ---------- */
   function acctName() { return (window.WB && window.WB.currentAccount) || ''; }
@@ -271,29 +272,42 @@ const Sync = (function () {
   function pushFn(s, t) { return t.backend === 'http' ? httpPush(s, t) : gistPush(s, t); }
 
   /* ---------- 对外动作（遍历所有端口） ---------- */
+  // 上传去重辅助：对「有意义内容」做签名（去掉每次都变的 savedAt），两次内容相同即视为无需再传
+  function sigOf(st) { const c = Object.assign({}, st); delete c.savedAt; return JSON.stringify(c); }
+  function hashStr(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); }
+  function markPushed(st) { lastPushedSig = hashStr(sigOf(st || localState())); }
   async function push() {
-    if (!on()) return;
+    if (!on()) return false;
     // 限流额度见底：延后到 reset 再补推，避免无意义的 403 风暴
     if (rateInfo.remaining !== null && rateInfo.remaining <= 2 && rateInfo.reset) {
       const wait = Math.min(Math.max(0, (rateInfo.reset * 1000) - Date.now()) + 3000, 1800000);
       setTimeout(() => { rateInfo.remaining = null; push().then(() => scheduleRefresh()).catch(() => {}); }, wait);
-      return;
+      return false;
     }
     const st = localState();
+    const sig = hashStr(sigOf(st));
+    // 上传去重：自上次成功上传以来内容无实质变化（仅 savedAt 等易变字段不同）则跳过，
+    // 避免「saveAll 每次刷新时间戳都触发一次上传」造成的限流风暴（表现为偶发同步失败、多端越同步越旧）。
+    if (sig === lastPushedSig) return false;
+    let allOk = true;
     for (const t of targets) {
-      await pushOne(st, t, 0);
+      const ok = await pushOne(st, t, 0);
+      if (!ok) allOk = false;
     }
+    if (allOk) lastPushedSig = sig;     // 仅全部端口成功后才记签名，避免「没传成功却误判已传」导致漏传
     saveTargets();
+    return allOk;
   }
   // 单端口上传；瞬时错误（限流/网络抖动）指数退避静默重试（1m,2m,4m…最长30m），不弹窗、不阻塞调用方
+  // 返回是否成功（供 push 判断是否需要更新去重签名）
   function pushOne(st, t, attempt) {
-    return pushFn(st, t).then(() => { t.lastSync = new Date().toLocaleString('zh-CN'); })
+    return pushFn(st, t).then(() => { t.lastSync = new Date().toLocaleString('zh-CN'); return true; })
       .catch(e => {
         if (transientErr(e) && attempt < 5) {
           const wait = Math.min(60000 * Math.pow(2, attempt), 1800000);
           return new Promise(r => setTimeout(r, wait)).then(() => pushOne(st, t, attempt + 1));
         }
-        handleSyncError(e, '上传');
+        handleSyncError(e, '上传'); return false;
       });
   }
   // 单端口拉取 + 瞬时错误（限流/超时/网络抖动）自动重试，提升国内网络下的成功率
@@ -320,7 +334,11 @@ const Sync = (function () {
     // 否则会把本机的「旧状态」当成最新写回云端，把另一台已同步的进度覆盖掉
     // （多端「越同步越旧 / 另一台又变回尚未学习」的根因）。
     if (!ok) return false;
+    const beforeSig = hashStr(sigOf(localState()));
     applyState(merged);
+    // 拉取未改变本地内容（本地与远端已一致）→ 记下签名，避免紧接着 schedulePush→push 又把相同内容上传一遍；
+    // 若拉取确实改变了本地（merge 收敛了两端差异）→ 不记签名，让随后的 push 把收敛后状态回传，保证多端一致。
+    if (hashStr(sigOf(localState())) === beforeSig) markPushed();
     saveTargets();
     return true;
   }
@@ -460,7 +478,7 @@ const Sync = (function () {
       render(host);
     };
     g('#syPull').onclick = async () => { const ok = await pull(); setToast(ok ? '⬇ 已从云端拉取并合并' : '拉取未成功（网络/限流），本地未改动'); scheduleRefresh(); };
-    g('#syPush').onclick = async () => { try { await push(); setToast('⬆ 已上传到云端'); } catch (e) { setToast('上传失败：' + e.message); } };
+    g('#syPush').onclick = async () => { const did = await push(); setToast(did ? '⬆ 已上传到云端' : '内容无变化，无需上传'); };
     if (g('#syForce')) g('#syForce').onclick = async () => {
       const btn = g('#syForce'); if (btn) { btn.disabled = true; btn.textContent = '⏳ 正在刷新…'; }
       setToast('正在与云端同步…');

@@ -1115,9 +1115,21 @@ function healDuplicateNews() {
       else changed = true;                            // 该词最早日是别的日期 → 从本日移除
     });
     if (keep.length !== arr.length) history[d].new = keep;
-    keep.forEach(it => {                              // 首学日对齐到最早日
-      const p = progress[it.key];
-      if (p && p.firstLearned && p.firstLearned !== d) { p.firstLearned = d; changed = true; }
+  });
+  // 首学日对齐（只前移、不改晚）：按「词」匹配而**不是**按记录里的 key。
+  // 原因：自建词学完后进度会被 migrate 到原词库 key（自建::x → 初中::x），若只按 key 找会漏掉迁移后的
+  // 记录，导致 firstLearned 停留在被 bug 改写的较晚日期（例：suggest 09-14 经自建学会→09-18 又被覆盖）。
+  const byWord = {};
+  Object.keys(progress).forEach(k => {
+    const p = progress[k];
+    if (!p || !p.word) return;
+    (byWord[wnorm(p.word)] = byWord[wnorm(p.word)] || []).push(k);
+  });
+  Object.keys(earliest).forEach(w => {
+    const d = earliest[w];
+    (byWord[w] || []).forEach(k => {
+      const p = progress[k];
+      if (p && p.firstLearned && d < p.firstLearned) { p.firstLearned = d; changed = true; }
     });
   });
   return changed;

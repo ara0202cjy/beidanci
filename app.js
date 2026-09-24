@@ -1019,6 +1019,9 @@ function resolveWord(bank, word) {
 //  • 新学习总词数/词库1 改变（或 forceResize）⇒ 立即按新目标增/删：不够由词库1 补，富余把已选词退回未学词库。
 // 当日上限为单一「新学习总词数」：今日已学新词数达到该上限后，当天不再出新词（明日再学下一批）。
 function reconcileLearnPlan(forceResize) {
+  // 先自愈跨日重复（并集型 merge 让删除不可逆，只能靠各端确定性重建）。
+  // 必须放在最前：后续 learnedTotal/maxSize 都要基于修复后的今日 new 数，否则会算错剩余名额。
+  const healed = healDuplicateNews();
   // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。
   // 例：strHash 兜底替代字母序后，已锁定的今日批次若保留仍是旧顺序，故版本不符时清空重排。
   // 仅当存档版本 ≠ 当前版本才触发（升级后首帧一次）；日常调用版本已一致、不影响「学完才出下一批」的粘性。
@@ -1060,7 +1063,7 @@ function reconcileLearnPlan(forceResize) {
     plan = buildBatch(plan, maxSize, banks);
   }
   pendingPlan = plan;
-  if (JSON.stringify(pendingPlan) + '|' + planTarget !== before) saveAll();
+  if (JSON.stringify(pendingPlan) + '|' + planTarget !== before || healed) saveAll();
   reconcileSecondRound();   // 顺带结算「词库2＝复习词库」的当日新推（幂等）
 }
 // 加入自建词库时：若该词此前已背过，重置为未背诵，使其重新进入优先推送
@@ -1087,6 +1090,37 @@ function wordIsLearned(word) {
   }
   if (progress[bankKey(SELFBANK_ID, word)] && progress[bankKey(SELFBANK_ID, word)].firstLearned) return true;
   return false;
+}
+// 自愈：清除「同一个词在多个日期都被记为 new」的重复项（只保留最早日），并把 firstLearned 对齐到最早日。
+// 为什么必须有它：Sync.merge 对 history.new 做的是「按 key 并集」，这意味着**删除无法同步**——
+// 即便在云端删掉了重复项，只要任一设备本地还留着旧副本，下次合并就会把它们 union 回云端。
+// 所以去重只能做成「每台设备都跑的确定性修复」：无论并集结果如何，跑完都收敛到同一个结果，
+// 再由各端把修复后的状态回传，最终一致（幂等）。
+// 副作用均为兜底性修正：① 某天的「新学」数不再虚高；② firstLearned 恢复为真实首学日。
+function healDuplicateNews() {
+  const days = Object.keys(history).sort();          // 升序 → 首次出现即最早日
+  const earliest = {};
+  days.forEach(d => {
+    ((history[d] && history[d].new) || []).forEach(it => {
+      const w = wnorm(it.word);
+      if (!earliest[w]) earliest[w] = d;
+    });
+  });
+  let changed = false;
+  days.forEach(d => {
+    const arr = (history[d] && history[d].new) || [];
+    const keep = [];
+    arr.forEach(it => {
+      if (earliest[wnorm(it.word)] === d) keep.push(it);
+      else changed = true;                            // 该词最早日是别的日期 → 从本日移除
+    });
+    if (keep.length !== arr.length) history[d].new = keep;
+    keep.forEach(it => {                              // 首学日对齐到最早日
+      const p = progress[it.key];
+      if (p && p.firstLearned && p.firstLearned !== d) { p.firstLearned = d; changed = true; }
+    });
+  });
+  return changed;
 }
 // 从历史 new 列表里找回某词的「首次学习日」（用于重学时恢复正确的 firstLearned，避免被改写成今天）。
 // 取所有日期中最早出现的那条，使「首次学习日」稳定、不被后续重练覆盖。

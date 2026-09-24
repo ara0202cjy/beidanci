@@ -296,39 +296,56 @@ const Sync = (function () {
         handleSyncError(e, '上传');
       });
   }
+  // 单端口拉取 + 瞬时错误（限流/超时/网络抖动）自动重试，提升国内网络下的成功率
+  function pullOne(t, attempt) {
+    return pullFn(t).catch(e => {
+      if (transientErr(e) && attempt < 3) {
+        const wait = Math.min(4000 * Math.pow(2, attempt), 30000);
+        return new Promise(r => setTimeout(r, wait)).then(() => pullOne(t, attempt + 1));
+      }
+      throw e;
+    });
+  }
   async function pull() {
-    if (!on()) return;
+    if (!on()) return false;
     let merged = localState();
+    let ok = false;                       // 是否至少有一个端口成功拉到数据
     for (const t of targets) {
       try {
-        const remote = await pullFn(t);
-        if (remote) { merged = merge(merged, remote); t.lastPull = new Date().toLocaleString('zh-CN'); }
+        const remote = await pullOne(t, 0);
+        if (remote) { merged = merge(merged, remote); t.lastPull = new Date().toLocaleString('zh-CN'); ok = true; }
       } catch (e) { handleSyncError(e, '拉取'); }
     }
+    // ⚠️ 全部端口都拉取失败 → 不写回、不触发上传。
+    // 否则会把本机的「旧状态」当成最新写回云端，把另一台已同步的进度覆盖掉
+    // （多端「越同步越旧 / 另一台又变回尚未学习」的根因）。
+    if (!ok) return false;
     applyState(merged);
     saveTargets();
+    return true;
   }
   async function sync() {
     if (!on()) return;
     const now = Date.now();
     if (now - lastSyncAt < 8000) return;   // 启动去重：8s 内不重复全量同步（seedAccounts 与 loadBanks 两次调用合并为一次）
     lastSyncAt = now;
-    await pull(); await push();
+    // ⚠️ 仅当拉取成功才上传：拉取失败（网络不通/限流）时本机状态可能是「尚未更新的旧态」，
+    // 若照常上传会把另一台已同步的进度覆盖掉。学习后的上传走 saveAll→schedulePush，不受此影响。
+    const pulled = await pull();
+    if (pulled) await push();
   }
   function startPeriodicPull() {
     if (pullTimer || !on()) return;
+    const doPull = () => { if (on()) pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取')); };
     pullTimer = setInterval(() => {
-      if (on() && document.visibilityState !== 'hidden') {
-        pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取'));
-      }
-    }, 5 * 60 * 1000);
+      if (on() && document.visibilityState !== 'hidden') doPull();
+    }, 2 * 60 * 1000);                    // 每 2 分钟后台拉取一次（原 5 分钟 → 缩短以更快收敛）
     if (!visBound) {
       visBound = true;
-      document.addEventListener('visibilitychange', () => {
-        if (on() && document.visibilityState === 'visible') {
-          pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取'));
-        }
-      });
+      // 多个「回到前台」信号都触发一次拉取，任一端学习后另一端能尽快刷新：
+      document.addEventListener('visibilitychange', () => { if (on() && document.visibilityState === 'visible') doPull(); });
+      window.addEventListener('focus', () => { if (on()) doPull(); });      // 窗口获焦（PWA 恢复更灵敏）
+      window.addEventListener('pageshow', () => { if (on()) doPull(); });   // 从 bfcache 恢复
     }
   }
   function stopPeriodicPull() { if (pullTimer) { clearInterval(pullTimer); pullTimer = null; } }
@@ -386,7 +403,8 @@ const Sync = (function () {
       </div>`).join('');
     host.innerHTML = `
       <div class="card"><h2>☁️ 云同步 <span class="tag ${on_ ? 'green' : ''}">${on_ ? '已开启' : '未配置'}</span></h2>
-        <div class="sub-tip">${n ? '当前账号 <b>' + escv(n) + '</b> 的同步端口（可配置多个，自动同步到全部）：' : '开启后多台设备共享同一份数据：打开页面自动拉取，学习后自动上传。'}${targets[0] && targets[0].lastSync ? ' 上次同步：' + escv(targets[0].lastSync) : ''}</div>
+        <div class="sub-tip">${n ? '当前账号 <b>' + escv(n) + '</b> 的同步端口（可配置多个，自动同步到全部）：' : '开启后多台设备共享同一份数据：打开页面自动拉取，学习后自动上传。'}</div>
+        <div class="sub-tip" style="margin-top:6px">上次上传：<b>${escv(t0.lastSync || '—')}</b> ｜ 上次拉取：<b>${escv(t0.lastPull || '—')}</b>（回到前台或每 2 分钟自动拉取）</div>
         <div class="sub-tip" style="margin-top:6px">同步内容：学习进度 · 错词记录 · 自建词库 · 打卡与学习记录 · 设置（当前词库 / 每日新词量 / 发音口音等）</div>
         <div class="seg" style="margin-top:12px">
           <div class="${t0.backend === 'gist' ? 'on' : ''}" id="bkGist">GitHub Gist</div>

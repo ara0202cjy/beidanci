@@ -334,6 +334,15 @@ const Sync = (function () {
     const pulled = await pull();
     if (pulled) await push();
   }
+  // 强制刷新：绕过启动去重与自动间隔，立即「拉取 → 合并 → 回传」，返回结果详情供 UI 反馈。
+  async function forceSync() {
+    if (!on()) return { ok: false, pulled: false, pushed: false };
+    const pulled = await pull();          // pull 内部对限流/超时/网络错误已做指数退避重试
+    let pushed = false;
+    if (pulled) { try { await push(); pushed = true; } catch (e) { } }
+    saveTargets();
+    return { ok: pulled, pulled, pushed };
+  }
   function startPeriodicPull() {
     if (pullTimer || !on()) return;
     const doPull = () => { if (on()) pull().then(() => scheduleRefresh()).catch(e => handleSyncError(e, '拉取')); };
@@ -423,6 +432,8 @@ const Sync = (function () {
           <button class="btn ghost sm" id="syPull">⬇ 从云端拉取</button>
           <button class="btn ghost sm" id="syPush">⬆ 上传到云端</button>
         </div>
+        <button class="btn primary sm" id="syForce" style="margin-top:10px;width:100%">🔃 强制刷新云端同步</button>
+        <div class="sub-tip" style="margin-top:6px">强制刷新：立即从云端拉取最新进度、合并后再回传（绕过自动同步间隔）。也可在本卡片上<b>下拉</b>触发。</div>
         <button class="btn ${on_ ? 'ghost' : 'primary'} sm" id="syStart" style="margin-top:10px">${on_ ? '🔄 立即双向同步（全部端口）' : '✅ 保存并开启同步'}</button>
         ${extra}
         <button class="btn ghost sm" id="syAdd" style="margin-top:10px">➕ 添加更多同步端口</button>
@@ -448,8 +459,16 @@ const Sync = (function () {
       await setup();
       render(host);
     };
-    g('#syPull').onclick = async () => { try { await pull(); setToast('已拉取'); scheduleRefresh(); } catch (e) { setToast('拉取失败：' + e.message); } };
-    g('#syPush').onclick = async () => { try { await push(); setToast('已上传'); } catch (e) { setToast('上传失败：' + e.message); } };
+    g('#syPull').onclick = async () => { const ok = await pull(); setToast(ok ? '⬇ 已从云端拉取并合并' : '拉取未成功（网络/限流），本地未改动'); scheduleRefresh(); };
+    g('#syPush').onclick = async () => { try { await push(); setToast('⬆ 已上传到云端'); } catch (e) { setToast('上传失败：' + e.message); } };
+    if (g('#syForce')) g('#syForce').onclick = async () => {
+      const btn = g('#syForce'); if (btn) { btn.disabled = true; btn.textContent = '⏳ 正在刷新…'; }
+      setToast('正在与云端同步…');
+      const r = await forceSync();
+      render(host);                        // 重渲染以更新「上次上传 / 上次拉取」时间
+      if (!r.pulled) setToast('刷新未成功：没能从云端拉取（网络/限流/配置），本地数据未改动，请稍后重试');
+      else setToast('✅ 已从云端刷新' + (r.pushed ? '并回传' : '（回传稍后自动重试）'));
+    };
     g('#syAdd').onclick = () => { targets.push(norm({})); saveTargets(); render(host); };
     host.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
       const i = +b.dataset.del; targets.splice(i, 1); saveTargets(); render(host);
@@ -467,10 +486,33 @@ const Sync = (function () {
     if (g('#syOff')) g('#syOff').onclick = () => {
       targets = []; saveTargets(); stopPeriodicPull(); render(host); setToast('已关闭云同步');
     };
+    // 「下拉刷新」手势：在同步卡片上向下拖拽超过阈值 → 强制刷新（方便手机单手操作）
+    (function bindPullGesture() {
+      const card = host.querySelector('.card');
+      if (!card || !on_) return;
+      let y0 = null, x0 = null, armed = false;
+      card.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; armed = false;
+      }, { passive: true });
+      card.addEventListener('touchmove', e => {
+        if (y0 === null) return;
+        const dy = e.touches[0].clientY - y0, dx = Math.abs(e.touches[0].clientX - x0);
+        if (dy > 10 && dy > dx * 1.5) armed = true;       // 明显的垂直下拉才记，避免与滚动/横滑混淆
+      }, { passive: true });
+      card.addEventListener('touchend', e => {
+        if (y0 === null) return;
+        const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : y0;
+        const fire = armed && (endY - y0) > 60;
+        y0 = null; x0 = null; armed = false;
+        if (fire) { const btn = host.querySelector('#syForce'); if (btn) btn.click(); }
+      }, { passive: true });
+    })();
   }
 
   return {
     render, setup, pull, push, sync, schedulePush, on, reload,
+    forceSync,   // 强制刷新（拉取→合并→回传），供设置页按钮/下拉手势与冒烟测试调用
     merge,   // 暴露合并逻辑，供冒烟测试直接校验多端合并规则
     get targets() { return targets; },
     tryImportFromHash,

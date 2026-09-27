@@ -1648,11 +1648,11 @@ function bindCheckin() {
   const gl = document.getElementById('ciGoLearn'); if (gl) gl.onclick = () => startLearning();
   const gr = document.getElementById('ciGoReview'); if (gr) gr.onclick = () => goto('review');
 }
-// 通用：渲染「今日学习/复习单词列表」（单词 + 释义 + 来源词库标签）
+// 通用：渲染「今日学习/复习单词列表」——只展示单词本身（不展开释义等内容）
 function dayWordListHtml(title, items) {
   if (!items || !items.length) return '';
   return `<div class="sub-tip" style="margin-top:12px">${title}（${items.length} 个）：</div>
-    <div class="list" style="margin-top:6px">${items.map(x => `<div class="item"><div><div class="w">${esc(x.word)}</div><div class="m">${esc(x.meaning || '')}</div></div>${x.bank ? `<span class="tag">${esc(x.bank)}</span>` : ''}</div>`).join('')}</div>`;
+    <div class="chip-wrap" style="margin-top:6px">${items.map(x => `<span class="chip">${esc(x.word)}</span>`).join('')}</div>`;
 }
 function refreshCheckin() { const el = document.getElementById('checkinCard'); if (el) { el.outerHTML = checkinCardHtml(); bindCheckin(); } }
 function startLearning() {

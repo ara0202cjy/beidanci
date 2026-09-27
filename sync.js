@@ -160,6 +160,12 @@ const Sync = (function () {
       if (x.recallDone || y.recallDone) o.recallDone = true;      // 任一端完成即视为完成
       if (x.sentenceDone || y.sentenceDone) o.sentenceDone = true;
       if (x.studyDone || y.studyDone) o.studyDone = true;        // 任一端完成「学习内容」即保留
+      // rounds：持久化「各轮是否真正结算」的证明（wb-v28+）。必须随合并传播，否则只接收完成态
+      // (rd/sd=true) 而无 rounds 的设备会在启动 healReviewFlags 时误清标记 → 跨端复习完成态不一致。
+      const xr = x.rounds || {}, yr = y.rounds || {};
+      if (xr.recall || xr.sentence || yr.recall || yr.sentence) {
+        o.rounds = { recall: !!(xr.recall || yr.recall), sentence: !!(xr.sentence || yr.sentence) };
+      }
       out.history[d] = o;
     });
     // settings：不能用 state.savedAt 比较 —— 本地快照的 savedAt 恒为 Date.now()，

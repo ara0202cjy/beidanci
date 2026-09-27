@@ -1554,10 +1554,12 @@ function renderLearnBox() {
     if (allDone) {
       tip = '新词来源（自建词库 ＋ 词库1）都已背完 🎉';
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>新词已背完 🎉</button>`;
+      preview = dayWordListHtml('今日学习的新词', (history[today] && history[today].new) || []);
     } else if (todayDone) {
       tip = `今日新词已全部学完（计划：${bankSummary}）`;
-      preview = `<div class="sub-tip" style="margin-top:10px">今日已学完 <b>${learnedToday}</b> 个新词（上限 ${total} 个），明天再来 🌙</div>`;
+      preview = `<div class="sub-tip" style="margin-top:10px">🎉 今日已学完 <b>${learnedToday}</b> 个新词（上限 ${total} 个），明天再来 🌙</div>`;
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>今日已学完</button>`;
+      preview += dayWordListHtml('今日学习的新词', (history[today] && history[today].new) || []);
     } else if (plan.length) {
       tip = `每日计划：${bankSummary}${selfLeft ? ` ｜ 自建优先 ${selfLeft} 个` : ''}${plan.length !== target ? `（当前待学 ${plan.length} 个）` : ''}`;
       preview = `<div class="sub-tip" style="margin-top:10px">本组待学 <b>${plan.length}</b> 个新词，可提前了解：</div>
@@ -1645,6 +1647,12 @@ function checkinCardHtml() {
 function bindCheckin() {
   const gl = document.getElementById('ciGoLearn'); if (gl) gl.onclick = () => startLearning();
   const gr = document.getElementById('ciGoReview'); if (gr) gr.onclick = () => goto('review');
+}
+// 通用：渲染「今日学习/复习单词列表」（单词 + 释义 + 来源词库标签）
+function dayWordListHtml(title, items) {
+  if (!items || !items.length) return '';
+  return `<div class="sub-tip" style="margin-top:12px">${title}（${items.length} 个）：</div>
+    <div class="list" style="margin-top:6px">${items.map(x => `<div class="item"><div><div class="w">${esc(x.word)}</div><div class="m">${esc(x.meaning || '')}</div></div>${x.bank ? `<span class="tag">${esc(x.bank)}</span>` : ''}</div>`).join('')}</div>`;
 }
 function refreshCheckin() { const el = document.getElementById('checkinCard'); if (el) { el.outerHTML = checkinCardHtml(); bindCheckin(); } }
 function startLearning() {
@@ -2056,7 +2064,10 @@ function renderSummary() {
   html += `<div class="sub-tip" style="margin-top:12px">打卡进度：单词复习 ${doneRecall ? '✅' : '⬜'} ｜ 情境填词 ${doneSentence ? '✅' : '⬜'}</div>`;
   if (need === 'sentence') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：情境填词 →</button>`;
   else if (need === 'recall') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：单词复习 →</button>`;
-  else html += `<div class="sub-tip" style="margin-top:10px">🎉 两轮复习均已完成，今日打卡达成！</div>`;
+  else {
+    html += `<div class="sub-tip" style="margin-top:10px">🎉 今日复习完！两轮复习均已完成，今日打卡达成！</div>`;
+    html += dayWordListHtml('今日复习的单词', (history[rday] && history[rday].review) || []);
+  }
   if (wrong.length) html += `<button class="btn red" style="margin-top:12px" id="reWrong">🔁 重练错词（${wrong.length}）</button>`;
   html += `<button class="btn ghost sm" style="margin-top:10px" id="backHome">返回首页</button>`;
   box.innerHTML = html;

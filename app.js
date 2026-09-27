@@ -129,7 +129,7 @@ window.WB = {
   secondRoundBank, secondRoundQuota, secondRoundStat, reconcileSecondRound,
   cleanupProbeData,
   nextReviewRoundNeeded,
-  markLearned, bankStat, buildReviewPool, primarySourceBank, migrateSelfBankToOrigin,
+  markLearned, bankStat, primarySourceBank, migrateSelfBankToOrigin,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -399,7 +399,7 @@ function settleReview(r, correct, day) {
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
 // 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
 function strHash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
-function dayRand(word) { return (strHash((word || '').toLowerCase() + '|' + todayStr()) % 1000000) / 1000000; }
+function dayRand(word) { return dayRandOn((word || '').toLowerCase(), todayStr()); }
 // 基于「目标键 + 指定日期」的确定性伪随机：当日复习题目的顺序与内容（例句选择）也用它，
 // 保证同一天在不同设备/端口生成完全相同的题序与题目内容（多端同步一致的根基）。
 function dayRandOn(seed, day) { return (strHash(String(seed == null ? '' : seed).toLowerCase() + '|' + (day || dayOf())) % 1000000) / 1000000; }
@@ -730,7 +730,7 @@ function detailInner(w) {
 function streakDays() {
   let n = 0; const d = new Date();
   for (let i = 0; i < 3650; i++) {
-    if (isChecked(todayStr(d))) n++;          // 需「单词复习 + 情境复习」两轮都完成
+    if (dayComplete(todayStr(d))) n++;          // 需「单词复习 + 情境复习」两轮都完成
     else if (i > 0) break;
     d.setDate(d.getDate() - 1);
   }
@@ -743,7 +743,6 @@ function recordHistory(type, entry, day) {
   if (!history[d]) history[d] = { new: [], review: [] };
   const arr = history[d][type];
   if (!arr.some(x => x.key === entry.key)) arr.push(entry);
-  saveAll();
 }
 // 打卡：单词复习/听中文听写记 recallDone（单词轮）、情境复习记 sentenceDone（情境轮），两轮都完成才算当日复习完成
 function markReviewDone(kind, day) {
@@ -765,7 +764,7 @@ function nextReviewRoundNeeded(d) {
 //   ① 新版双轮代码在 confirmCheck 把完成的轮次写入 history[day].rounds（不随 reviewState 被下一轮覆盖而丢失）→ 以它为准重建标记；
 //   ② 旧版遗留（无 rounds）：仅当 reviewState 中无对应轮次的 settled 记录时才清掉脏 Done。
 function healReviewFlags() {
-  const d = todayStr();
+  const d = REVIEW_DAY || todayStr();
   const h = history[d];
   if (!h) return false;
   if (h.rounds) {                                  // 新版：以持久化轮次记录为准重建 Done 标记
@@ -821,7 +820,6 @@ function markStudyDone(d) {
   history[d].studyDone = true;
   saveAll();
 }
-function isChecked(d) { return dayComplete(d); }   // 兼容：连续打卡 / 补打卡判定统一为「打卡完成」
 function bankStat(id) {
   const total = BANK_DATA[id]?.count || 0;
   const learned = Object.values(progress).filter(p => p.bank === id).length;
@@ -1028,13 +1026,11 @@ function planQueue() {
   const queue = pendingPlan.map(p => { const w = resolveWord(p.bank, p.word); return w ? { ...w, bank: p.bank, word: p.word } : null; }).filter(Boolean);
   return { bank: pendingPlan.length ? pendingPlan[0].bank : (studyBanks()[0] && studyBanks()[0].id || ''), queue };
 }
-function buildQueue() { return planQueue(); }
 // 按 bank+word 反查完整词对象（学习/预览时使用）
 function resolveWord(bank, word) {
   if (bank === SELFBANK_ID) return selfBank.find(w => w.word === word);
   return (BANK_DATA[bank]?.words || []).find(w => w.word === word);
 }
-// 粘性批次 reconcile（跨库版，总词数上限模型）：
 // 粘性批次 reconcile（新学习总数模型）：
 //  • 已学过的词自动移出批次；
 //  • 批次非空且「新学习总词数 + 词库1」未变 ⇒ 保留原批次（不新增），满足「只有学完才生成新词」；
@@ -1415,19 +1411,27 @@ function openSettings() {
 }
 
 /* ===================== 学习（首页） ===================== */
+// 学习页 / 复习页共用的「词库2 ＝ 复习词库」统计（两处文案都基于同一份 secondRoundStat 结果）
+function sec2Info() {
+  const st = secondRoundStat();
+  if (!st.bank) return { noBank: true, bank: '' };
+  return {
+    noBank: false, bank: st.bank, quota: st.quota, pushedToday: st.pushedToday, due: st.due,
+    okDone: st.done - st.wrongOut, learned: st.learned, wrongOut: st.wrongOut,
+    left: Math.max(0, st.learned - st.started),
+  };
+}
 // 学习页「词库2 ＝ 复习词库」说明行
 function sec2Html() {
-  const st = secondRoundStat();
-  if (!st.bank) return `<div class="sub-tip" style="margin-top:6px">词库2 未选择 → 第二轮复习未开启（在设置里选第 2 个词库即开启）</div>`;
-  const left = Math.max(0, st.learned - st.started);
-  const okDone = st.done - st.wrongOut;
-  return `<div class="sub-tip" style="margin-top:6px">词库2（复习词库）· ${esc(st.bank)}：每日新推 <b>${st.quota}</b> 个已背词做第二轮（当日 ＋ 第 ${SECOND_INTERVAL} 天）<b>单列、不计入新学习总数</b>｜今推 <b>${st.pushedToday}</b> · 待做 <b>${st.due}</b> · 完成 <b>${okDone}</b>/${st.learned}${st.wrongOut ? ` · 错题 <b>${st.wrongOut}</b>` : ''}${left ? ` · 未开始 ${left}` : ''}</div>`;
+  const i = sec2Info();
+  if (i.noBank) return `<div class="sub-tip" style="margin-top:6px">词库2 未选择 → 第二轮复习未开启（在设置里选第 2 个词库即开启）</div>`;
+  return `<div class="sub-tip" style="margin-top:6px">词库2（复习词库）· ${esc(i.bank)}：每日新推 <b>${i.quota}</b> 个已背词做第二轮（当日 ＋ 第 ${SECOND_INTERVAL} 天）<b>单列、不计入新学习总数</b>｜今推 <b>${i.pushedToday}</b> · 待做 <b>${i.due}</b> · 完成 <b>${i.okDone}</b>/${i.learned}${i.wrongOut ? ` · 错题 <b>${i.wrongOut}</b>` : ''}${i.left ? ` · 未开始 ${i.left}` : ''}</div>`;
 }
 // 复习页里「第二轮」的一句话说明
 function sec2Desc() {
-  const st = secondRoundStat();
-  if (!st.bank) return '未选择词库2 → 尚未开启（在设置里选第 2 个词库即开启）';
-  return `${esc(st.bank)} 库的已背词每日新推 ${st.quota} 个，每个词两轮（推送当日 ＋ 第 ${SECOND_INTERVAL} 天）；期间答错的转错题节奏。今日已推 ${st.pushedToday}、待做 ${st.due}、已完成 ${st.done - st.wrongOut}/${st.learned}${st.wrongOut ? `（转错题 ${st.wrongOut}）` : ''}`;
+  const i = sec2Info();
+  if (i.noBank) return '未选择词库2 → 尚未开启（在设置里选第 2 个词库即开启）';
+  return `${esc(i.bank)} 库的已背词每日新推 ${i.quota} 个，每个词两轮（推送当日 ＋ 第 ${SECOND_INTERVAL} 天）；期间答错的转错题节奏。今日已推 ${i.pushedToday}、待做 ${i.due}、已完成 ${i.okDone}/${i.learned}${i.wrongOut ? `（转错题 ${i.wrongOut}）` : ''}`;
 }
 // 一次性迁移：清理本地预览探针误入云端的测试进度（2026-09-15 事故）。
 // 特征：词形如 seed0/seed12（真实词库经核验不存在「seed + 数字」的词条，只有单独的 seed），
@@ -1533,7 +1537,6 @@ function renderLearnBox() {
   }
   if (!learnState || !learnState.queue.length) {
     setLearnActive(false);
-    reconcileLearnPlan();
     const plan = pendingPlan.map(p => resolveWord(p.bank, p.word)).filter(Boolean);
     const banks = studyBanks();
     const lb = learnBanks();
@@ -1567,7 +1570,7 @@ function renderLearnBox() {
          <div class="sub-tip" style="margin-top:6px">本组未学完不会生成新词；单词的学习日期记在实际学习当天</div>`;
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn">开始学习</button>`;
     } else if (total <= 0 && selfLeft === 0) {
-      tip = '未设置每日新词';
+      tip = '未设置每日新词（今日学习内容视为已完成）';
       btn = `<button class="btn primary" style="margin-top:14px" id="startLearn" disabled>无新词</button>`;
     } else {
       tip = `每日计划：${bankSummary}`;
@@ -1721,7 +1724,7 @@ function reviewRoundFinished() {
 }
 function review() {
   // 往日遗留的「结果页状态」不阻塞今日复习：同一轮只在当天保持结果页
-    if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
+  if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
     reviewState = null; saveAll();
   }
   reconcileSecondRound();   // 进入复习页先结算「词库2＝复习词库」的当日新推，保证今日复习池完整
@@ -2108,6 +2111,7 @@ function openMakeup() {
       openMakeup(); return;
     }
     REVIEW_DAY = d;                        // 进度与打卡均记到「原应打卡日」
+    healReviewFlags();                      // 先愈合该往日可能残留的旧版单轮脏标记（recallDone+sentenceDone 同 true），让情境轮可达
     settings.reviewType = 'recall'; saveAll();   // 补打卡走「单词复习→情境填词」双轮，方算完整打卡
     startReview(pool);
   });

@@ -759,6 +759,29 @@ function nextReviewRoundNeeded(d) {
   if (!h.sentenceDone) return 'sentence';
   return null;
 }
+// 自愈复习标记：旧版单轮模型完成「一轮」会把 recallDone/sentenceDone 同时置 true，
+// 导致新版双轮逻辑误判「两轮都已完成」→ 单词复习一轮后即显示「复习结束」、不再出情境轮。
+// 校正原则：以「该轮是否真正结算过」为准，只清掉从未真正结算的脏 Done 标记，绝不误清真实进度。
+//   ① 新版双轮代码在 confirmCheck 把完成的轮次写入 history[day].rounds（不随 reviewState 被下一轮覆盖而丢失）→ 以它为准重建标记；
+//   ② 旧版遗留（无 rounds）：仅当 reviewState 中无对应轮次的 settled 记录时才清掉脏 Done。
+function healReviewFlags() {
+  const d = todayStr();
+  const h = history[d];
+  if (!h) return false;
+  if (h.rounds) {                                  // 新版：以持久化轮次记录为准重建 Done 标记
+    const r = h.rounds; let changed = false;
+    if (!!h.recallDone !== !!r.recall) { h.recallDone = !!r.recall; changed = true; }
+    if (!!h.sentenceDone !== !!r.sentence) { h.sentenceDone = !!r.sentence; changed = true; }
+    return changed;
+  }
+  const rs = reviewState;
+  const recallSettled = !!(rs && rs.settled && (rs.mode === 'recall' || (rs.pool && rs.pool[0] && rs.pool[0].type === 'word')));
+  const sentenceSettled = !!(rs && rs.settled && rs.pool && rs.pool[0] && rs.pool[0].type === 'sentence');
+  let changed = false;
+  if (h.sentenceDone && !sentenceSettled) { h.sentenceDone = false; changed = true; }
+  if (h.recallDone && !recallSettled) { h.recallDone = false; changed = true; }
+  return changed;
+}
 // 打卡完成 = 完成「固定学习内容」（当日新词学习）且「全部应复习单词」已复习
 function nothingToStudy() {
   if (!BANKS_READY) return false;       // 词库未就绪时不可断言「无词可学」
@@ -1022,6 +1045,7 @@ function reconcileLearnPlan(forceResize) {
   // 先自愈跨日重复（并集型 merge 让删除不可逆，只能靠各端确定性重建）。
   // 必须放在最前：后续 learnedTotal/maxSize 都要基于修复后的今日 new 数，否则会算错剩余名额。
   const healed = healDuplicateNews();
+  if (healReviewFlags()) healed = true;
   // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。
   // 例：strHash 兜底替代字母序后，已锁定的今日批次若保留仍是旧顺序，故版本不符时清空重排。
   // 仅当存档版本 ≠ 当前版本才触发（升级后首帧一次）；日常调用版本已一致、不影响「学完才出下一批」的粘性。
@@ -1689,7 +1713,7 @@ function reviewRoundFinished() {
 }
 function review() {
   // 往日遗留的「结果页状态」不阻塞今日复习：同一轮只在当天保持结果页
-  if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
+    if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
     reviewState = null; saveAll();
   }
   reconcileSecondRound();   // 进入复习页先结算「词库2＝复习词库」的当日新推，保证今日复习池完整
@@ -2003,6 +2027,9 @@ function confirmCheck() {
   // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
   if (settings.reviewType === 'sentence') markReviewDone('sentence', rday);
   else markReviewDone('recall', rday);
+  // 持久化本轮完成记录（不随 reviewState 被下一轮覆盖而丢失），供 healReviewFlags 自愈旧版单轮脏标记
+  history[rday].rounds = history[rday].rounds || {};
+  history[rday].rounds[settings.reviewType === 'sentence' ? 'sentence' : 'recall'] = true;
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();
@@ -2065,6 +2092,7 @@ function openMakeup() {
       // 该日已无待复习词（或仅学未复习）：直接结算为打卡完成
       if (!history[d]) history[d] = { new: [], review: [] };
       history[d].recallDone = true; history[d].sentenceDone = true; history[d].studyDone = true;
+      history[d].rounds = { recall: true, sentence: true };   // 补打卡兜底：两轮均记完成
       saveAll(); toast('该日已结算为打卡完成 🎉');
       openMakeup(); return;
     }

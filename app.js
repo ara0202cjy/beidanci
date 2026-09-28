@@ -2112,7 +2112,8 @@ function renderSummary() {
 }
 // 回看复习题目：复习完成后仍可查看当日复习过的词与题目（弹窗形式，列表可滚动）。
 // 题目内容以 history[day].review 为准（两轮累计），情境句按「词 + 日期」确定性重建 → 与当日复习题一致。
-function openReviewRecap(day) {
+// 支持「再次批改」：逐个点 ✗ 标记错词，确认后按 App 的答错逻辑（settleReview）加入错题本（最后错=今天）。
+function openReviewRecap(day, note) {
   day = day || todayStr();
   const items = (history[day] && history[day].review) || [];
   const rows = items.map(r => {
@@ -2123,12 +2124,47 @@ function openReviewRecap(day) {
     let eg = '';
     if (s && s.en) eg = `<div class="eg"><div class="en">${highlightVariants(s.en, r.word)}</div>${s.zh ? `<div class="zh">${esc(s.zh)}</div>` : ''}</div>`;
     else if (ex) eg = `<div class="eg"><div class="en">${esc(ex.en)}</div><div class="zh">${esc(ex.zh)}</div></div>`;
-    return `<div class="item"><div><div class="w">${esc(r.word)}</div>${eg}<div class="mean-list">${renderMeaning(meaning)}</div></div>${r.bank ? `<span class="tag">${esc(r.bank)}</span>` : ''}</div>`;
+    const wb = wrongBook[r.key];
+    const wbTag = wb ? `<span class="tag" style="margin-left:8px">错题本 · 错 ${wb.wrongCount || 0} 次</span>` : '';
+    return `<div class="item" data-key="${esc(r.key)}">
+      <div style="flex:1;min-width:0"><div class="w">${esc(r.word)}${wbTag}</div>${eg}<div class="mean-list">${renderMeaning(meaning)}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none">
+        ${r.bank ? `<span class="tag">${esc(r.bank)}</span>` : ''}
+        <div class="check on" data-key="${esc(r.key)}" title="点此切换：✓ 正确 / ✗ 错（加入错题本）">✓</div>
+      </div></div>`;
   }).join('');
   openModal(`<h3>复习题目回看 · ${esc(day)}</h3>
-    <div class="sub-tip">共 ${items.length} 词${items.length ? '，情境句按当日确定性生成，可逐词重看' : ''}</div>
-    <div class="list" style="margin-top:8px">${rows || '<div class="empty">当日暂无复习记录</div>'}</div>
+    <div class="sub-tip">共 ${items.length} 词${items.length ? '，情境句按当日确定性生成；点 ✗ 可再批改并加入错题本' : ''}</div>
+    <div class="list" id="recapList" style="margin-top:8px">${rows || '<div class="empty">当日暂无复习记录</div>'}</div>
+    <div class="sub-tip" id="recapNote" style="margin-top:8px;color:var(--brand);min-height:16px">${esc(note || '')}</div>
+    ${items.length ? `<button class="btn primary" style="margin-top:6px" id="recapSubmit">确认批改：加入错题本（错 0）</button>` : ''}
     <button class="btn ghost" style="margin-top:12px" onclick="closeModal()">关闭</button>`);
+  if (items.length) bindRecapCheck(day);
+}
+// 回看页的「再次批改」交互：点 ✓/✗ 切换，确认后把错词按答错逻辑加入错题本（最后错=今天）
+function bindRecapCheck(day) {
+  const checks = [...document.querySelectorAll('#recapList .check')];
+  const btn = document.getElementById('recapSubmit');
+  const note = document.getElementById('recapNote');
+  const wrongCount = () => checks.filter(el => !el.classList.contains('on')).length;
+  const refresh = () => { if (btn) btn.textContent = `确认批改：加入错题本（错 ${wrongCount()}）`; };
+  checks.forEach(el => el.onclick = () => {
+    const on = !el.classList.contains('on');
+    el.classList.toggle('on', on);
+    el.textContent = on ? '✓' : '✗';
+    const it = el.closest('.item'); if (it) it.classList.toggle('bad', !on);
+    refresh();
+  });
+  refresh();
+  if (btn) btn.onclick = () => {
+    const wrongKeys = checks.filter(el => !el.classList.contains('on')).map(el => el.dataset.key);
+    if (!wrongKeys.length) { if (note) note.textContent = '请先点 ✗ 标记错词，再确认批改'; return; }
+    const items = ((history[day] && history[day].review) || []).filter(r => wrongKeys.includes(r.key));
+    const today = todayStr();
+    items.forEach(r => settleReview({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, false, today));
+    saveAll();   // 落盘并触发云同步（并集合并：错题本记录在各端都会保留）
+    openReviewRecap(day, `✅ 已加入错题本 ${items.length} 个错词（最后错 ${today}）`);
+  };
 }
 function openMakeup() {
   // 仅列出「尚未打卡完成」的过往日期（今日不在此列；已完成学习+复习的日期也不出现）

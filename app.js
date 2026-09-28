@@ -754,6 +754,13 @@ function markReviewDone(kind, day) {
 // 复习还需完成哪一轮：单词复习/听中文听写 = recall 轮；情境填词 = sentence 轮
 function nextReviewRoundNeeded(d) {
   const h = history[d] || {};
+  // 优先信任 rounds（wb-v28+ 持久化「各轮真正结算」的证明），不受 recallDone/sentenceDone 脏标记影响
+  if (h.rounds) {
+    if (!h.rounds.recall) return 'recall';
+    if (!h.rounds.sentence) return 'sentence';
+    return null;
+  }
+  // 旧版遗留（无 rounds）：回退到 recallDone/sentenceDone
   if (!h.recallDone) return 'recall';
   if (!h.sentenceDone) return 'sentence';
   return null;
@@ -809,6 +816,11 @@ function dayStudyDone(d) {
 }
 function dayReviewDone(d) {
   const h = history[d];
+  // 优先信任 rounds（wb-v28+ 持久化证明），不受脏标记影响
+  if (h && h.rounds) {
+    if (h.rounds.recall && h.rounds.sentence) return true;
+    return false;
+  }
   if (h && h.recallDone && h.sentenceDone) return true;   // 复习需单词复习+情境填词两轮都完成
   if (d === todayStr() && nothingToReview()) return true; // 当日无待复习词，视为满足
   return false;

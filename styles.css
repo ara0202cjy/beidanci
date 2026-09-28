@@ -91,8 +91,6 @@ body {
 .btn.ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
 .btn.green { background: var(--green); }
 .btn.red { background: var(--red); }
-.btn.amber { background: var(--amber); }
-.btn.purple { background: var(--purple); }
 .btn.sm { padding: 9px 13px; font-size: 13px; width: auto; border-radius: 11px; }
 .btn:disabled { opacity: .45; }
 .row { display: flex; gap: 10px; }
@@ -107,13 +105,7 @@ body {
 .stat.matcha { background: var(--matcha); border-color: #C6CFA8; }
 .stat.strawberry { background: var(--strawberry); border-color: #D6C0BC; }
 .stat.blueberry { background: var(--blueberry); border-color: #C6C4DC; }
-.stat.g .n { color: var(--green); }
-.stat.r .n { color: var(--red); }
-.stat.p .n { color: var(--purple); }
-.stat.b .n { color: var(--blue); }
-
 /* 进度条 */
-.prog-wrap { margin-top: 4px; }
 .prog { height: 8px; border-radius: 4px; background: #E2DACE; overflow: hidden; }
 .prog > i { display: block; height: 100%; background: var(--brand); border-radius: 4px; }
 
@@ -169,20 +161,6 @@ mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; 
 .affix-root { margin-top: 7px; font-size: 12.5px; color: var(--sub); }
 .affix-root b { color: var(--brand); font-weight: 700; }
 
-/* 复习/听写 */
-.dict-play { font-size: 15px; color: var(--brand); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-.hint-word { font-size: 30px; letter-spacing: 8px; font-weight: 600; color: var(--ink); margin: 10px 0; }
-.hint-first { color: var(--brand); }
-.dict-input { width: 100%; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; font-size: 18px;
-  font-family: inherit; outline: none; margin-top: 10px; background: #fff; }
-.dict-input:focus { border-color: var(--brand); }
-.answer-box { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 15px; display: none; }
-.answer-box.show { display: block; }
-.answer-box.ok { background: var(--green-soft); color: var(--green); }
-.answer-box.no { background: var(--red-soft); color: var(--red); }
-.speed { display: flex; gap: 8px; align-items: center; }
-.speed input { flex: 1; }
-
 /* 列表 */
 .list { display: flex; flex-direction: column; gap: 8px; }
 .item { display: flex; align-items: center; justify-content: space-between; padding: 12px;
@@ -193,8 +171,6 @@ mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; 
 .tag { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--brand-soft); color: var(--brand); }
 .tag.red { background: var(--red-soft); color: var(--red); }
 .tag.green { background: var(--green-soft); color: var(--green); }
-.tag.blue { background: var(--mint); color: var(--blue); }
-.tag.purple { background: var(--blueberry); color: var(--purple); }
 
 /* 底部导航（单色线条图标） */
 .tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
@@ -263,15 +239,6 @@ input[type=range] { accent-color: var(--brand); }
 #app.learn-active > .stat-grid,
 #app.learn-active > .card.lemon,
 #app.learn-active > .card.mint { display: none; }
-
-/* ===== 填空默写（模式二） ===== */
-.cloze-sentence { font-size: 17px; line-height: 2.1; margin: 10px 0 4px; color: var(--ink); }
-.cloze-sentence .cloze-in {
-  width: 92px; border: none; border-bottom: 2px solid var(--brand);
-  background: transparent; font-size: 16px; text-align: center; padding: 0 4px;
-  color: var(--brand); outline: none;
-}
-.cloze-hint { font-size: 13px; color: var(--sub); margin-top: 8px; }
 
 /* ===== 批量添加自建词库 ===== */
 .bulk-list { max-height: 52vh; overflow: auto; margin-top: 8px; }
@@ -348,20 +315,11 @@ input[type=range] { accent-color: var(--brand); }
 .wb-item .wb-head .w { font-size: 16px; font-weight: 600; color: var(--ink); display: flex; align-items: center; flex: 1; }
 .wb-item .wb-head .chev { color: var(--sub); font-size: 12px; margin-left: 4px; font-weight: 400; }
 .wb-item .wb-head .meta { font-size: 12px; color: var(--sub); flex: none; }
-.wb-item .wb-del { flex: 0 0 auto; padding: 4px 9px; font-size: 12px; }
 .wb-item .wb-detail { width: 100%; margin-top: 9px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .wb-item .wb-detail .dm { font-size: 13px; color: var(--sub); margin-bottom: 7px; }
 .wb-item .wb-detail .dm.dim { opacity: .72; }
 .wb-item .wb-detail .dm b { color: var(--brand); }
 .wb-item .wb-detail .mean-list { margin-top: 8px; }
-/* 单词复习：折叠卡列表 */
-.recall-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
-.recall-item .recall-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-.recall-item .recall-head .w { font-size: 17px; font-weight: 600; color: var(--ink); flex: 1; }
-.recall-item .recall-chev { color: var(--sub); font-size: 13px; font-weight: 400; transition: transform .15s; }
-.recall-item.open .recall-chev { color: var(--brand); }
-.recall-item .recall-detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
-.recall-item .recall-detail .mean-list { margin-top: 8px; }
 /* 筛选栏：维度 + 时间/次数分桶 */
 .wb-filter { margin-bottom: 10px; }
 .wb-filter .seg { margin-bottom: 6px; }
@@ -379,8 +337,6 @@ input[type=range] { accent-color: var(--brand); }
 .paper-prompt { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 18px; margin-top: 6px; }
 .paper-prompt .pp-label { font-size: 13px; color: var(--sub); margin-bottom: 8px; }
 .paper-prompt .mean-list { margin-top: 0; gap: 7px; }
-.speaker-btn.big { padding: 13px 22px; font-size: 16px; border-radius: 26px; }
-.speaker-btn.big svg { width: 22px; height: 22px; }
 /* 空格只保留字符下划线（细线），不再叠加 border 粗横线 */
 .blank { color: var(--brand); font-weight: 600; padding: 0 2px; }
 
@@ -396,9 +352,6 @@ input[type=range] { accent-color: var(--brand); }
 .rq-detail { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
 .rq-detail .mean-list { margin-top: 8px; }
 .rq-detail .eg { margin-top: 8px; }
-/* 待复习词预览（胶囊列表） */
-.rp-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.rp-w { font-size: 13px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
 
 /* ---------- 跨库背词：选词库 + 每库每日词数 ---------- */
 .bank-pick { display: flex; flex-wrap: wrap; gap: 10px; }

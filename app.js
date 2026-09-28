@@ -395,7 +395,6 @@ function settleReview(r, correct, day) {
   if (!p.nextReview && wrongBook[r.key]) delete wrongBook[r.key];
   return p;
 }
-function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[r[i], r[j]] = [r[j], r[i]]; } return r; }
 // 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
 function strHash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
 function dayRand(word) { return dayRandOn((word || '').toLowerCase(), todayStr()); }
@@ -1182,10 +1181,8 @@ function migrateSelfBankToOrigin() {
   });
   saveAll();
 }
-// 一次性校准：改为"按学习日 / 答错日排档期"后，把既有单词的下次复习日统一重排
-// 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
-// 一次性校准：改为「双锚点」后，把既有单词的学习日/错题日两个锚点字段补全并重排
-// 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次
+// 一次性校准：改为「双锚点」后，把既有单词的学习日/错题日两个锚点字段补全并重排。
+// 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次。
 function calibrateSchedule() {
   if (settings.scheduleV3) return 0;
   let n = 0;
@@ -2420,25 +2417,14 @@ function exportData() {
   toast('已导出进度文件');
 }
 
-/* ---------- 错题本导出 Excel（单词 / 音标 / 中文释义，A4 版式） ---------- */
-function exportWrongExcel(items) {
-  const arr = (items && items.length) ? items : Object.values(wrongBook);
-  if (!arr.length) { toast('错题本是空的，没有可导出的内容'); return; }
-  const rows = arr.map(w => {
-    const lc = (w.word || '').toLowerCase();
-    const d = DICT[lc] || {};
-    const uk = w.phonetic_uk || d.uk || '';
-    const us = w.phonetic_us || d.us || '';
-    const phon = [uk ? '英 /' + uk + '/' : '', us ? '美 /' + us + '/' : ''].filter(Boolean).join('   ');
-    return { word: w.word || '', phon, meaning: (w.meaning || d.meaning || '').replace(/\s*\n\s*/g, ' ') };
-  });
-  const trs = rows.map(r =>
-    `<tr><td class="w">${esc(r.word)}</td><td class="p">${esc(r.phon)}</td><td>${esc(r.meaning)}</td></tr>`
-  ).join('');
+/* ---------- Excel 导出公共函数（.xls · A4 版式） ---------- */
+function downloadExcel({ filename, title, headers, rows, emptyMsg, doneMsg }) {
+  if (!rows.length) { toast(emptyMsg); return; }
+  const ths = headers.map(h => `<th>${esc(h)}</th>`).join('');
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
 <head><meta charset="utf-8">
 <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-<x:Name>错题本</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+<x:Name>${esc(title)}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
 </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
 <style>
   @page { size: A4 portrait; margin: 18mm 14mm; }
@@ -2448,29 +2434,47 @@ function exportWrongExcel(items) {
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   th, td { border: 1px solid #999; padding: 6px 8px; vertical-align: top; word-break: break-word; }
   th { background: #EADFD8; text-align: left; }
-  td.w { font-weight: 600; width: 22%; }
-  td.p { color: #666; width: 27%; }
+  td.w { font-weight: 600; }
+  td.p { color: #666; }
   tr { page-break-inside: avoid; }
 </style></head>
 <body>
-<h2>错题本</h2>
+<h2>${esc(title)}</h2>
 <div class="meta">导出日期：${todayStr()} ｜ 共 ${rows.length} 词</div>
 <table>
-  <thead><tr><th>单词</th><th>音标</th><th>中文释义</th></tr></thead>
-  <tbody>${trs}</tbody>
+  <thead><tr>${ths}</tr></thead>
+  <tbody>${rows.join('')}</tbody>
 </table>
 </body></html>`;
   const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = '错题本_' + todayStr() + '.xls';
+  a.href = URL.createObjectURL(blob); a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast(`已导出 ${rows.length} 个错词（Excel · A4）`);
+  toast(doneMsg.replace('{n}', rows.length));
 }
-// 导出「已背单词」为 Excel（.xls）：取 progress 中已学习过的全部词，含词库/首学日期/最近复习/错词状态
+/* ---------- 错题本导出 Excel（单词 / 音标 / 中文释义） ---------- */
+function exportWrongExcel(items) {
+  const arr = (items && items.length) ? items : Object.values(wrongBook);
+  const rows = arr.map(w => {
+    const lc = (w.word || '').toLowerCase();
+    const d = DICT[lc] || {};
+    const uk = w.phonetic_uk || d.uk || '';
+    const us = w.phonetic_us || d.us || '';
+    const phon = [uk ? '英 /' + uk + '/' : '', us ? '美 /' + us + '/' : ''].filter(Boolean).join('   ');
+    return `<tr><td class="w">${esc(w.word || '')}</td><td class="p">${esc(phon)}</td><td>${esc((w.meaning || d.meaning || '').replace(/\s*\n\s*/g, ' '))}</td></tr>`;
+  });
+  downloadExcel({
+    filename: '错题本_' + todayStr() + '.xls', title: '错题本',
+    headers: ['单词', '音标', '中文释义'], rows,
+    emptyMsg: '错题本是空的，没有可导出的内容',
+    doneMsg: '已导出 {n} 个错词（Excel · A4）',
+  });
+}
+// 导出「已背单词」为 Excel：取 progress 中已学习过的全部词，含词库/首学日期/最近复习/错词状态
 function exportLearnedExcel() {
   const arr = Object.values(progress).filter(p => p && p.word && p.firstLearned);
-  if (!arr.length) { toast('还没有已背单词，无法导出'); return; }
+  arr.sort((a, b) => (a.bank === b.bank ? a.word.localeCompare(b.word) : a.bank.localeCompare(b.bank)));
   const rows = arr.map(p => {
     const lc = (p.word || '').toLowerCase();
     const d = DICT[lc] || {};
@@ -2479,52 +2483,14 @@ function exportLearnedExcel() {
     const phon = [uk ? '英 /' + uk + '/' : '', us ? '美 /' + us + '/' : ''].filter(Boolean).join('   ');
     const wb = wrongBook[bankKey(p.bank, p.word)];
     const status = p.nextReview ? (wb ? '复习中(含错词)' : '复习中') : (wb ? '错词·已掌握' : '已掌握');
-    return {
-      word: p.word,
-      phon,
-      meaning: (p.meaning || d.meaning || '').replace(/\s*\n\s*/g, ' '),
-      bank: p.bank || '',
-      first: p.firstLearned || '',
-      last: p.lastReview || '',
-      wrong: wb ? ('是(' + (wb.wrongCount || 0) + ')') : '否',
-      status,
-    };
+    return `<tr><td class="w">${esc(p.word || '')}</td><td class="p">${esc(phon)}</td><td>${esc((p.meaning || d.meaning || '').replace(/\s*\n\s*/g, ' '))}</td><td>${esc(p.bank || '')}</td><td>${esc(p.firstLearned || '')}</td><td>${esc(p.lastReview || '')}</td><td>${esc(wb ? ('是(' + (wb.wrongCount || 0) + ')') : '否')}</td><td>${esc(status)}</td></tr>`;
   });
-  rows.sort((a, b) => (a.bank === b.bank ? a.word.localeCompare(b.word) : a.bank.localeCompare(b.bank)));
-  const trs = rows.map(r =>
-    `<tr><td class="w">${esc(r.word)}</td><td class="p">${esc(r.phon)}</td><td>${esc(r.meaning)}</td><td>${esc(r.bank)}</td><td>${esc(r.first)}</td><td>${esc(r.last)}</td><td>${esc(r.wrong)}</td><td>${esc(r.status)}</td></tr>`
-  ).join('');
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-<head><meta charset="utf-8">
-<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-<x:Name>已背单词</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-<style>
-  @page { size: A4 portrait; margin: 18mm 14mm; }
-  body { font-family: "Microsoft YaHei","PingFang SC",sans-serif; font-size: 11pt; color: #333; }
-  h2 { font-size: 14pt; margin: 0 0 3px; }
-  .meta { color: #888; font-size: 9pt; margin-bottom: 10px; }
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  th, td { border: 1px solid #999; padding: 6px 8px; vertical-align: top; word-break: break-word; }
-  th { background: #EADFD8; text-align: left; }
-  td.w { font-weight: 600; width: 16%; }
-  td.p { color: #666; width: 22%; }
-  tr { page-break-inside: avoid; }
-</style></head>
-<body>
-<h2>已背单词</h2>
-<div class="meta">导出日期：${todayStr()} ｜ 共 ${rows.length} 词</div>
-<table>
-  <thead><tr><th>单词</th><th>音标</th><th>中文释义</th><th>词库</th><th>首次学习</th><th>最近复习</th><th>错词</th><th>状态</th></tr></thead>
-  <tbody>${trs}</tbody>
-</table>
-</body></html>`;
-  const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = '已背单词_' + todayStr() + '.xls';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast(`已导出 ${rows.length} 个已背单词（Excel · A4）`);
+  downloadExcel({
+    filename: '已背单词_' + todayStr() + '.xls', title: '已背单词',
+    headers: ['单词', '音标', '中文释义', '词库', '首次学习', '最近复习', '错词', '状态'], rows,
+    emptyMsg: '还没有已背单词，无法导出',
+    doneMsg: '已导出 {n} 个已背单词（Excel · A4）',
+  });
 }
 function importData(file) {
   const fr = new FileReader();

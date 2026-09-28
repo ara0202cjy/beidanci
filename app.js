@@ -122,7 +122,7 @@ window.WB = {
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
-  sortStudyOrder, dayRand,
+  dayRand,
   learnNext, wrongNext, secNext, refreshNext, isDue, settleReview, calibrateSchedule,
   exportLearnedExcel,
   reconcileLearnPlan, resolveWord, candidatesForBank, buildBatch, studyBanks, studyTotal, learnBanks,
@@ -268,7 +268,6 @@ window.seedAccounts = seedAccounts;
 let BANK_DATA = {};
 let ALL_INDEX = [];
 let EXAMPLES = {};
-let FREQ = {};      // 朗文词频等级（0 最常用 → 5 未收录），用于出词排序
 let ROOTS = {};     // 词根词缀 + 词频（灵格斯词根词源字典）：{ word: [拆解, 柯林斯★, COCA排名, 词根说明] }
 let OBSCURE = {};   // 熟词僻义（中考/高考）
 let BANK_MAP = {};  // 单词 → 词库数据（批量添加时自动匹配）
@@ -289,7 +288,7 @@ async function loadData() {
 // 学习/复习/工作本仅依赖 localStorage 中的进度数据，无需等待本函数。
 function loadBanksBg() {
   const small = [
-    ['examples.json', v => EXAMPLES = v], ['freq.json', v => FREQ = v],
+    ['examples.json', v => EXAMPLES = v],
     ['obscure.json', v => OBSCURE = v], ['dict.json', v => DICT = v],
     ['roots.json', v => ROOTS = v],
     ['collocation.json', v => COLLOC = v], ['thesaurus.json', v => THES = v],
@@ -841,12 +840,6 @@ function bankStat(id) {
 /* ---------- 词库与推送顺序 ---------- */
 function bankWords(id) { return (BANK_DATA[id]?.words || []).map(w => ({ ...w, bank: id })); }
 function unlearned(id) { return bankWords(id).filter(w => !progress[bankKey(id, w.word)]); }
-// 按常见度排序（freq 越小越常见）；同级内用「当日确定性随机」打散，保证不同端顺序一致
-function sortByFreq(list) {
-  return list.map(w => ({ w, f: FREQ[w.word.toLowerCase()] ?? 5, r: dayRand(w.word) }))
-    .sort((a, b) => a.f - b.f || a.r - b.r)
-    .map(x => x.w);
-}
 // 词形归一化（与小写、去首尾空白、合并内部空白），与词库对比脚本保持一致
 function wnorm(w) { return (w || '').toLowerCase().trim().replace(/\s+/g, ' '); }
 // 计算雅思与托福的共有词集合（归一化后精确匹配），结果存入 COMMON_SET
@@ -856,12 +849,6 @@ function computeCommon() {
   COMMON_SET = new Set(a.filter(w => bset.has(wnorm(w.word))).map(w => wnorm(w.word)));
 }
 function isCommon(word) { return COMMON_SET ? COMMON_SET.has(wnorm(word)) : false; }
-// 学习排序：雅思/托福两库的共有词优先背诵（先打共同基础），其余再按常见度排序；同级用当日确定性随机打散
-function sortStudyOrder(list) {
-  return list.map(w => ({ w, common: isCommon(w.word) ? 0 : 1, f: FREQ[w.word.toLowerCase()] ?? 5, r: dayRand(w.word) }))
-    .sort((a, b) => a.common - b.common || a.f - b.f || a.r - b.r)
-    .map(x => x.w);
-}
 // 两库模型：最多 2 个正式词库 —— 词库1 ＝ 学习词库（产生新词），词库2 ＝ 复习词库（推送已背词做第二轮）。
 // 「新学习总词数」是唯一的新词上限：自建词库优先占额，词库1 补足；词库2 的复习推送单列、不计入该上限。
 function normalizeStudyBanks() {
@@ -935,49 +922,23 @@ function reconcileSecondRound() {
   if (n) saveAll();
   return n;
 }
-// 单库的未学候选（常用词优先 → 词频高优先 → 同档按当日确定性乱序），不含已学词
-// 词频分（越小越常用）：朗文等级(0–5，全体词都有) 为主档，柯林斯★/COCA 在同一档内细化。
-// ⚠️ 仅用于「词库推送顺序」判定，不在界面展示（用户要求：词频只做排序、不展示）。
-function freqScore(word) {
-  const lc = wnorm(word);
-  const lv = (typeof FREQ !== 'undefined' && FREQ) ? FREQ[lc] : undefined;
-  const base = (typeof lv === 'number') ? lv : 5;
-  const r = (typeof ROOTS !== 'undefined' && ROOTS) ? ROOTS[lc] : null;
-  if (!r) return base;
-  const coca = r[2] || 0;
-  const collins = r[1] || 0;
-  let sub = 0;
-  if (coca) sub = Math.min(0.9, Math.log10(coca) / 6);      // COCA 越小越常用（1→0）
-  else if (collins) sub = Math.max(0, 1 - collins / 5);     // 5★→0，1★→0.8
-  return base + sub;
-}
+// 单库的未学候选（随机推送），不含已学词。
+// ⚠️ 已取消「按词频推送」：不再用朗文等级/柯林斯★/COCA 排序，改为随机抽词。
+// ⚠️ 不用 Math.random：随机序由「词 + 当日日期」播种（dayShuffle），
+//    保证同一天各设备选出的词与顺序完全一致（多端同步根基），且每天都会换一批。
+// 雅思∩托福的共有词仍优先打底（「先打共同基础」这一独立特性保留）；对不含该交集的词库（如初中）该档为空 → 全库纯随机。
 function candidatesForBank(bankId, exclude) {
   const ex = new Set(exclude || []);
-  const idx = {};
-  (BANK_DATA[bankId]?.words || []).forEach((w, i) => { idx[wnorm(w.word)] = i; });
-  let out = [];
+  const common = [], rest = [];
   (BANK_DATA[bankId]?.words || []).forEach(w => {
     const key = bankKey(bankId, w.word);
     if (ex.has(key)) return;
     if (progress[key] && progress[key].firstLearned) return;
-    out.push({ ...w, bank: bankId, _i: idx[wnorm(w.word)] ?? 0, _c: isCommon(w.word) ? 0 : 1 });
+    const item = { ...w, bank: bankId };
+    (isCommon(w.word) ? common : rest).push(item);
   });
-  // 主排序：常用词优先(_c 升序) → 词频高优先(freqScore 升序：朗文等级 ＋ 柯林斯★/COCA 细化)。
-  out.sort((a, b) => a._c - b._c || freqScore(a.word) - freqScore(b.word));
-  // 同档（_c 与 FREQ 均相同）内用「按当日日期播种的确定性乱序」打散：
-  // 观感随机、但同一天各设备生成顺序完全一致（多端同步），且不会退回字母顺序。
   const day = todayStr();
-  const groups = []; const gmap = new Map();
-  out.forEach(w => {
-    const f = Math.round(freqScore(w.word) * 2) / 2;   // 0.5 档分组：同档内按日乱序（柯林斯/COCA 可改变分档）
-    const gk = w._c + '|' + f;
-    let g = gmap.get(gk);
-    if (!g) { g = { c: w._c, f: f, list: [] }; gmap.set(gk, g); groups.push(g); }
-    g.list.push(w);
-  });
-  groups.sort((a, b) => a.c - b.c || a.f - b.f);
-  out = groups.flatMap(g => dayShuffle(g.list, w => w.word, day));
-  return out;
+  return dayShuffle(common, w => w.word, day).concat(dayShuffle(rest, w => w.word, day));
 }
 // 组合当日待学批次（新学习总数模型）：
 //  ① 保留已选未学词（粘性，受 maxSize 约束；复习词库的旧词不再保留）

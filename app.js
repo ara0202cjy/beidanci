@@ -1638,11 +1638,13 @@ function checkinCardHtml() {
   const sd = dayStudyDone(d), rd = dayReviewDone(d);
   if (sd && rd) {
     const t = todayStat(d);
+    const revN = ((history[d] && history[d].review) || []).length;
     return `<div class="card checkin done" id="checkinCard">
       <div class="ci-emoji">🎉</div>
       <div class="ci-main">
         <div class="ci-title">今日打卡完成</div>
         <div class="ci-sub">已学 ${t.new} 个新词 · 已复习 ${t.review} 个词，今日已结算，不再计入补打卡</div>
+        ${revN ? `<button class="btn ghost sm" id="ciRecap" style="margin-top:8px">📖 回看今日题目（${revN}）</button>` : ''}
       </div></div>`;
   }
   let btn = '';
@@ -1662,6 +1664,7 @@ function checkinCardHtml() {
 function bindCheckin() {
   const gl = document.getElementById('ciGoLearn'); if (gl) gl.onclick = () => startLearning();
   const gr = document.getElementById('ciGoReview'); if (gr) gr.onclick = () => goto('review');
+  const rc = document.getElementById('ciRecap'); if (rc) rc.onclick = () => openReviewRecap();   // 打卡完成后仍可回看复习题目
 }
 // 通用：渲染「今日学习/复习单词列表」——只展示单词本身（不展开释义等内容）
 function dayWordListHtml(title, items) {
@@ -2082,6 +2085,8 @@ function renderSummary() {
   else {
     html += `<div class="sub-tip" style="margin-top:10px">🎉 今日复习完！两轮复习均已完成，今日打卡达成！</div>`;
     html += dayWordListHtml('今日复习的单词', (history[rday] && history[rday].review) || []);
+    const recapN = ((history[rday] && history[rday].review) || []).length;
+    if (recapN) html += `<button class="btn ghost sm" style="margin-top:10px" id="recapReview">📖 回看今日题目（${recapN}）</button>`;
   }
   if (wrong.length) html += `<button class="btn red" style="margin-top:12px" id="reWrong">🔁 重练错词（${wrong.length}）</button>`;
   html += `<button class="btn ghost sm" style="margin-top:10px" id="backHome">返回首页</button>`;
@@ -2102,7 +2107,28 @@ function renderSummary() {
     reviewState = { pool: wq, idx: 0, day: d };
     review(); renderReviewCard();
   };
+  if ($('#recapReview')) $('#recapReview').onclick = () => openReviewRecap(rday);
   $('#backHome').onclick = () => goto('learn');
+}
+// 回看复习题目：复习完成后仍可查看当日复习过的词与题目（弹窗形式，列表可滚动）。
+// 题目内容以 history[day].review 为准（两轮累计），情境句按「词 + 日期」确定性重建 → 与当日复习题一致。
+function openReviewRecap(day) {
+  day = day || todayStr();
+  const items = (history[day] && history[day].review) || [];
+  const rows = items.map(r => {
+    const lc = (r.word || '').toLowerCase();
+    const meaning = r.meaning || (DICT[lc] && DICT[lc].meaning) || '';
+    const s = contextSentence(r.word, meaning, day);
+    const ex = (EXAMPLES[lc] || [])[0];
+    let eg = '';
+    if (s && s.en) eg = `<div class="eg"><div class="en">${highlightVariants(s.en, r.word)}</div>${s.zh ? `<div class="zh">${esc(s.zh)}</div>` : ''}</div>`;
+    else if (ex) eg = `<div class="eg"><div class="en">${esc(ex.en)}</div><div class="zh">${esc(ex.zh)}</div></div>`;
+    return `<div class="item"><div><div class="w">${esc(r.word)}</div>${eg}<div class="mean-list">${renderMeaning(meaning)}</div></div>${r.bank ? `<span class="tag">${esc(r.bank)}</span>` : ''}</div>`;
+  }).join('');
+  openModal(`<h3>复习题目回看 · ${esc(day)}</h3>
+    <div class="sub-tip">共 ${items.length} 词${items.length ? '，情境句按当日确定性生成，可逐词重看' : ''}</div>
+    <div class="list" style="margin-top:8px">${rows || '<div class="empty">当日暂无复习记录</div>'}</div>
+    <button class="btn ghost" style="margin-top:12px" onclick="closeModal()">关闭</button>`);
 }
 function openMakeup() {
   // 仅列出「尚未打卡完成」的过往日期（今日不在此列；已完成学习+复习的日期也不出现）

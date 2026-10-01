@@ -1831,10 +1831,12 @@ function contextSentence(word, meaning, day) {
   const lc = (word || '').toLowerCase();
   if (lc) {
     const exs = EXAMPLES[lc];
-    if (exs && exs.length) {
+    // 只取「英文句非空」的例句：空串会让情境题退化成听写题（情境轮必须每题都有横线句）
+    const usable = (exs && exs.length) ? exs.filter(x => x && x.en && String(x.en).trim()) : [];
+    if (usable.length) {
       // 例句按「词 + 当日日期」确定性挑选（不用 Math.random）：各端当天看到同一句，多端一致
-      const i = Math.min(exs.length - 1, Math.floor(dayRandOn(lc, d) * exs.length));
-      return { en: exs[i].en, zh: (exs[i] && exs[i].zh) || (exs[0] && exs[0].zh) || '' };
+      const i = Math.min(usable.length - 1, Math.floor(dayRandOn(lc, d) * usable.length));
+      return { en: usable[i].en, zh: (usable[i] && usable[i].zh) || (usable[0] && usable[0].zh) || '' };
     }
     const th = THES[lc];
     if (Array.isArray(th)) {
@@ -1864,7 +1866,9 @@ function makeTypedQueue(pool, type, day) {
     delete c._wrongAdded;                       // 新一轮重新计错
     if (type === 'sentence') {
       const s = contextSentence(e.word, e.meaning, d);
+      // 情境轮必须「每题都是带横线的英文语境句」，绝不回落成听写题（否则情境轮会混入中文听写、且覆盖不全）
       if (s && s.en) return { ...c, type: 'sentence', sentence: s };
+      return { ...c, type: 'sentence', sentence: { en: `The word ${e.word || 'word'} is important to learn.`, zh: '' } };
     }
     return { ...c, type: 'word' };
   });
@@ -1903,7 +1907,7 @@ function renderReviewCard() {
   if (cur.type === 'sentence' && cur.sentence) {
     const sb = blankSentence(cur.sentence.en, cur.word);
     prompt = `<div class="paper-prompt">
-      <div class="pp-label">情境填词：写出横线处的单词</div>
+      <div class="pp-label">情境填词：写出横线处的单词（共 ${st.pool.length} 题，全部做完后统一批改）</div>
       <div class="eg" style="margin-top:0"><div class="en">${sb.html}</div></div>
       <div class="mean-list">${renderMeaning(cur.meaning)}</div>
       ${sb.variantBlank ? `<div class="sub-tip pp-warn" style="margin-top:8px">⚠ 此题为变形词</div>` : (sb.hasBlank ? '' : '<div class="sub-tip" style="margin-top:8px">⚠ 例句中未直接出现该词，请依据中文释义回忆拼写</div>')}
@@ -2003,7 +2007,7 @@ function renderCheck() {
   const head = document.createElement('div');
   head.innerHTML = `<h2>核对答案（共 ${st.pool.length} 个）</h2>
     <button class="btn ghost sm" id="exitReview" style="margin:6px 0">← 退出复习</button>
-    <div class="sub-tip">对照你纸上的写法：对的保留，错的点击标记为「错」（自动加入错题本）。词组若无例句则显示中文释义。</div>`;
+    <div class="sub-tip">以下为本次<b>全部 ${st.pool.length} 题</b>，请一次性统一批改：对的保留，错的点击标记为「错」（自动加入错题本）。</div>`;
   st.check.forEach((r, i) => {
     const lc = r.word.toLowerCase();
     const d = DICT[lc] || {};
@@ -2083,8 +2087,8 @@ function renderSummary() {
   }
   // 双轮打卡进度（单词复习 + 情境填词 各完成一轮才记当日复习完成）
   html += `<div class="sub-tip" style="margin-top:12px">打卡进度：单词复习 ${doneRecall ? '✅' : '⬜'} ｜ 情境填词 ${doneSentence ? '✅' : '⬜'}</div>`;
-  if (need === 'sentence') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：情境填词 →</button>`;
-  else if (need === 'recall') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：单词复习 →</button>`;
+  if (need === 'sentence') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：情境填词（全部 ${st.pool.length} 词）→</button>`;
+  else if (need === 'recall') html += `<button class="btn primary" id="nextRound" style="margin-top:12px">进行第 2 轮：单词复习（全部 ${st.pool.length} 词）→</button>`;
   else {
     html += `<div class="sub-tip" style="margin-top:10px">🎉 今日复习完！两轮复习均已完成，今日打卡达成！</div>`;
     html += dayWordListHtml('今日复习的单词', (history[rday] && history[rday].review) || []);

@@ -18,6 +18,7 @@ const BANKS = [
   { id: '考研', file: 'levels/考研.json', color: '#C08C8C' },
   { id: '雅思', file: 'levels/雅思.json', color: '#A89AB8' },
   { id: '托福', file: 'levels/托福.json', color: '#9A8FB0' },
+  { id: '短语', file: 'phrases.json', color: '#B08DA8' },
 ];
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
 // 错词复习节奏：在错误的第 1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
@@ -303,6 +304,13 @@ function loadBanksBg() {
     ALL_INDEX = [];
     BANKS.forEach(b => (BANK_DATA[b.id]?.words || []).forEach(w => ALL_INDEX.push({ word: w.word, bank: b.id, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk })));
     selfBank.forEach(w => ALL_INDEX.push({ word: w.word, bank: SELFBANK_ID, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk }));
+    // 短语词库自带例句（word.ex）：注入 EXAMPLES，使学习卡 exampleHtml 与情境填词 contextSentence 能直接取用，无需改动复习逻辑
+    BANKS.forEach(b => (BANK_DATA[b.id]?.words || []).forEach(w => {
+      if (w && Array.isArray(w.ex) && w.ex.length) {
+        const lc = (w.word || '').toLowerCase();
+        if (lc) EXAMPLES[lc] = (EXAMPLES[lc] || []).concat(w.ex.filter(e => e && e.en && String(e.en).trim()));
+      }
+    }));
     BANK_MAP = {};
     ALL_INDEX.forEach(x => { if (!BANK_MAP[x.word.toLowerCase()]) BANK_MAP[x.word.toLowerCase()] = x; });
   });

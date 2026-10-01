@@ -1003,6 +1003,25 @@ function resolveWord(bank, word) {
   if (bank === SELFBANK_ID) return selfBank.find(w => w.word === word);
   return (BANK_DATA[bank]?.words || []).find(w => w.word === word);
 }
+// 自愈：把「已经背过、却还留在自建词库里」的词清出去（并记墓碑）。
+// 为什么必须有它：selfBank 的合并是「并集 − 墓碑」，而「学完自建词」在本版之前只做本地 filter、不记墓碑，
+// 于是 pull 时云端/另一台的旧副本会把它并集回来 → 学完又被反复推送（自建词永远推不完）。
+// 这里做成「每台设备都跑的确定性自愈」：与并集结果无关，跑完各端都收敛到同一状态（幂等）。
+// 只清「确已学过」的词，且跳过「今天刚加入/重新加入」的词（给重新加入留一天缓冲，避免误删）。
+function healSelfBank() {
+  if (!Array.isArray(selfBank) || !selfBank.length) return false;
+  const today = todayStr();
+  const removed = [];
+  selfBank = selfBank.filter(w => {
+    if (!w || !w.word) return true;
+    if (w.added === today) return true;              // 今天新加/重新加入：不判定（重新加入需先重置进度才有效）
+    if (!wordIsLearned(w.word)) return true;
+    removed.push(w.word); return false;              // 已背过 → 移出自建词库
+  });
+  if (!removed.length) return false;
+  if (window.Sync && Sync.noteDelete) removed.forEach(x => Sync.noteDelete(x));   // 记墓碑，让移除也能跨端同步
+  return true;
+}
 // 粘性批次 reconcile（新学习总数模型）：
 //  • 已学过的词自动移出批次；
 //  • 批次非空且「新学习总词数 + 词库1」未变 ⇒ 保留原批次（不新增），满足「只有学完才生成新词」；
@@ -1012,8 +1031,9 @@ function resolveWord(bank, word) {
 function reconcileLearnPlan(forceResize) {
   // 先自愈跨日重复（并集型 merge 让删除不可逆，只能靠各端确定性重建）。
   // 必须放在最前：后续 learnedTotal/maxSize 都要基于修复后的今日 new 数，否则会算错剩余名额。
-  const healed = healDuplicateNews();
+  let healed = healDuplicateNews();
   if (healReviewFlags()) healed = true;
+  if (healSelfBank()) healed = true;   // 自建词库自愈：学完的词必须移出（否则会被并集复活、反复推送）
   // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。
   // 例：strHash 兜底替代字母序后，已锁定的今日批次若保留仍是旧顺序，故版本不符时清空重排。
   // 仅当存档版本 ≠ 当前版本才触发（升级后首帧一次）；日常调用版本已一致、不影响「学完才出下一批」的粘性。
@@ -1030,7 +1050,11 @@ function reconcileLearnPlan(forceResize) {
   const before = JSON.stringify(pendingPlan) + '|' + total + '|' + JSON.stringify(banks);
   let plan = (pendingPlan || []).filter(p => {
     const key = bankKey(p.bank, p.word);
-    return !(progress[key] && progress[key].firstLearned);
+    if (progress[key] && progress[key].firstLearned) return false;
+    // 兼容「自建词学完 → 进度迁到原词库 key」：自建待学项要按「词」判断是否已学，
+    // 只看 自建::word 会漏（表现为该词在待学批次里残留、天天重复推送）。
+    if (p.bank === SELFBANK_ID && wordIsLearned(p.word)) return false;
+    return true;
   });
   // 影响新词批次的配置变化才重排批次：新学习总数 / 词库1 / 自建词库成员（加入或学完自建词都会改 selfBank）。
   // 注意必须纳入自建词：否则「先生成了不含自建的粘性批次、之后才加自建词」时 sig 不变、批次永不重建，
@@ -1064,14 +1088,16 @@ function resetWordForSelf(word) {
   let reset = false;
   if (progress[key]) { delete progress[key]; reset = true; }
   if (wrongBook[key]) { delete wrongBook[key]; reset = true; }
-  // 迁移后，自建词学完的进度落在「原词库」key；重学需同时清掉，使其真正回到未背诵
-  // （原词库不再显示已背，直到再次学完；也避免「已学」状态阻碍重新推送）
-  const src = primarySourceBank(word);
-  if (src) {
-    const ok = bankKey(src, word);
-    if (progress[ok]) { delete progress[ok]; reset = true; }
-    if (wrongBook[ok]) { delete wrongBook[ok]; reset = true; }
-  }
+  // 迁移后，自建词学完的进度落在「原词库」key；重学需一并清掉，使其真正回到未背诵
+  // （原词库不再显示已背，直到再次学完；也避免「已学」状态阻碍重新推送）。
+  // 注意要清「全部包含该词的词库」，只清主要来源库会漏（该词可能同时存在于多个词库）。
+  Object.keys(BANK_DATA || {}).forEach(id => {
+    const k = bankKey(id, word);
+    if (progress[k]) { delete progress[k]; reset = true; }
+    if (wrongBook[k]) { delete wrongBook[k]; reset = true; }
+  });
+  // 重新加入自建词库时清除「墓碑」：否则并集合并会一直把该词过滤掉（加了却进不去）。
+  if (window.Sync && Sync.untomb) Sync.untomb(word);
   return reset;
 }
 // 判断某词是否已学习（任意正式词库、或自建 key 有 firstLearned 记录）
@@ -1647,6 +1673,9 @@ function markLearned(w) {
     // 自建词库的词：学完后从自建词库移除；并把进度记到它的「原词库」key 上，
     // 使该词在原词库显示已背、不再被原词库重复推送（除非用户再次加入自建词库、重新推送）。
     selfBank = selfBank.filter(x => x.word !== w.word);
+    // ⚠️ 必须记「墓碑」：selfBank 的合并是「并集 − 墓碑」，若不记墓碑，只要云端（或另一台设备）
+    // 还留着该词，下一次 pull 的并集就会把它复活 → 学完又被反复推送（自建词永远推不完）。
+    if (window.Sync && Sync.noteDelete) Sync.noteDelete(w.word);
     const src = primarySourceBank(w.word);
     learnedKey = src ? bankKey(src, w.word) : key;
     learnedBank = src || SELFBANK_ID;
@@ -1696,6 +1725,9 @@ function reviewRoundFinished() {
   return st.pool.every(r => r && rec.has(r.key));
 }
 function review() {
+  // 补打卡指针（REVIEW_DAY）只在其复习会话仍存在时有效；一旦会话丢失就清掉，
+  // 否则 dayOf() 会一直指向往日，令「本轮是否已结算」判断失效、卡在批改页（表现为复习走不下去）。
+  if (REVIEW_DAY && REVIEW_DAY !== todayStr() && (!reviewState || reviewState.day !== REVIEW_DAY)) REVIEW_DAY = null;
   // 往日遗留的「结果页状态」不阻塞今日复习：同一轮只在当天保持结果页
   if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
     reviewState = null; saveAll();
@@ -1708,34 +1740,47 @@ function review() {
   function renderSetup() {
     const pool = buildReviewPool();
     const resuming = reviewState && !reviewRoundFinished();   // 存在未完成的中途复习 → 提供「继续」
-    // 用「还差哪一轮」决定本轮应启动的题型，避免残留的 reviewType 让用户反复重做已完成的那一轮、
-    // 而另一轮永远不标记，导致「单词复习×1+情境×1 后仍显示未复习完成」的死循环。
+    // 本轮应启动的题型：默认尊重用户选择，仅当所选轮次已完成时才自动引导到还缺的那一轮。
+    // （旧逻辑无条件改成待完成轮，导致「情境填词」永远选不中 → 表现为情境复习用不了）
     const need = nextReviewRoundNeeded(todayStr());
     const needKind = need === 'sentence' ? 'sentence' : (need === 'recall' ? 'recall' : null);
+    // 轮次完成情况（优先信任 rounds）
+    const hToday = history[todayStr()] || {};
+    const recallDoneNow = hToday.rounds ? !!hToday.rounds.recall : !!hToday.recallDone;
+    const sentenceDoneNow = hToday.rounds ? !!hToday.rounds.sentence : !!hToday.sentenceDone;
     if (!resuming && needKind) {
-      // recall 轮允许用户在「单词复习 / 听中文听写」间自选；sentence 轮固定情境填词
-      if (need === 'sentence') settings.reviewType = 'sentence';
+      // 当日「用户显式选过题型」优先于默认；默认仍按「还差哪一轮」自动选（防残留 reviewType 让用户反复做同一轮）。
+      // 显式选择的意义：允许先做「情境填词」再补「单词复习」（旧逻辑无条件改回单词复习 → 情境复习用不了）。
+      const explicit = (settings.reviewChoice && settings.reviewChoice.day === todayStr() && settings.reviewChoice.type === settings.reviewType)
+        ? settings.reviewChoice.type : null;
+      if (explicit) {
+        settings.reviewType = explicit;
+        const exDone = explicit === 'sentence' ? sentenceDoneNow : recallDoneNow;
+        if (exDone) settings.reviewType = needKind;          // 显式选的这轮已完成 → 自动切到还缺的那一轮
+      } else if (needKind === 'sentence') settings.reviewType = 'sentence';
       else if (settings.reviewType !== 'word') settings.reviewType = 'recall';
     }
     const isRecall = settings.reviewType === 'recall';
     const isSent = settings.reviewType === 'sentence';
+    const needLabel = needKind === 'sentence' ? '情境填词' : (needKind === 'recall' ? '单词复习' : '');
     // 三种题型下方的提示统一为「复习节奏」，未开始复习前不暴露任何待复习单词
     $('#reviewSetup').innerHTML = `
       <h2>今日复习 <span class="r">${pool.length} 词</span></h2>
       <div class="seg" id="rvType" style="margin-bottom:8px">
-        <div class="${isRecall ? 'on' : ''}" data-t="recall" style="${needKind && needKind !== 'recall' ? 'opacity:.4' : ''}">单词复习</div>
-        <div class="${isSent ? 'on' : ''}" data-t="sentence" style="${needKind && needKind !== 'sentence' ? 'opacity:.4' : ''}">情境填词</div>
-        <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word" style="${needKind && needKind !== 'recall' ? 'opacity:.4' : ''}">听中文听写</div>
+        <div class="${isRecall ? 'on' : ''}" data-t="recall">单词复习</div>
+        <div class="${isSent ? 'on' : ''}" data-t="sentence">情境填词</div>
+        <div class="${settings.reviewType === 'word' ? 'on' : ''}" data-t="word">听中文听写</div>
       </div>
-      ${needKind ? `<div class="sub-tip" style="margin-top:2px;color:var(--brand)">本轮需完成：<b>${needKind === 'sentence' ? '情境填词' : '单词复习'}${settings.reviewType === 'word' ? '（听中文听写）' : ''}</b>${resuming ? '（继续上次未完成的复习）' : ''}</div>` : ''}
+      ${needKind ? `<div class="sub-tip" style="margin-top:2px;color:var(--brand)">本轮还需完成：<b>${needLabel}</b>（三种题型随时可切换，先做哪一轮都行；已完成的轮次不必重做）${resuming ? '（继续上次未完成的复习）' : ''}</div>` : ''}
       <div class="sub-tip" id="rvDesc">复习节奏（双锚点）：<b>学习日</b>锚点固定按第 1、2、3、5、7、15、30 天推送；<b>错题日</b>锚点（最近一次答错日）按第 1、2、3、20、40 天推送，并<b>叠加</b>在正常学习顺序之上。每次新答错会重置错题锚点、错题节奏从头重数；学习顺序不受影响。<br><b>第二轮（词库2 ＝ 复习词库）</b>：${sec2Desc()}<br><b style="color:var(--brand)">打卡完成需「单词复习 + 情境填词」各完成一轮</b>（听中文听写视作单词轮）；系统会在你完成一轮后自动引导进入另一轮。</div>
       ${resuming ? `<div class="sub-tip" style="margin-bottom:8px">检测到上次未完成的复习（第 ${reviewState.idx + 1}/${reviewState.pool.length} 个），可继续或重新开始。</div>` : ''}
       <div><button class="btn primary" id="startReview" ${pool.length || resuming ? '' : 'disabled'}>${resuming ? '▶ 继续复习（剩 ' + (reviewState.pool.length - reviewState.idx) + '）' : '▶ 开始复习' + (pool.length ? '（' + pool.length + '）' : '')}</button></div>
       ${resuming ? '<div style="margin-top:8px"><button class="btn ghost sm" id="restartReview">↺ 重新开始今日复习</button></div>' : ''}
       <div style="margin-top:10px"><button class="btn ghost sm" id="makeup">📅 补打卡（复习过往某天）</button></div>`;
     document.querySelectorAll('#rvType div').forEach(d => d.onclick = () => {
-      if (d.style.opacity === '0.4') { toast('请先完成当前需要的轮次：' + (needKind === 'sentence' ? '情境填词' : '单词复习')); return; }
-      settings.reviewType = d.dataset.t; saveAll(); renderSetup();
+      settings.reviewType = d.dataset.t;
+      settings.reviewChoice = { day: todayStr(), type: d.dataset.t };   // 记住当日的显式选择，默认规则不再覆盖它
+      saveAll(); renderSetup();
     });
     $('#startReview').onclick = () => {
       if (resuming) { review(); return; }            // 续接上次中途复习
@@ -1830,11 +1875,17 @@ function startReview(pool) {
   if (!pool.length) { toast('今日暂无复习词'); return; }
   // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
   const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
-  // 本轮题型由「还差哪一轮」决定（而非残留的 reviewType），保证两轮都会被推进、不会反复重做同一轮
+  // 本轮题型：默认尊重用户在「题型切换」里的选择（可先做情境填词，也可先做单词复习）；
+  // 仅当所选轮次已完成时，才自动切到还缺的那一轮 —— 既保证两轮都会被推进、不会卡死在同一轮，
+  // 又不再强制改回单词复习（旧逻辑会让「情境填词」永远选不中，表现为情境复习用不了）。
   const need = nextReviewRoundNeeded(d);
   if (!need) { toast('今日复习已完成 🎉'); return; }
-  // recall 轮允许用户在「单词复习 / 听中文听写」间自选（二者都记 recallDone）
-  let type = (need === 'recall' && settings.reviewType === 'word') ? 'word' : need;
+  const h = history[d] || {};
+  const recallDoneNow = h.rounds ? !!h.rounds.recall : !!h.recallDone;
+  const sentenceDoneNow = h.rounds ? !!h.rounds.sentence : !!h.sentenceDone;
+  let type = settings.reviewType === 'sentence' ? 'sentence' : (settings.reviewType === 'word' ? 'word' : 'recall');
+  if (type === 'sentence' && sentenceDoneNow) type = 'recall';
+  else if (type !== 'sentence' && recallDoneNow) type = 'sentence';
   settings.reviewType = type; saveAll();
   if (type === 'recall') {
     reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d };
@@ -2381,6 +2432,7 @@ orange"></textarea>
           toAdd.forEach(a => {
             if (a.learned && !includeLearned) return;   // 选择「否」：跳过已学单词
             selfBank.push({ word: a.w, phonetic_us: a.pu, phonetic_uk: a.pk, meaning: a.meaning || '（未填释义）', added: todayStr() });
+            if (window.Sync && Sync.untomb) Sync.untomb(a.w);   // 清墓碑：曾删过又加回来时，别被并集过滤掉
             if (a.learned) { resetWordForSelf(a.w); reset++; }
             added++;
           });
@@ -2614,6 +2666,7 @@ function dict() {
         }
         const doAdd = () => {
           selfBank.push({ word, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning, added: todayStr() });
+          if (window.Sync && Sync.untomb) Sync.untomb(word);   // 清墓碑：曾删过又加回来时，别被并集过滤掉
           saveAll(); sb.textContent = '已加';
         };
         if (wordIsLearned(word)) {
@@ -2661,11 +2714,12 @@ function dict() {
       return;
     }
     migrateSelfBankToOrigin();   // 自建词库学完的词同步到原词库进度（幂等；需在 BANK_DATA 就绪后）
+    reconcileLearnPlan();        // 词库就绪后再跑一次：healSelfBank 需要 BANK_DATA 才能判断「该词是否已在某词库学过」
     // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
     if (window.Sync && Sync.on()) {
       Sync.sync()
         .catch(() => { })
-        .then(() => { migrateSelfBankToOrigin(); calibrateSchedule(); try { WB.refresh(); } catch (e) { } });
+        .then(() => { migrateSelfBankToOrigin(); calibrateSchedule(); try { reconcileLearnPlan(); } catch (e) { } try { WB.refresh(); } catch (e) { } });
     } else {
       try { WB.refresh(); } catch (e) { }   // 词库就绪后刷新当前页，补全学习/词库/查词
     }

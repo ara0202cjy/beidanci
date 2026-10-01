@@ -545,6 +545,11 @@ const Sync = (function () {
       if (!t.some(w => w.toLowerCase() === word.toLowerCase())) { t.push(word); store.set('wb_selftomb', t); }
       schedulePush();
     },
+    untomb(word) { // 「重新加入自建词库」时清除墓碑：否则并集合并会一直把该词过滤掉（加了却进不去）
+      const t = (window.store ? store.get('wb_selftomb', []) : []);
+      const n = t.filter(w => String(w).toLowerCase() !== String(word).toLowerCase());
+      if (n.length !== t.length) { store.set('wb_selftomb', n); schedulePush(); }
+    },
   };
 })();
 

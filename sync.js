@@ -91,6 +91,7 @@ const Sync = (function () {
       pendingPlan: a.pendingPlan || [],
       planTarget: a.planTarget || 0,
       reviewReset: a.reviewReset || [],
+      sessionReset: !!a.sessionReset,
     };
   }
   function applyState(s) {
@@ -105,6 +106,7 @@ const Sync = (function () {
     if (s.pendingPlan) a.pendingPlan = s.pendingPlan;
     if (typeof s.planTarget === 'number') a.planTarget = s.planTarget;
     if (Array.isArray(s.reviewReset)) a.reviewReset = s.reviewReset;   // 账户级「清除某日复习进度」命令，供 reconcileLearnPlan 消费
+    if (s.sessionReset !== undefined) a.sessionReset = !!s.sessionReset;   // 账户级「清除残留会话」命令，供 reconcileLearnPlan 消费
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
     // 关键：拉取合并后，用「最新进度」重新校正本地待学批次 pendingPlan。
@@ -194,6 +196,9 @@ const Sync = (function () {
     // reviewReset：账户级「强制清除某日复习进度」命令（云端下发）。取两端并集，确保命令能到达每台设备；
     // 设备侧自愈处理完会把本地数组清空并回传（push 整份覆盖 gist），故不会死循环。
     out.reviewReset = [...new Set([...(a.reviewReset || []), ...(b.reviewReset || [])])];
+    // sessionReset：账户级「清除残留会话」命令（云端下发），OR 合并确保能到达每台设备；
+    // 设备消费后置 false 并回传（push 整份覆盖 gist），故不会死循环。
+    out.sessionReset = !!(a.sessionReset || b.sessionReset);
     return out;
   }
 

@@ -777,6 +777,16 @@ function healReviewFlags() {
     const r = h.rounds; let changed = false;
     if (!!h.recallDone !== !!r.recall) { h.recallDone = !!r.recall; changed = true; }
     if (!!h.sentenceDone !== !!r.sentence) { h.sentenceDone = !!r.sentence; changed = true; }
+    // 自愈：固定顺序「单词轮(recall)先、情境轮(sentence)后」。若持久化 reviewState 是「单词轮已结算」
+    // 状态（最后真正完成的是单词轮），却标记了 sentenceDone/rounds.sentence=true，说明单词轮结算时全局
+    // reviewType 残留为 'sentence'（上一次情境轮会话中途退出未清），confirmCheck 把本轮误记为「情境轮完成」
+    // → 情境轮实际从未结算却被显示已完成。撤销该错误标记，恢复情境轮为待完成（lvcheng 账户实测复现）。
+    const isRecallDoneState = !!(reviewState && (reviewState.done || reviewState.settled) && reviewState.pool && reviewState.pool[0] && reviewState.pool[0].type !== 'sentence');
+    if (r.sentence && isRecallDoneState) {
+      r.sentence = false;
+      if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
+      changed = true;
+    }
     return changed;
   }
   const rs = reviewState;
@@ -2077,7 +2087,11 @@ function confirmCheck() {
   st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
   // 复习完成 = 「单词复习（或听中文听写）」一轮 + 「情境填词」一轮，各自独立记一轮，两轮都完成才算复习完成
   // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
-  if (settings.reviewType === 'sentence') markReviewDone('sentence', rday);
+  // ⚠️ 本轮「属于哪一论」必须以 reviewState 中实际卡片内容为准（pool[0].type==='sentence' 即情境轮），
+  // 不能用全局 settings.reviewType：情境轮会话中途退出后 settings.reviewType 会残留为 'sentence'，
+  // 之后若续做/重做单词轮，confirmCheck 会据此错误把单词轮记成「情境轮完成」→ 情境轮从未真正结算却被显示已完成。
+  const roundKind = (st.pool && st.pool[0] && st.pool[0].type === 'sentence') ? 'sentence' : 'recall';
+  if (roundKind === 'sentence') markReviewDone('sentence', rday);
   else {
     markReviewDone('recall', rday);
     // 固化「首轮单词轮」的全部词到当天历史，供第2轮情境填词重建使用：
@@ -2088,7 +2102,7 @@ function confirmCheck() {
   }
   // 持久化本轮完成记录（不随 reviewState 被下一轮覆盖而丢失），供 healReviewFlags 自愈旧版单轮脏标记
   history[rday].rounds = history[rday].rounds || {};
-  history[rday].rounds[settings.reviewType === 'sentence' ? 'sentence' : 'recall'] = true;
+  history[rday].rounds[roundKind] = true;
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();

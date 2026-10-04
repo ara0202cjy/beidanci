@@ -777,15 +777,25 @@ function healReviewFlags() {
     const r = h.rounds; let changed = false;
     if (!!h.recallDone !== !!r.recall) { h.recallDone = !!r.recall; changed = true; }
     if (!!h.sentenceDone !== !!r.sentence) { h.sentenceDone = !!r.sentence; changed = true; }
-    // 自愈：固定顺序「单词轮(recall)先、情境轮(sentence)后」。若持久化 reviewState 是「单词轮已结算」
-    // 状态（最后真正完成的是单词轮），却标记了 sentenceDone/rounds.sentence=true，说明单词轮结算时全局
-    // reviewType 残留为 'sentence'（上一次情境轮会话中途退出未清），confirmCheck 把本轮误记为「情境轮完成」
-    // → 情境轮实际从未结算却被显示已完成。撤销该错误标记，恢复情境轮为待完成（lvcheng 账户实测复现）。
-    const isRecallDoneState = !!(reviewState && (reviewState.done || reviewState.settled) && reviewState.pool && reviewState.pool[0] && reviewState.pool[0].type !== 'sentence');
-    if (r.sentence && isRecallDoneState) {
-      r.sentence = false;
-      if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
-      changed = true;
+    // 自愈：以 reviewState 中「该轮是否真正结算（settled/done）」为最终真相，纠正「标记完成却从未真正结算」的脏数据。
+    // 关键场景（lvcheng 实测）：云端用 OR 合并复习完成标记，本机残留 sentenceDone/rounds.sentence=true 无法被云端撤销；
+    // 而本机 reviewState 是「情境轮 at='card'/未 settled」（情境轮从未真正完成）→ 必须撤销 sentence 完成标记，
+    // 否则设备同步后「情境填词没复习却显示已完成」会复现。同理 recall 轮若标记完成但 reviewState 显示未结算也要撤销。
+    // 只有 reviewState 缺失 / 非当天会话时才无法判断，保留原值（避免误清真实进度）。
+    if (reviewState && reviewState.day === d) {
+      const isSentence = !!(reviewState.pool && reviewState.pool[0] && reviewState.pool[0].type === 'sentence');
+      const reallySettled = !!(reviewState.settled || reviewState.done);
+      if (isSentence && r.sentence && !reallySettled) {        // 情境轮被标记完成，但实际会话未结算 → 撤销
+        r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
+      }
+      if (!isSentence && r.recall && !reallySettled) {          // 单词轮被标记完成，但实际会话未结算 → 撤销
+        r.recall = false; if (h.recallDone) { h.recallDone = false; changed = true; }
+      }
+      // 固定顺序「单词轮(recall)先、情境轮(sentence)后」：最后真正完成的是单词轮却标记 sentence=true → 撤销
+      const isRecallDoneState = !isSentence && reallySettled;
+      if (r.sentence && isRecallDoneState) {
+        r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
+      }
     }
     return changed;
   }

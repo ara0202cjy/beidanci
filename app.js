@@ -31,7 +31,7 @@ const LEARN_PLAN_VER = 4;   // 选词/排序逻辑版本：变更（字母序兜
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
-  plan: 'wb_plan', plantarget: 'wb_plantarget',
+  plan: 'wb_plan', plantarget: 'wb_plantarget', reset: 'wb_reviewreset',
 };
 
 /* ---------- 存储 ---------- */
@@ -51,8 +51,8 @@ let currentAccount = store.get(ACCT.session, '') || '';
 function saveAccounts() { store.set(ACCT.reg, accounts); }
 function saveSession() { store.set(ACCT.session, currentAccount); }
 
-let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget;
-function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget }; }
+let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset;
+function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset }; }
 function loadState() {
   const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
@@ -66,6 +66,7 @@ function loadState() {
     reviewState = s.reviewState || null;
     pendingPlan = s.pendingPlan || [];
     planTarget = s.planTarget || 0;
+    reviewReset = s.reviewReset || [];
   } else {
     progress = store.get(K.progress, {});
     wrongBook = store.get(K.wrong, {});
@@ -76,6 +77,7 @@ function loadState() {
     reviewState = store.get(K.review, null);
     pendingPlan = store.get(K.plan, []);
     planTarget = store.get(K.plantarget, 0);
+    reviewReset = store.get(K.reset, []);
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
   normalizeStudyBanks();   // 兼容迁移：从无 studyBanks 的旧数据构建「选词库 + 每日额度」
@@ -120,6 +122,7 @@ window.WB = {
   get reviewState() { return reviewState; }, set reviewState(v) { reviewState = v; },
   get pendingPlan() { return pendingPlan; }, set pendingPlan(v) { pendingPlan = v; },
   get planTarget() { return planTarget; }, set planTarget(v) { planTarget = v; },
+  get reviewReset() { return reviewReset; }, set reviewReset(v) { reviewReset = v; },
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
@@ -1061,6 +1064,22 @@ function reconcileLearnPlan(forceResize) {
   let healed = healDuplicateNews();
   if (healReviewFlags()) healed = true;
   if (healSelfBank()) healed = true;   // 自建词库自愈：学完的词必须移出（否则会被并集复活、反复推送）
+  // 账户级「强制清除某日复习进度」命令（由云端 gist 下发，跨端收敛）。
+  // 复习完成标记 recallDone/sentenceDone/rounds 在合并时是 OR，普通云端清除会被本机并集还原，
+  // 所以必须以「命令」形式下发给各端，由各自的自愈在本地真正清掉再回传，才能稳定生效。
+  if (Array.isArray(reviewReset) && reviewReset.length) {
+    let cleared = false;
+    reviewReset = reviewReset.filter(day => {
+      const h = history[day];
+      if (!h) return false;            // 无此日记录 → 直接消费掉该命令
+      delete h.recallDone; delete h.sentenceDone; delete h.rounds;
+      delete h.review; delete h.firstRound;   // 一并清掉「今日复习的单词」记录与首轮固化
+      if (reviewState && reviewState.day === day) reviewState = null;  // 清掉残留的半截复习会话
+      cleared = true;
+      return false;                     // 处理完即移出命令队列（避免重复/循环）
+    });
+    if (cleared) saveAll();
+  }
   // 清理 wb-v38 短暂引入的「当日显式题型选择」（现已改回「先单词轮→后情境填词」的固定顺序，不再需要）
   if (settings.reviewChoice) { delete settings.reviewChoice; healed = true; }
   // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。

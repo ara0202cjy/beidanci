@@ -31,7 +31,7 @@ const LEARN_PLAN_VER = 4;   // 选词/排序逻辑版本：变更（字母序兜
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
-  plan: 'wb_plan', plantarget: 'wb_plantarget', reset: 'wb_reviewreset',
+  plan: 'wb_plan', plantarget: 'wb_plantarget', reset: 'wb_reviewreset', sreset: 'wb_sessionreset',
 };
 
 /* ---------- 存储 ---------- */
@@ -51,8 +51,8 @@ let currentAccount = store.get(ACCT.session, '') || '';
 function saveAccounts() { store.set(ACCT.reg, accounts); }
 function saveSession() { store.set(ACCT.session, currentAccount); }
 
-let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset;
-function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset }; }
+let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset;
+function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset }; }
 function loadState() {
   const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
@@ -67,6 +67,7 @@ function loadState() {
     pendingPlan = s.pendingPlan || [];
     planTarget = s.planTarget || 0;
     reviewReset = s.reviewReset || [];
+    sessionReset = s.sessionReset || false;
   } else {
     progress = store.get(K.progress, {});
     wrongBook = store.get(K.wrong, {});
@@ -78,6 +79,7 @@ function loadState() {
     pendingPlan = store.get(K.plan, []);
     planTarget = store.get(K.plantarget, 0);
     reviewReset = store.get(K.reset, []);
+    sessionReset = store.get(K.sreset, false);
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
   normalizeStudyBanks();   // 兼容迁移：从无 studyBanks 的旧数据构建「选词库 + 每日额度」
@@ -123,6 +125,7 @@ window.WB = {
   get pendingPlan() { return pendingPlan; }, set pendingPlan(v) { pendingPlan = v; },
   get planTarget() { return planTarget; }, set planTarget(v) { planTarget = v; },
   get reviewReset() { return reviewReset; }, set reviewReset(v) { reviewReset = v; },
+  get sessionReset() { return sessionReset; }, set sessionReset(v) { sessionReset = v; },
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
@@ -1079,6 +1082,15 @@ function reconcileLearnPlan(forceResize) {
       return false;                     // 处理完即移出命令队列（避免重复/循环）
     });
     if (cleared) saveAll();
+  }
+  // 账户级「清除残留会话」命令（reviewState / learnState 在 merge 里是 pick=「本地非空保留」，
+  // 云端置空无法覆盖设备本机残留 → 必须以命令下发，由各端在本地清掉再回传才生效）。
+  // 用途：清掉指向非当日 / 已失效词库的过期会话（否则今日学习/复习页会显示错内容）。
+  if (sessionReset) {
+    reviewState = null;
+    learnState = null;
+    sessionReset = false;
+    saveAll();
   }
   // 清理 wb-v38 短暂引入的「当日显式题型选择」（现已改回「先单词轮→后情境填词」的固定顺序，不再需要）
   if (settings.reviewChoice) { delete settings.reviewChoice; healed = true; }

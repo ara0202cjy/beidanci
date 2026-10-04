@@ -1884,20 +1884,31 @@ function makeTypedQueue(pool, type, day) {
 function startReview(pool) {
   const d = dayOf();
   if (!pool.length) { toast('今日暂无复习词'); return; }
-  // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
-  const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
-  // 题型由「双轮固定顺序」决定，用户不可颠倒顺序：
-  //   第 1 轮（单词轮未完成）= 单词复习 或 听中文听写（沿用用户在这两者间的偏好）
-  //   第 2 轮（单词轮已完成）= 情境填词
   const need = nextReviewRoundNeeded(d);
   if (!need) { toast('今日复习已完成 🎉'); return; }
   const type = (need === 'sentence') ? 'sentence' : (settings.reviewType === 'word' ? 'word' : 'recall');
   settings.reviewType = type; saveAll();
   if (type === 'recall') {
+    // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
+    const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
     reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d };
     saveAll(); review(); return;
   }
   // type === 'word'（听中文听写）或 'sentence'（情境填词）都走纸质卡片（paper-prompt + 上下翻页）
+  // 第 2 轮（情境填词）必须复习「首轮单词轮的全部词」：优先用当天已记录的首轮词集合
+  // （history[rday].review，必要时 firstRound 兜底），不重新动态算池——否则首轮判错的词
+  // 因 nextReview 被 settleReview 推后、或跨午夜 / 多端时间差 / reviewState 丢失时重新
+  // buildReviewPool 会漏掉它们；而结果页「今日复习的单词」来自 history[rday].review，
+  // 两者须完全一致，确保「所有单词都在该轮被复习到」。
+  let queue;
+  if (type === 'sentence') {
+    const base = (history[d] && (history[d].review || history[d].firstRound)) || [];
+    queue = base.length
+      ? dayShuffle(base.map(e => ({ key: e.key, word: e.word, bank: e.bank, meaning: e.meaning, phonetic_us: e.phonetic_us, phonetic_uk: e.phonetic_uk })), e => e.key, d)
+      : dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
+  } else {
+    queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
+  }
   reviewState = { pool: makeTypedQueue(queue, type, d), idx: 0, day: d };
   saveAll(); review(); renderReviewCard();
 }
@@ -2067,7 +2078,14 @@ function confirmCheck() {
   // 复习完成 = 「单词复习（或听中文听写）」一轮 + 「情境填词」一轮，各自独立记一轮，两轮都完成才算复习完成
   // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
   if (settings.reviewType === 'sentence') markReviewDone('sentence', rday);
-  else markReviewDone('recall', rday);
+  else {
+    markReviewDone('recall', rday);
+    // 固化「首轮单词轮」的全部词到当天历史，供第2轮情境填词重建使用：
+    // 第2轮必须复习首轮每一个词（含首轮判错的词），不能因判错词 nextReview 被推后、
+    // 跨午夜 / 多端时间差 / reviewState 丢失重新 buildReviewPool 而漏掉；
+    // 结果页「今日复习的单词」取自 history[rday].review（首轮已记录），两者须完全一致。
+    history[rday].firstRound = st.pool.map(r => ({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
+  }
   // 持久化本轮完成记录（不随 reviewState 被下一轮覆盖而丢失），供 healReviewFlags 自愈旧版单轮脏标记
   history[rday].rounds = history[rday].rounds || {};
   history[rday].rounds[settings.reviewType === 'sentence' ? 'sentence' : 'recall'] = true;

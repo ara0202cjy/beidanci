@@ -30,6 +30,7 @@ const Sync = (function () {
   let pullTimer = null;                               // 定时拉取定时器
   let visBound = false;                               // 可见性监听器是否已绑定
   let lastPushedSig = '';                             // 上次成功上传的内容签名（去掉 savedAt 等易变字段）——用于上传去重
+  let pulledOnce = false;                             // 本会话是否已成功拉取过远端（防止未拉取就上传覆盖云端已有数据）
 
   /* ---------- 账号感知 ---------- */
   function acctName() { return (window.WB && window.WB.currentAccount) || ''; }
@@ -223,6 +224,7 @@ const Sync = (function () {
     noteRate(r);
     const d = await r.json();
     t.gistId = d.id; saveTargets();
+    pulledOnce = true;                    // 新建存档已含本机数据，视为已建立基线，允许后续上传
     return d.id;
   }
   async function gistPull(t) {
@@ -289,6 +291,12 @@ const Sync = (function () {
   function markPushed(st) { lastPushedSig = hashStr(sigOf(st || localState())); }
   async function push() {
     if (!on()) return false;
+    // ⚠️ 防「未拉取就上传」覆盖云端（多端数据被清零的根因）：
+    // 启动时 reconcileLearnPlan→saveAll→schedulePush 会在 2.5s 后上传，而 Sync.sync()（先拉取）
+    // 要等 4MB 词库加载完才跑——若本机持有较旧/较空的数据，会在首次拉取前就把云端已有进度整份覆盖。
+    // 因此：只要已存在 gist 存档（gistId 非空）但本会话尚未成功拉取过，就先跳过上传；
+    // 待 pull() 成功合并后，sync()/schedulePush 会自动补传（不会丢失本机改动）。
+    if (!pulledOnce && targets.some(t => t.backend === 'gist' && t.gistId)) return false;
     // 限流额度见底：延后到 reset 再补推，避免无意义的 403 风暴
     if (rateInfo.remaining !== null && rateInfo.remaining <= 2 && rateInfo.reset) {
       const wait = Math.min(Math.max(0, (rateInfo.reset * 1000) - Date.now()) + 3000, 1800000);
@@ -345,6 +353,7 @@ const Sync = (function () {
     // 否则会把本机的「旧状态」当成最新写回云端，把另一台已同步的进度覆盖掉
     // （多端「越同步越旧 / 另一台又变回尚未学习」的根因）。
     if (!ok) return false;
+    pulledOnce = true;                    // 成功拉取：此后允许上传（合并后的本机状态已含云端数据，不会覆盖丢失）
     const beforeSig = hashStr(sigOf(localState()));
     applyState(merged);
     // 拉取未改变本地内容（本地与远端已一致）→ 记下签名，避免紧接着 schedulePush→push 又把相同内容上传一遍；

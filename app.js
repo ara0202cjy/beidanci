@@ -31,7 +31,7 @@ const LEARN_PLAN_VER = 4;   // 选词/排序逻辑版本：变更（字母序兜
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
-  plan: 'wb_plan', plantarget: 'wb_plantarget', reset: 'wb_reviewreset', sreset: 'wb_sessionreset',
+  plan: 'wb_plan', plantarget: 'wb_plantarget', reset: 'wb_reviewreset', sreset: 'wb_sessionreset', rreset: 'wb_roundreset',
 };
 
 /* ---------- 存储 ---------- */
@@ -51,8 +51,8 @@ let currentAccount = store.get(ACCT.session, '') || '';
 function saveAccounts() { store.set(ACCT.reg, accounts); }
 function saveSession() { store.set(ACCT.session, currentAccount); }
 
-let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset;
-function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset }; }
+let progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset, roundReset;
+function snapshot() { return { progress, wrongBook, selfBank, settings, history, learnState, reviewState, pendingPlan, planTarget, reviewReset, sessionReset, roundReset }; }
 function loadState() {
   const base = { speed: 0, reviewMode: 'zh', autoSpeak: true, dailyNew: 5, curBank: '初中', reviewType: 'sentence', accent: 'en-US', pronRate: 0.95 };
   if (currentAccount) {
@@ -68,6 +68,7 @@ function loadState() {
     planTarget = s.planTarget || 0;
     reviewReset = s.reviewReset || [];
     sessionReset = s.sessionReset || false;
+    roundReset = s.roundReset || [];
   } else {
     progress = store.get(K.progress, {});
     wrongBook = store.get(K.wrong, {});
@@ -80,6 +81,7 @@ function loadState() {
     planTarget = store.get(K.plantarget, 0);
     reviewReset = store.get(K.reset, []);
     sessionReset = store.get(K.sreset, false);
+    roundReset = store.get(K.rreset, []);
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
   normalizeStudyBanks();   // 兼容迁移：从无 studyBanks 的旧数据构建「选词库 + 每日额度」
@@ -126,6 +128,7 @@ window.WB = {
   get planTarget() { return planTarget; }, set planTarget(v) { planTarget = v; },
   get reviewReset() { return reviewReset; }, set reviewReset(v) { reviewReset = v; },
   get sessionReset() { return sessionReset; }, set sessionReset(v) { sessionReset = v; },
+  get roundReset() { return roundReset; }, set roundReset(v) { roundReset = v; },
   get currentAccount() { return currentAccount; },
   refresh() { try { PAGES[CUR](); } catch (e) { } },
   buildReviewPool,
@@ -1092,6 +1095,23 @@ function reconcileLearnPlan(forceResize) {
     sessionReset = false;
     saveAll();
   }
+  // 账户级「撤销指定日某一轮完成标记」命令（元素形如 'YYYY-MM-DD:sentence'）。
+  // 场景：某一轮被误记完成（如往日补打卡会话刷新后被结算到今天）→ 只撤销那一轮，
+  // 保留 history[day].review 词表与另一轮进度，用户可按「同一批词」重做该轮。
+  if (Array.isArray(roundReset) && roundReset.length) {
+    let rchanged = false;
+    roundReset = roundReset.filter(spec => {
+      const parts = String(spec || '').split(':');
+      const day = parts[0], round = parts[1];
+      const hh = history[day];
+      if (!hh || (round !== 'recall' && round !== 'sentence')) return false;
+      if (hh.rounds && hh.rounds[round]) { delete hh.rounds[round]; rchanged = true; }
+      if (!hh.rounds || (!hh.rounds.recall && !hh.rounds.sentence)) delete hh.rounds;
+      if (hh[round + 'Done']) { delete hh[round + 'Done']; rchanged = true; }
+      return false;                      // 处理完即移出队列
+    });
+    if (rchanged) saveAll();
+  }
   // 清理 wb-v38 短暂引入的「当日显式题型选择」（现已改回「先单词轮→后情境填词」的固定顺序，不再需要）
   if (settings.reviewChoice) { delete settings.reviewChoice; healed = true; }
   // 选词/排序逻辑版本迁移：旧版本生成的「粘性批次」作废，按新逻辑重新生成当日批次。
@@ -2002,7 +2022,9 @@ function renderReviewCard() {
 }
 // 打叉：立即记入错题本，重置错题锚点（错后第 1、2、3、20、40 天重新叠加推送）
 function markWrongNow(r) {
-  settleReview(r, false, dayOf());
+  // 同 confirmCheck：以本会话所属日记账（REVIEW_DAY 刷新后会丢，reviewState.day 才可靠）
+  const sday = (reviewState && reviewState.day) || dayOf();
+  settleReview(r, false, sday);
   saveAll();
 }
 // 单词复习：逐词判定「认识 / 不认识」
@@ -2120,12 +2142,16 @@ function confirmCheck() {
   if (!st) return;
   if (reviewRoundFinished()) { renderSummary(); return; }   // 幂等：防双击/回退重入导致重复结算
   if (!st.check) st.check = st.pool.map(c => ({ ...c, ok: c.recallOk !== false }));
-  const rday = REVIEW_DAY || dayOf();
+  // ⚠️ 结算归属日以「本会话所属日」为准：REVIEW_DAY 只是内存态，页面刷新/重开 App/换设备后即丢失，
+  // 若拿它兜底，补打卡的「往日会话」会被结算到今天 → 今日凭空出现 rounds.sentence=true，
+  // 表现为「第 1 轮刚做完就显示第 2 轮已结束」。reviewState.day 在建会话时就已持久化，才是权威归属日
+  //（也正是「补打卡按应打卡日记账」规范所要求的）。
+  const rday = (st && st.day) || REVIEW_DAY || dayOf();
   // 先把「本轮已结算」标记写进 reviewState 再落盘：刷新页面 / 云端同步合并 / 重开 App 后
   // renderBox 才能继续停在结果页，而不是退回最后一张卡片（历史上 done 写在 saveAll 之后，故从未落盘）
   st.settled = true; st.done = true; st.day = rday;
-  st.check.forEach(r => settleReview(r, r.ok, dayOf()));
-  st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, dayOf()));
+  st.check.forEach(r => settleReview(r, r.ok, rday));
+  st.pool.forEach(r => recordHistory('review', { key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }, rday));
   // 复习完成 = 「单词复习（或听中文听写）」一轮 + 「情境填词」一轮，各自独立记一轮，两轮都完成才算复习完成
   // 单词复习 / 听中文听写 → recallDone（单词轮）；情境填词 → sentenceDone（情境轮）
   // ⚠️ 本轮「属于哪一论」必须以 reviewState 中实际卡片内容为准（pool[0].type==='sentence' 即情境轮），
@@ -2154,7 +2180,8 @@ function renderSummary() {
   const st = reviewState;
   const wrong = (st.check || st.pool).filter(r => !r.ok);
   const box = $('#reviewBox');
-  const rday = REVIEW_DAY || dayOf();
+  // 归属日同 confirmCheck：以 reviewState.day（已持久化）为准，避免刷新后把往日会话算到今天
+  const rday = (st && st.day) || REVIEW_DAY || dayOf();
   const doneRecall = !!(history[rday] && history[rday].recallDone);
   const doneSentence = !!(history[rday] && history[rday].sentenceDone);
   const need = nextReviewRoundNeeded(rday);     // 还需完成哪一轮（null=两轮均已完成）

@@ -2475,6 +2475,7 @@ function banks() {
     <div class="card" style="margin-top:12px">
       <h2>已背单词</h2>
       <button class="btn ghost sm" id="expLearnedBtn">📤 导出已背单词（Excel）</button>
+      <div class="list" id="recentLearnedList"></div>
     </div>
     <div class="sub-tip" style="margin-top:10px">云同步与进度备份已移至右上角 ⚙ 设置里（点开即展开）。</div>`;
   const sl = $('#selfList');
@@ -2511,6 +2512,54 @@ function banks() {
     };
     sl.appendChild(it);
   });
+  // 已背单词 · 近 10 天背诵内容：按日分组（history[day].new = 当天新学/首次背下的词），
+  // 词条可展开查看释义/音标/例句；无记录的日期不显示。
+  (function renderRecentLearned() {
+    const rl = $('#recentLearnedList');
+    if (!rl) return;
+    const days = [];
+    for (let i = 0; i < 10; i++) days.push(addDays(todayStr(), -i));   // 今天往前共 10 天
+    let total = 0;
+    days.forEach(d => {
+      const list = (history[d] && history[d].new) || [];
+      if (!list.length) return;
+      total += list.length;
+      const hd = document.createElement('div');
+      hd.className = 'sub-tip';
+      hd.style.cssText = 'margin:14px 0 4px;font-weight:600';
+      hd.textContent = `${d} · ${list.length} 词`;
+      rl.appendChild(hd);
+      list.forEach(entry => {
+        const w = String(entry.word || '');
+        if (!w) return;
+        const dd = DICT[w.toLowerCase()] || {};
+        const it = document.createElement('div');
+        it.className = 'item sbk-item';
+        it.innerHTML = `
+          <div class="sbk-head">
+            <div class="w clickable">${esc(w)} <span class="chev">▸</span></div>
+            ${entry.bank ? `<span class="tag">${esc(entry.bank)}</span>` : ''}
+          </div>
+          <div class="sbk-detail" style="display:none">
+            ${detailInner({ word: w, bank: entry.bank || '', phonetic_us: entry.phonetic_us || dd.us || '', phonetic_uk: entry.phonetic_uk || dd.uk || '', meaning: entry.meaning || dd.meaning || '' })}
+          </div>`;
+        const head2 = it.querySelector('.sbk-head');
+        head2.onclick = () => {
+          const dv = it.querySelector('.sbk-detail');
+          const open = dv.style.display === 'none';
+          dv.style.display = open ? '' : 'none';
+          it.querySelector('.chev').textContent = open ? '▾' : '▸';
+        };
+        rl.appendChild(it);
+      });
+    });
+    if (!total) { rl.innerHTML = '<div class="empty">近 10 天还没有新学单词</div>'; return; }
+    const cap = document.createElement('div');
+    cap.className = 'sub-tip';
+    cap.style.marginTop = '4px';
+    cap.textContent = `近 10 天共背诵 ${total} 词（点单词展开释义与例句）`;
+    rl.insertBefore(cap, rl.firstChild);
+  })();
   $('#bulkBtn').onclick = () => {
     openModal(`<h3>批量添加自建单词</h3>
       <div class="sub-tip">每行一个，或用英文分号 ; 分隔。自动匹配词库并填入释义/音标；词库未收录的词需手动补释义。</div>

@@ -806,6 +806,13 @@ function healReviewFlags() {
         r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
       }
     }
+    // 🛡️ 顺序不变量自愈（不依赖 reviewState，故刷新/离线/多端都能确定性收敛）：
+    // 复习固定顺序为「第1轮 recall → 第2轮 sentence」。若 rounds.sentence=true 而 rounds.recall 尚未完成，
+    // 则第2轮完成标记在逻辑上不可能成立（UI 只在 need==='recall' 时才允许进入第1轮）→ 必为脏数据，撤销。
+    // 这条堵住了「脏标记先存在 → nextReviewRoundNeeded 返回 null → 连第1轮都进不去」的死角。
+    if (r.sentence && !r.recall) {
+      r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
+    }
     return changed;
   }
   const rs = reviewState;
@@ -2158,18 +2165,30 @@ function confirmCheck() {
   // 不能用全局 settings.reviewType：情境轮会话中途退出后 settings.reviewType 会残留为 'sentence'，
   // 之后若续做/重做单词轮，confirmCheck 会据此错误把单词轮记成「情境轮完成」→ 情境轮从未真正结算却被显示已完成。
   const roundKind = (st.pool && st.pool[0] && st.pool[0].type === 'sentence') ? 'sentence' : 'recall';
-  if (roundKind === 'sentence') markReviewDone('sentence', rday);
+  // 🛡️ 空题量保护：0 词的会话不产生任何「该轮已完成」的证明（否则会凭空出现某一轮已完成）。
+  const hasWords = !!(st.pool && st.pool.length);
+  if (roundKind === 'sentence') { if (hasWords) markReviewDone('sentence', rday); }
   else {
-    markReviewDone('recall', rday);
+    if (hasWords) markReviewDone('recall', rday);
     // 固化「首轮单词轮」的全部词到当天历史，供第2轮情境填词重建使用：
     // 第2轮必须复习首轮每一个词（含首轮判错的词），不能因判错词 nextReview 被推后、
     // 跨午夜 / 多端时间差 / reviewState 丢失重新 buildReviewPool 而漏掉；
     // 结果页「今日复习的单词」取自 history[rday].review（首轮已记录），两者须完全一致。
-    history[rday].firstRound = st.pool.map(r => ({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
+    if (hasWords) history[rday].firstRound = st.pool.map(r => ({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
   }
   // 持久化本轮完成记录（不随 reviewState 被下一轮覆盖而丢失），供 healReviewFlags 自愈旧版单轮脏标记
   history[rday].rounds = history[rday].rounds || {};
-  history[rday].rounds[roundKind] = true;
+  if (hasWords) history[rday].rounds[roundKind] = true;
+  // 🛡️ 顺序不变量（用户硬要求：第1轮做完绝不能显示「第2轮已复习完毕」）：
+  // 复习轮固定顺序为「第1轮单词轮 → 第2轮情境轮」，且 UI 只在 `need==='recall'` 时才允许进入第1轮。
+  // 因此能走到这里且本轮是 recall，就意味着本日前的 rounds.recall 为 false → 第2轮绝不可能被合法结算过；
+  // 此时 rounds.sentence 若为 true，只可能是历史脏数据或误结算（如往日补打卡会话被错误归属到今天）。
+  // 当场撤销 → 第2轮立即恢复可达，且第2轮词表取 history[rday].review（与第1轮完全相同）。
+  if (roundKind === 'recall' && history[rday].rounds && history[rday].rounds.sentence) {
+    delete history[rday].rounds.sentence;
+    delete history[rday].sentenceDone;
+    saveAll();
+  }
   // 补打卡（REVIEW_DAY 指向过往某日）：完成复习即记到原应打卡日，使其从补打卡栏目移除
   if (REVIEW_DAY) { if (!history[REVIEW_DAY]) history[REVIEW_DAY] = { new: [], review: [] }; history[REVIEW_DAY].studyDone = true; }
   saveAll();

@@ -92,6 +92,7 @@ const Sync = (function () {
       planTarget: a.planTarget || 0,
       reviewReset: a.reviewReset || [],
       sessionReset: !!a.sessionReset,
+      roundReset: a.roundReset || [],
     };
   }
   function applyState(s) {
@@ -107,6 +108,7 @@ const Sync = (function () {
     if (typeof s.planTarget === 'number') a.planTarget = s.planTarget;
     if (Array.isArray(s.reviewReset)) a.reviewReset = s.reviewReset;   // 账户级「清除某日复习进度」命令，供 reconcileLearnPlan 消费
     if (s.sessionReset !== undefined) a.sessionReset = !!s.sessionReset;   // 账户级「清除残留会话」命令，供 reconcileLearnPlan 消费
+    if (Array.isArray(s.roundReset)) a.roundReset = s.roundReset;   // 账户级「撤销某一轮完成标记」命令
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
     // 关键：拉取合并后，用「最新进度」重新校正本地待学批次 pendingPlan。
@@ -199,6 +201,8 @@ const Sync = (function () {
     // sessionReset：账户级「清除残留会话」命令（云端下发），OR 合并确保能到达每台设备；
     // 设备消费后置 false 并回传（push 整份覆盖 gist），故不会死循环。
     out.sessionReset = !!(a.sessionReset || b.sessionReset);
+    // roundReset：账户级「撤销指定日某一轮完成标记」命令（'YYYY-MM-DD:recall|sentence'），并集传播。
+    out.roundReset = [...new Set([...(a.roundReset || []), ...(b.roundReset || [])])];
     return out;
   }
 

@@ -786,26 +786,25 @@ function healReviewFlags() {
     const r = h.rounds; let changed = false;
     if (!!h.recallDone !== !!r.recall) { h.recallDone = !!r.recall; changed = true; }
     if (!!h.sentenceDone !== !!r.sentence) { h.sentenceDone = !!r.sentence; changed = true; }
-    // 自愈：以 reviewState 中「该轮是否真正结算（settled/done）」为最终真相，纠正「标记完成却从未真正结算」的脏数据。
-    // 关键场景（lvcheng 实测）：云端用 OR 合并复习完成标记，本机残留 sentenceDone/rounds.sentence=true 无法被云端撤销；
-    // 而本机 reviewState 是「情境轮 at='card'/未 settled」（情境轮从未真正完成）→ 必须撤销 sentence 完成标记，
-    // 否则设备同步后「情境填词没复习却显示已完成」会复现。同理 recall 轮若标记完成但 reviewState 显示未结算也要撤销。
-    // 只有 reviewState 缺失 / 非当天会话时才无法判断，保留原值（避免误清真实进度）。
-    if (reviewState && reviewState.day === d) {
-      const isSentence = !!(reviewState.pool && reviewState.pool[0] && reviewState.pool[0].type === 'sentence');
-      const reallySettled = !!(reviewState.settled || reviewState.done);
-      if (isSentence && r.sentence && !reallySettled) {        // 情境轮被标记完成，但实际会话未结算 → 撤销
-        r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
-      }
-      if (!isSentence && r.recall && !reallySettled) {          // 单词轮被标记完成，但实际会话未结算 → 撤销
-        r.recall = false; if (h.recallDone) { h.recallDone = false; changed = true; }
-      }
-      // 固定顺序「单词轮(recall)先、情境轮(sentence)后」：最后真正完成的是单词轮却标记 sentence=true → 撤销
-      const isRecallDoneState = !isSentence && reallySettled;
-      if (r.sentence && isRecallDoneState) {
+    // ⚠️ 这里曾有一条按 reviewState「未结算」撤销完成标记的规则（wb-v45/v46），**已移除**（wb-v53）：
+    // 该规则有致命误伤——用户刚做完第1轮、系统已进入下一轮（或用户主动重做某轮）时，新建的未结算会话
+    // 会把上一轮**已 legit 完成**的 rounds.recall 撤销 → 系统以为第1轮没做 → 重新进第1轮；
+    // 而此时排期已被 settleReview 推进，重算池只剩零星几词 → 第1轮题量从 40 骤降到 2、第2轮也跟着变 2，
+    // 造成「两轮词数/顺序不一致」（lvcheng 2026-10-06 实测）。
+    // 「标记完成 + 同轮会话未结算」本质无法区分「残留中断」与「用户重做」，**保留完成标记更安全**。
+    // 完成标记的可靠性现由以下机制保证：① 结算归属日以 reviewState.day 为准（wb-v50）；
+    // ② 顺序不变量（下方）；③ 空题量不结算（wb-v51）；④ 跨端 roundReset 命令可精确撤销某一轮。
+    // 「同轮未结算就撤销完成标记」的两条规则已移除（见上方说明），但**保留下面这条 sound 的**：
+    // 若持久化 reviewState 显示「最后真正结算的是单词轮(recall)会话」，而 rounds.sentence 却为 true，
+    // 则第2轮完成标记必为脏数据 → 撤销。依据：固定顺序下 UI 只在 need==='recall' 时才允许进第1轮，
+    // 故能出现「已结算的单词轮会话」就意味着第1轮刚做完，第2轮不可能在其之后被结算过。
+    if (reviewState && reviewState.day === d && reviewState.settled) {
+      const isSentenceNow = !!(reviewState.pool && reviewState.pool[0] && reviewState.pool[0].type === 'sentence');
+      if (r.sentence && !isSentenceNow) {
         r.sentence = false; if (h.sentenceDone) { h.sentenceDone = false; changed = true; }
       }
     }
+    //
     // 🛡️ 顺序不变量自愈（不依赖 reviewState，故刷新/离线/多端都能确定性收敛）：
     // 复习固定顺序为「第1轮 recall → 第2轮 sentence」。若 rounds.sentence=true 而 rounds.recall 尚未完成，
     // 则第2轮完成标记在逻辑上不可能成立（UI 只在 need==='recall' 时才允许进入第1轮）→ 必为脏数据，撤销。
@@ -1980,10 +1979,23 @@ function startReview(pool) {
   // 两者须完全一致，确保「所有单词都在该轮被复习到」。
   let queue;
   if (type === 'sentence') {
-    const base = (history[d] && (history[d].review || history[d].firstRound)) || [];
-    queue = base.length
-      ? dayShuffle(base.map(e => ({ key: e.key, word: e.word, bank: e.bank, meaning: e.meaning, phonetic_us: e.phonetic_us, phonetic_uk: e.phonetic_uk })), e => e.key, d)
-      : dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
+    // 第2轮词表 = 第1轮的全量词（history[d].review，firstRound 兜底）。
+    // ⚠️ 兜底禁用重算池（wb-v53）：第1轮结算时 settleReview 已把绝大多数词的 nextReview 推后，
+    // 此时重算池只剩零星几词 → 第2轮题量会从 40 骤降到 2（lvcheng 2026-10-06 实测）。
+    // 若 review 与 firstRound 都为空（异常态），取三者并集并**回写 history[d].review**，
+    // 使「结果页展示的今日复习单词」与「第2轮题量」始终同源、不会出现两轮词数不一致。
+    let base = (history[d] && (history[d].review || history[d].firstRound)) || [];
+    if (!base.length) {
+      const seen = new Set();
+      base = [].concat((history[d] && history[d].firstRound) || [], pool.map(e => ({ ...e })))
+        .filter(e => e && e.key && !seen.has(e.key) && seen.add(e.key));
+      if (base.length) {
+        if (!history[d]) history[d] = { new: [], review: [] };
+        base.forEach(e => recordHistory('review', e, d));
+        saveAll();
+      }
+    }
+    queue = dayShuffle(base.map(e => ({ key: e.key, word: e.word, bank: e.bank, meaning: e.meaning, phonetic_us: e.phonetic_us, phonetic_uk: e.phonetic_uk })), e => e.key, d);
   } else {
     queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
   }

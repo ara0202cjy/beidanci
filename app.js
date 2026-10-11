@@ -782,8 +782,15 @@ function healReviewFlags() {
   const d = REVIEW_DAY || todayStr();
   const h = history[d];
   if (!h) return false;
+  let changed = false;
+  // 🛡️ 自愈 firstRound 塌缩：首轮全量词 firstRound 规模应与 review（当日复习词并集）基本一致；
+  // 若 review 明显多于 firstRound（重练错词 repWrong 子会话曾用少量错词覆盖过 firstRound 所致），
+  // 以 review 修复，保证第 2 轮情境填词仍覆盖全部词（lvcheng 2026-10-11 实测 firstRound 仅 1 词而 review 有 74 词）。
+  if (h.firstRound && h.review && h.review.length > h.firstRound.length * 2) {
+    h.firstRound = h.review.slice(); changed = true;
+  }
   if (h.rounds) {                                  // 新版：以持久化轮次记录为准重建 Done 标记
-    const r = h.rounds; let changed = false;
+    const r = h.rounds;
     if (!!h.recallDone !== !!r.recall) { h.recallDone = !!r.recall; changed = true; }
     if (!!h.sentenceDone !== !!r.sentence) { h.sentenceDone = !!r.sentence; changed = true; }
     // ⚠️ 这里曾有一条按 reviewState「未结算」撤销完成标记的规则（wb-v45/v46），**已移除**（wb-v53）：
@@ -817,7 +824,6 @@ function healReviewFlags() {
   const rs = reviewState;
   const recallSettled = !!(rs && rs.settled && (rs.mode === 'recall' || (rs.pool && rs.pool[0] && rs.pool[0].type === 'word')));
   const sentenceSettled = !!(rs && rs.settled && rs.pool && rs.pool[0] && rs.pool[0].type === 'sentence');
-  let changed = false;
   if (h.sentenceDone && !sentenceSettled) { h.sentenceDone = false; changed = true; }
   if (h.recallDone && !recallSettled) { h.recallDone = false; changed = true; }
   return changed;
@@ -2179,18 +2185,29 @@ function confirmCheck() {
   const roundKind = (st.pool && st.pool[0] && st.pool[0].type === 'sentence') ? 'sentence' : 'recall';
   // 🛡️ 空题量保护：0 词的会话不产生任何「该轮已完成」的证明（否则会凭空出现某一轮已完成）。
   const hasWords = !!(st.pool && st.pool.length);
-  if (roundKind === 'sentence') { if (hasWords) markReviewDone('sentence', rday); }
+  // 🛡️ 异常题量保护：第 2 轮（情境填词）必须覆盖「当天全量复习词」（history[rday].review / firstRound）。
+  // 若本会话词数远少于应覆盖量（被重练错词 repWrong、残留会话缩成 1~2 词），说明这是非完整会话，
+  // 绝不记「第 2 轮已完成」（rounds.sentence / sentenceDone）——否则体验为「第一轮做完直接显示第二轮已完成」
+  // （用户硬要求杜绝；lvcheng 2026-10-11 实测 firstRound 仅 1 词却 rounds.sentence=true）。
+  const expN = (history[rday].review || []).length || (history[rday].firstRound || []).length;
+  const legitSentence = roundKind === 'sentence' && hasWords && (expN === 0 || st.pool.length * 2 >= expN);
+  if (roundKind === 'sentence') {
+    if (legitSentence) markReviewDone('sentence', rday);
+  }
   else {
     if (hasWords) markReviewDone('recall', rday);
     // 固化「首轮单词轮」的全部词到当天历史，供第2轮情境填词重建使用：
     // 第2轮必须复习首轮每一个词（含首轮判错的词），不能因判错词 nextReview 被推后、
     // 跨午夜 / 多端时间差 / reviewState 丢失重新 buildReviewPool 而漏掉；
     // 结果页「今日复习的单词」取自 history[rday].review（首轮已记录），两者须完全一致。
-    if (hasWords) history[rday].firstRound = st.pool.map(r => ({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
+    // ⚠️ 重练错词(repWrong)子会话只覆盖少量错词，绝不能用它覆盖首轮全量词集合 firstRound
+    // （否则 firstRound 塌缩为几词，第 2 轮情境填词随之漏词，体验为「第二轮默认完成」；lvcheng 2026-10-11）。
+    if (hasWords && !st.repWrong) history[rday].firstRound = st.pool.map(r => ({ key: r.key, word: r.word, bank: r.bank, meaning: r.meaning, phonetic_us: r.phonetic_us, phonetic_uk: r.phonetic_uk }));
   }
   // 持久化本轮完成记录（不随 reviewState 被下一轮覆盖而丢失），供 healReviewFlags 自愈旧版单轮脏标记
   history[rday].rounds = history[rday].rounds || {};
-  if (hasWords) history[rday].rounds[roundKind] = true;
+  if (roundKind === 'recall' && hasWords) history[rday].rounds.recall = true;
+  if (legitSentence) history[rday].rounds.sentence = true;   // 异常题量会话不写 rounds.sentence（防「默认完成」）
   // 🛡️ 顺序不变量（用户硬要求：第1轮做完绝不能显示「第2轮已复习完毕」）：
   // 复习轮固定顺序为「第1轮单词轮 → 第2轮情境轮」，且 UI 只在 `need==='recall'` 时才允许进入第1轮。
   // 因此能走到这里且本轮是 recall，就意味着本日前的 rounds.recall 为 false → 第2轮绝不可能被合法结算过；
@@ -2244,13 +2261,18 @@ function renderSummary() {
     list.appendChild(it);
   });
   if ($('#nextRound')) $('#nextRound').onclick = () => {
-    if (need === 'sentence') { startSentenceRound(st.pool); toast('第 2 轮：情境填词'); }
-    else { startRecallRound(st.pool); toast('第 2 轮：单词复习'); }
+    // ⚠️ 第 2 轮必须严格用「当天全量复习词」（history[d].review，必要 firstRound 兜底）重建，
+    // 绝不能用 st.pool（当前会话池）——重练错词(reWrong)会替换 reviewState 为少量错词，
+    // 若用 st.pool 第 2 轮就只剩这几词（lvcheng 2026-10-11 实测：体验为「第二轮默认完成」）。
+    // startReview 内部对 sentence 轮直接走 history[d].review 全量，天然规避此坑；recall 轮同理。
+    if (need === 'sentence') { startReview(st.pool); toast('第 2 轮：情境填词'); }
+    else { startReview(st.pool); toast('第 2 轮：单词复习'); }
   };
   if ($('#reWrong')) $('#reWrong').onclick = () => {
     const d = dayOf();
     const wq = dayShuffle(wrong, r => r.key, d).map(r => ({ ...r, ok: true }));
-    reviewState = { pool: wq, idx: 0, day: d };
+    // repWrong 标记：告知 confirmCheck 这是「重练错词」子会话，不得用它覆盖首轮全量词集合 firstRound
+    reviewState = { pool: wq, idx: 0, day: d, repWrong: true };
     review(); renderReviewCard();
   };
   if ($('#recapReview')) $('#recapReview').onclick = () => openReviewRecap(rday);

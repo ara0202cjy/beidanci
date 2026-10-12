@@ -99,6 +99,10 @@ body {
 
 /* 统计四宫格 */
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.stat-grid.three .stat { padding: 12px 10px; }
+.stat-grid.three .stat .n { font-size: 22px; }
+.stat-grid.three .stat .l { font-size: 11px; }
 .stat { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
 .stat .n { font-size: 26px; font-weight: 600; color: var(--brand); line-height: 1.2; }
 .stat .l { color: var(--sub); font-size: 12px; margin-top: 2px; }

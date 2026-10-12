@@ -85,6 +85,10 @@ function loadState() {
   }
   if (!BANKS.some(b => b.id === settings.curBank)) settings.curBank = '初中';
   normalizeStudyBanks();   // 兼容迁移：从无 studyBanks 的旧数据构建「选词库 + 每日额度」
+  // 跨天遗留的复习会话作废：普通往日会话（reviewState.makeup 非真）绑定「开始当天」，
+  // 隔天不能再把昨天的词池当今日复习续做（lvcheng 2026-10-12 实测：昨日 74 词会话跨天续做）。
+  // 补打卡会话（makeup:true）保留——它本就是为往日而建，需可续做。
+  if (reviewState && reviewState.day && reviewState.day !== todayStr() && !reviewState.makeup) reviewState = null;
 }
 loadState();
 // 设置项变更检测：仅当「内容」真正变化才更新 _at，供多端同步判断哪一端更新。
@@ -1832,8 +1836,11 @@ function review() {
   // 补打卡指针（REVIEW_DAY）只在其复习会话仍存在时有效；一旦会话丢失就清掉，
   // 否则 dayOf() 会一直指向往日，令「本轮是否已结算」判断失效、卡在批改页（表现为复习走不下去）。
   if (REVIEW_DAY && REVIEW_DAY !== todayStr() && (!reviewState || reviewState.day !== REVIEW_DAY)) REVIEW_DAY = null;
-  // 往日遗留的「结果页状态」不阻塞今日复习：同一轮只在当天保持结果页
-  if (reviewState && (reviewState.done || reviewState.settled) && reviewState.day && reviewState.day !== dayOf()) {
+  // 跨天遗留的复习会话：普通往日会话一律作废（不能把昨天的词池当今日复习续做），补打卡会话保留。
+  // 用 reviewState.makeup 区分：补打卡启动的会话带 makeup:true（startReview 内设置），普通会话为 false。
+  // ⚠️ 旧逻辑只在 (done||settled) 时才清跨天会话，漏了「未结算的跨天普通会话」——换天后既不会被清，
+  // 又会以「继续复习（剩 N）」形式把往日词池顶成今日复习（lvcheng 2026-10-12 实测：昨日 74 词会话跨天续做）。
+  if (reviewState && reviewState.day && reviewState.day !== dayOf() && !reviewState.makeup) {
     reviewState = null; saveAll();
   }
   reconcileSecondRound();   // 进入复习页先结算「词库2＝复习词库」的当日新推，保证今日复习池完整
@@ -1985,7 +1992,7 @@ function startReview(pool) {
   if (type === 'recall') {
     // 队列按「词 + 当日日期」确定性排序：同一天在任何设备打开都是同一批题、同一顺序、同一例句
     const queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
-    reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d };
+    reviewState = { pool: queue.map(e => ({ ...e, type: 'recall' })), idx: 0, mode: 'recall', day: d, makeup: !!REVIEW_DAY };
     saveAll(); review(); return;
   }
   // type === 'word'（听中文听写）或 'sentence'（情境填词）都走纸质卡片（paper-prompt + 上下翻页）
@@ -2016,7 +2023,7 @@ function startReview(pool) {
   } else {
     queue = dayShuffle(pool.map(e => ({ ...e })), e => e.key, d);
   }
-  reviewState = { pool: makeTypedQueue(queue, type, d), idx: 0, day: d };
+  reviewState = { pool: makeTypedQueue(queue, type, d), idx: 0, day: d, makeup: !!REVIEW_DAY };
   saveAll(); review(); renderReviewCard();
 }
 // 纸质听写：只出题，不填键盘；上一个/下一个翻页，最后提交进入核对页

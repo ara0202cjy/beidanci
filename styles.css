@@ -98,7 +98,7 @@ body {
 .row > * { flex: 1; }
 
 /* 统计四宫格 */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .stat-grid.three { grid-template-columns: 1fr 1fr 1fr; }
 .stat-grid.three .stat { padding: 12px 10px; }
 .stat-grid.three .stat .n { font-size: 22px; }

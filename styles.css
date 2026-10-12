@@ -31,6 +31,7 @@
   --blueberry: #D8D7E4;
   --mint: #D4DEDC;
   --lemon: #E8E0CB;
+  --grape: #DED7E4;
 
   --radius: 18px;
   --shadow: 0 3px 14px rgba(90, 82, 76, .08);
@@ -105,6 +106,7 @@ body {
 .stat.matcha { background: var(--matcha); border-color: #C6CFA8; }
 .stat.strawberry { background: var(--strawberry); border-color: #D6C0BC; }
 .stat.blueberry { background: var(--blueberry); border-color: #C6C4DC; }
+.stat.grape { background: var(--grape); border-color: #C6C0D6; }
 /* 进度条 */
 .prog { height: 8px; border-radius: 4px; background: #E2DACE; overflow: hidden; }
 .prog > i { display: block; height: 100%; background: var(--brand); border-radius: 4px; }

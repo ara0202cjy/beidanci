@@ -1588,9 +1588,11 @@ function learn() {
   app().innerHTML = `
     ${topbar('学习')}
     <div class="stat-grid">
-      <div class="stat vanilla"><div class="n">${total}</div><div class="l">累计已背单词</div></div>
       <div class="stat matcha g"><div class="n">${streakDays()}</div><div class="l">连续打卡（天）</div></div>
       <div class="stat grape"><div class="n">${totalCheckinDays()}</div><div class="l">累计打卡（天）</div></div>
+    </div>
+    <div class="stat-grid three">
+      <div class="stat vanilla"><div class="n">${total}</div><div class="l">累计已背单词</div></div>
       <div class="stat strawberry r"><div class="n">${t.new}</div><div class="l">今日新学单词</div></div>
       <div class="stat blueberry p"><div class="n">${t.review}</div><div class="l">今日复习单词</div></div>
     </div>

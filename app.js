@@ -744,6 +744,14 @@ function streakDays() {
   }
   return n;
 }
+// 累计打卡天数：历史上「打卡完成」过的所有天数（不论是否连续），与 streakDays 互补
+function totalCheckinDays() {
+  let n = 0;
+  for (const d in history) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d) && dayComplete(d)) n++;
+  }
+  return n;
+}
 let REVIEW_DAY = null;                       // 补打卡时指向「原应打卡日」；null 表示今天
 function dayOf() { return REVIEW_DAY || todayStr(); }
 function recordHistory(type, entry, day) {
@@ -1582,6 +1590,7 @@ function learn() {
     <div class="stat-grid">
       <div class="stat vanilla"><div class="n">${total}</div><div class="l">累计已背单词</div></div>
       <div class="stat matcha g"><div class="n">${streakDays()}</div><div class="l">连续打卡（天）</div></div>
+      <div class="stat grape"><div class="n">${totalCheckinDays()}</div><div class="l">累计打卡（天）</div></div>
       <div class="stat strawberry r"><div class="n">${t.new}</div><div class="l">今日新学单词</div></div>
       <div class="stat blueberry p"><div class="n">${t.review}</div><div class="l">今日复习单词</div></div>
     </div>

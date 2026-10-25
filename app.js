@@ -182,6 +182,7 @@ window.WB = {
   cleanupProbeData,
   nextReviewRoundNeeded,
   markLearned, bankStat, primarySourceBank, migrateSelfBankToOrigin,
+  healWrongAnchors, isFullyMastered,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -1497,6 +1498,30 @@ function calibrateSchedule() {
   });
   settings.scheduleV3 = true;
   if (n) saveAll();
+  return n;
+}
+// 一次性自愈：给「在错题本里、但 progress 缺 wrongAnchor」的词补回错题锚点。
+// 背景（wb-v61）：错题档期完全依赖 wrongAnchor（错题日锚点）。该字段缺失时：
+//   · wrongNext() 返回空 → nextReview 变空 → 旧判据把该词当作「已掌握」而从错题本删除；
+//   · 即「错题内容自己消失」。
+// 成因：云端合并曾按整条记录二选一，一端独有的 wrongAnchor 被整体丢弃（已修，见 sync.js merge）。
+// 修复：用错题条目自身记录的 lastWrong 回填 —— 二者本就同源（答错时同时写入 wb.lastWrong 与 p.wrongAnchor），
+//      因此回填值与原锚点语义一致。幂等：只补缺失的，不覆盖已有锚点。
+function healWrongAnchors() {
+  let n = 0;
+  Object.keys(wrongBook || {}).forEach(k => {
+    const w = wrongBook[k];
+    if (!w) return;
+    const p = progress[k];
+    if (!p) return;                                   // 无进度记录：不臆造（错题条目自会保留）
+    if (p.wrongAnchor) return;                        // 已有锚点 → 不动
+    const anchor = w.lastWrong || w.added || '';
+    if (!anchor) return;
+    p.wrongAnchor = anchor;
+    p.lastWrongReview = p.lastWrongReview || anchor;
+    refreshNext(p);                                   // 重算 nextReview，让该词重新进入复习排期
+    n++;
+  });
   return n;
 }
 // 一次性迁移：为「既有学习记录」补上 studyDone 标志（历史已学+已复习的日期，连续打卡不丢）
@@ -3172,6 +3197,7 @@ function dict() {
     if (Sync.tryImportFromHash()) toast('已通过配对链接开启云同步');
   }
   // 关键：先用本地数据渲染界面，绝不因词库/云端同步请求卡住（pending）而长时间白屏
+  healWrongAnchors();   // 先补回缺失的错题锚点（必须在 calibrateSchedule 之前：后者会清理「已掌握」条目）
   calibrateSchedule();
   seedStudyDone();
   cleanupProbeData();     // 一次性清理探针误入的测试进度（见函数注释），须在生成批次/复习池之前
@@ -3197,7 +3223,7 @@ function dict() {
     if (window.Sync && Sync.on()) {
       Sync.sync()
         .catch(() => { })
-        .then(() => { migrateSelfBankToOrigin(); calibrateSchedule(); try { reconcileLearnPlan(); } catch (e) { } try { WB.refresh(); } catch (e) { } });
+        .then(() => { migrateSelfBankToOrigin(); healWrongAnchors(); calibrateSchedule(); try { reconcileLearnPlan(); } catch (e) { } try { WB.refresh(); } catch (e) { } });
     } else {
       try { WB.refresh(); } catch (e) { }   // 词库就绪后刷新当前页，补全学习/词库/查词
     }

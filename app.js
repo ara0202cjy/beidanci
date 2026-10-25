@@ -18,6 +18,7 @@ const BANKS = [
   { id: '考研', file: 'levels/考研.json', color: '#C08C8C' },
   { id: '雅思', file: 'levels/雅思.json', color: '#A89AB8' },
   { id: '托福', file: 'levels/托福.json', color: '#9A8FB0' },
+  { id: '短语动词', file: 'phrasal.json', color: '#B07CC6' },
 ];
 const INTERVALS = [1, 2, 3, 5, 7, 15, 30];
 // 错词复习节奏：在错误的第 1、2、3、20、40 天再次推送（独立于新词 INTERVALS）
@@ -306,10 +307,25 @@ function loadBanksBg() {
     ['obscure.json', v => OBSCURE = v], ['dict.json', v => DICT = v],
     ['roots.json', v => ROOTS = v],
     ['collocation.json', v => COLLOC = v], ['thesaurus.json', v => THES = v],
-    ['phrasal.json', v => PHRASE = v],
+    // 注：phrasal.json 同时作为「短语动词」学习词库加载（见下方 BANKS 分支），此处不再单独加载，避免重复请求
   ];
   return Promise.all([
-    ...BANKS.map(b => fetch(WB + b.file).then(r => r.json()).then(d => { BANK_DATA[b.id] = d; }).catch(() => { })),
+    ...BANKS.map(b => fetch(WB + b.file).then(r => r.json()).then(d => {
+      if (b.id === '短语动词') {
+        // 原始结构供 phraseDetail（查词详情）/ 查词补全使用
+        PHRASE = d;
+        // 归一化成「学习词库」结构：{ count, words:[{word,meaning,...}] }，使其可进入 buildBatch / 复习轮转
+        const words = [];
+        for (const word in d) {
+          const v = d[word] || {};
+          const s0 = (v.senses && v.senses[0]) || {};
+          words.push({ word, meaning: s0.zh || '', phonetic_us: '', phonetic_uk: '', en: s0.en || '', ex: s0.ex || [], base: v.base || '' });
+        }
+        BANK_DATA[b.id] = { count: words.length, words };
+      } else {
+        BANK_DATA[b.id] = d;
+      }
+    }).catch(() => { })),
     ...small.map(([f, set]) => fetch(WB + f).then(r => r.ok ? r.json() : null).then(d => { if (d) set(d); }).catch(() => { })),
   ]).then(() => {
     computeCommon(); // 计算雅思∩托福的共有词，供"先背相同词汇"排序使用
@@ -318,6 +334,15 @@ function loadBanksBg() {
     selfBank.forEach(w => ALL_INDEX.push({ word: w.word, bank: SELFBANK_ID, meaning: w.meaning, phonetic_us: w.phonetic_us, phonetic_uk: w.phonetic_uk }));
     BANK_MAP = {};
     ALL_INDEX.forEach(x => { if (!BANK_MAP[x.word.toLowerCase()]) BANK_MAP[x.word.toLowerCase()] = x; });
+    // 短语动词例句注入 EXAMPLES：情境轮 contextSentence 即可返回真实短语例句（key 为小写短语，含空格）
+    const pv = BANK_DATA['短语动词'];
+    if (pv && pv.words) pv.words.forEach(w => {
+      if (w.ex && w.ex.length) {
+        const k = w.word.toLowerCase();
+        if (!EXAMPLES[k]) EXAMPLES[k] = [];
+        w.ex.forEach(e => { if (e && e.en && !EXAMPLES[k].some(x => x.en === e.en)) EXAMPLES[k].push(e); });
+      }
+    });
   });
 }
 
@@ -503,6 +528,13 @@ function blankSentence(en, word) {
     return '<span class="blank">＿＿＿＿＿</span>';
   });
   return { html, hasBlank: has, variantBlank: variant, variantText };
+}
+// 短语组成提示：情境轮挖空短语时，提示它由几个单词组成（如「abide + by」）
+function phraseCompositionHint(word, bank) {
+  if (bank !== '短语动词') return '';
+  const parts = (word || '').trim().split(/\s+/);
+  if (parts.length < 2) return '';
+  return `这是一个由 ${parts.length} 个单词组成的短语：${parts.join(' + ')}`;
 }
 // 核对页高亮：原形与变形都标出来
 function highlightVariants(en, word) {
@@ -2056,11 +2088,13 @@ function renderReviewCard() {
   let prompt;
   if (cur.type === 'sentence' && cur.sentence) {
     const sb = blankSentence(cur.sentence.en, cur.word);
+    const phraseHint = phraseCompositionHint(cur.word, cur.bank);
     prompt = `<div class="paper-prompt">
       <div class="pp-label">情境填词：写出横线处的单词（共 ${st.pool.length} 题，全部做完后统一批改）</div>
       <div class="eg" style="margin-top:0"><div class="en">${sb.html}</div></div>
       <div class="mean-list">${renderMeaning(cur.meaning)}</div>
       ${sb.variantBlank ? `<div class="sub-tip pp-warn" style="margin-top:8px">⚠ 此题为变形词</div>` : (sb.hasBlank ? '' : '<div class="sub-tip" style="margin-top:8px">⚠ 例句中未直接出现该词，请依据中文释义回忆拼写</div>')}
+      ${phraseHint ? `<div class="sub-tip" style="margin-top:8px">💡 ${esc(phraseHint)}</div>` : ''}
     </div>`;
   } else {
     prompt = `<div class="paper-prompt">

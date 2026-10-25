@@ -2601,7 +2601,9 @@ function wrong() {
     </div>`;
   // 排序/筛选状态放在模块级：整页重渲染（云同步刷新、词库加载完成等）后仍保留用户选择，
   // 否则一同步就把用户刚设好的筛选重置掉，观感上同样是"界面跳掉"。
-  sortBy = wbSortBy; sortDesc = wbSortDesc; filterDim = wbFilterDim; filterVal = wbFilterVal;
+  // ⚠️ 必须用 let 声明局部变量：app.js 顶部是 'use strict'，
+  //    对未声明变量赋值会抛 ReferenceError → wrong() 中途崩溃 → 事件处理器不绑定 → 整页点选无反应。
+  let sortBy = wbSortBy, sortDesc = wbSortDesc, filterDim = wbFilterDim, filterVal = wbFilterVal;
   const list = $('#wrongList');
   const FILTER_OPTS = {
     all: [['all', '全部']],

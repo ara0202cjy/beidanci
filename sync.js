@@ -124,6 +124,11 @@ const Sync = (function () {
     a = a || {}; b = b || {};
     const out = { v: 1, savedAt: Date.now(), device };
     // progress
+    // ⚠️ 合并必须「字段级」而非整条二选一：
+    //    排期依赖 firstLearned / wrongAnchor / lastLearnReview / lastWrongReview 等锚点字段，
+    //    若整条取较新的一份，另一端独有的锚点会被整体丢弃 → wrongNext/learnNext 返回空
+    //    → nextReview 为空 → 复习结算时把该词从错题本误删（用户看到「错题自己消失了」）。
+    //    因此：基础记录取较新，锚点字段各自取并集（有值优先，日期类取更早＝档期更全）。
     out.progress = {};
     const pk = new Set([...Object.keys(a.progress || {}), ...Object.keys(b.progress || {})]);
     pk.forEach(k => {
@@ -132,9 +137,31 @@ const Sync = (function () {
       if (!y) { out.progress[k] = x; return; }
       const dx = x.lastReview || x.firstLearned || '';
       const dy = y.lastReview || y.firstLearned || '';
-      if (dy > dx) out.progress[k] = y;
-      else if (dx > dy) out.progress[k] = x;
-      else out.progress[k] = ((y.stage || 0) > (x.stage || 0) ? y : x);
+      let base;
+      if (dy > dx) base = y;
+      else if (dx > dy) base = x;
+      else base = ((y.stage || 0) > (x.stage || 0) ? y : x);
+      const m = Object.assign({}, base);
+      // 锚点字段：并集（缺失的一端不影响另一端已持有的值）
+      const earliest = (f) => {
+        const vx = x[f], vy = y[f];
+        if (!vx) return vy || '';
+        if (!vy) return vx;
+        return vx < vy ? vx : vy;          // 锚点取更早 → 档期起点更早、覆盖更全
+      };
+      const latest = (f) => {
+        const vx = x[f], vy = y[f];
+        if (!vx) return vy || '';
+        if (!vy) return vx;
+        return vx > vy ? vx : vy;          // 上次复习日取更晚
+      };
+      const anchorFields = ['firstLearned', 'wrongAnchor'];
+      anchorFields.forEach(f => { if (x[f] || y[f]) m[f] = earliest(f); });
+      ['lastLearnReview', 'lastWrongReview', 'lastReview'].forEach(f => { if (x[f] || y[f]) m[f] = latest(f); });
+      // stage 等进度值取较大（不因合并倒退）
+      if ((x.stage || 0) > (m.stage || 0)) m.stage = x.stage;
+      if ((y.stage || 0) > (m.stage || 0)) m.stage = y.stage;
+      out.progress[k] = m;
     });
     // wrongBook
     out.wrongBook = {};

@@ -1214,6 +1214,23 @@ function wordIsLearned(word) {
   if (progress[bankKey(SELFBANK_ID, word)] && progress[bankKey(SELFBANK_ID, word)].firstLearned) return true;
   return false;
 }
+// 编辑距离（容错模糊搜索用）：仅小字符串，带长度预剪枝由调用方保证
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  let prev = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    const cur = new Array(n + 1); cur[0] = i;
+    const ca = a.charCodeAt(i - 1);
+    for (let j = 1; j <= n; j++) {
+      const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
 // 自愈：清除「同一个词在多个日期都被记为 new」的重复项（只保留最早日），并把 firstLearned 对齐到最早日。
 // 为什么必须有它：Sync.merge 对 history.new 做的是「按 key 并集」，这意味着**删除无法同步**——
 // 即便在云端删掉了重复项，只要任一设备本地还留着旧副本，下次合并就会把它们 union 回云端。
@@ -2628,29 +2645,57 @@ orange"></textarea>
         const k = w.toLowerCase();
         let m = BANK_MAP[k] || null;
         if (!m && DICT[k]) { const d = DICT[k]; m = { word: w, bank: '词典', meaning: d.meaning, phonetic_us: d.us, phonetic_uk: d.uk }; }
-        return { w, m, inSelf: selfBank.some(s => s.word.toLowerCase() === k), idx: i };
+        return { w, m, inSelf: selfBank.some(s => s.word.toLowerCase() === k), learned: wordIsLearned(w), idx: i };
       });
+      const unmatched = rows.filter(r => !r.m);
       const body = rows.map(r => `
         <div class="bulk-row" data-i="${r.idx}">
-          <div class="bw">${esc(r.w)} ${r.inSelf ? '<span class="tag">已存在</span>' : ''}</div>
+          <div class="bw">${esc(r.w)}
+            ${r.inSelf ? '<span class="tag">已存在</span>' : ''}
+            ${r.learned ? '<span class="tag green">已背</span>' : ''}
+            ${!r.m ? '<span class="tag red">未匹配词库</span>' : ''}
+          </div>
           ${r.m ? `<div class="bm">✔ 已匹配 ${esc(r.m.bank)}：${esc(r.m.meaning)}</div>` : `<input class="field sm" data-meaning placeholder="中文释义（词库未收录，请填写）" value="">`}
         </div>`).join('');
+      // 未匹配到词库的词：让用户选择「仅添加已匹配的」还是「添加全部（含未匹配）」
+      let unmatchedMode = 'all';   // 'all' 添加全部（含未匹配）｜ 'matched' 仅添加已匹配的
+      const ubanner = unmatched.length ? `
+        <div class="sub-tip" style="margin:8px 0 4px">有 <b>${unmatched.length}</b> 个词未匹配到词库，如何处理这些词？</div>
+        <div class="seg" id="unmatchedSeg" style="margin-bottom:10px">
+          <div data-m="all" class="on">添加全部（含未匹配）</div>
+          <div data-m="matched">仅添加已匹配的 ${rows.length - unmatched.length} 个</div>
+        </div>` : '';
       openModal(`<h3>核对 ${rows.length} 个单词</h3>
-        <div class="sub-tip">✔ 为自动匹配；未匹配请填释义（可留空，之后在查词里补）</div>
+        <div class="sub-tip">✔ 为自动匹配；未匹配请填释义（可留空，之后在查词里补）。<span class="tag green">已背</span> 表示该词此前已学习过，加入时会被重置为未背并重新推送。</div>
+        ${ubanner}
         <div class="bulk-list" id="bulkRows">${body}</div>
         <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" id="bulkOk">加入自建词库</button></div>`);
+      if (unmatched.length) {
+        const seg = $('#unmatchedSeg');
+        seg.querySelectorAll('div').forEach(d => d.onclick = () => {
+          unmatchedMode = d.dataset.m;
+          seg.querySelectorAll('div').forEach(x => x.classList.toggle('on', x === d));
+          // 「仅添加已匹配的」时禁用未匹配行的释义输入（这些词将被跳过）
+          document.querySelectorAll('#bulkRows .bulk-row').forEach(row => {
+            const wi = row.querySelector('[data-meaning]');
+            if (wi) { const r = rows[+row.dataset.i]; wi.disabled = (unmatchedMode === 'matched' && !r.m); }
+          });
+        });
+      }
       $('#bulkOk').onclick = () => {
-        let dup = 0, reset = 0;
+        let dup = 0, reset = 0, skipped = 0;
         const toAdd = [];
         const learnedList = [];
         rows.forEach(r => {
+          // 「仅添加已匹配的」模式：跳过未匹配到词库的词
+          if (!r.m && unmatchedMode === 'matched') { skipped++; return; }
           // 已存在的词也算"再次加入"：若此前已背过则重置为未背诵，重新推送
           if (r.inSelf) { dup++; if (resetWordForSelf(r.w)) reset++; return; }
           let meaning = '', pu = '', pk = '';
           if (r.m) { meaning = r.m.meaning; pu = r.m.phonetic_us; pk = r.m.phonetic_uk; }
           else { const inp = document.querySelector(`#bulkRows .bulk-row[data-i="${r.idx}"] [data-meaning]`); meaning = inp ? inp.value.trim() : ''; }
           const learned = wordIsLearned(r.w);
-          toAdd.push({ w: r.w, meaning, pu, pk, learned });
+          toAdd.push({ w: r.w, meaning, pu, pk, learned, matched: !!r.m });
           if (learned) learnedList.push(r.w);
         });
         const commit = (includeLearned) => {
@@ -2663,7 +2708,7 @@ orange"></textarea>
             added++;
           });
           saveAll(); closeModal(); banks();
-          toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}`);
+          toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}${skipped ? ` ｜ ${skipped} 个未匹配跳过` : ''}`);
         };
         if (learnedList.length) {
           // 已学习过的词弹窗确认：是→重置并加入；否→仅加入未学过的词
@@ -2852,18 +2897,35 @@ function dict() {
         }
       }
     }
+    if (res.length < 30 && q.length >= 2) {       // 模糊搜索：编辑距离容错（拼写 typo / 漏字母）
+      const tol = q.length <= 4 ? 1 : 2;
+      const lo = q.length - tol, hi = q.length + tol;
+      for (const x of ALL_INDEX) {
+        const wk = x.word.toLowerCase();
+        if (hit.has(wk)) continue;
+        const L = wk.length;
+        if (L < lo || L > hi) continue;            // 长度预剪枝，避免大词库全量扫描
+        if (lev(wk, q) <= tol) {
+          hit.add(wk);
+          const d = DICT[wk];
+          res.push({ word: x.word, bank: x.bank, us: (d && d.us) || x.phonetic_us, uk: (d && d.uk) || x.phonetic_uk, meaning: (d && d.meaning) || x.meaning });
+          if (res.length >= 30) break;
+        }
+      }
+    }
     empty.style.display = res.length ? 'none' : '';
     list.innerHTML = '';
     res.forEach(x => {
       const it = document.createElement('div'); it.className = 'item dict-item';
       const inSelf = selfBank.some(s => s.word.toLowerCase() === x.word.toLowerCase());
+      const learned = wordIsLearned(x.word);
       const w = { word: x.word, bank: x.bank, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning };
       const acc = settings.accent || 'en-US';
       const ph = acc === 'en-GB' ? (x.uk || x.us) : (x.us || x.uk);
       it.innerHTML = `
         <div class="dict-head">
           <div class="dh-left">
-            <div class="w clickable">${esc(x.word)} <span class="chev">▸</span></div>
+            <div class="w clickable">${esc(x.word)} ${learned ? '<span class="tag green">已背</span>' : ''} <span class="chev">▸</span></div>
             ${ph ? `<span class="dh-ph">${esc(ph)}</span>` : ''}
           </div>
           <button class="spk" title="朗读" aria-label="朗读">${icon('i-sound')}</button>

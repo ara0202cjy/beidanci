@@ -422,7 +422,11 @@ const Sync = (function () {
       pushing = push().then(() => { pushing = null; scheduleRefresh(); }).catch(e => { pushing = null; handleSyncError(e, '上传'); });
     }, 2500);
   }
-  function scheduleRefresh() { if (window.WB && window.WB.refresh) window.WB.refresh(); }
+  // 刷新调度：统一交给 app.js 的 WB.refresh（内部已带「输入中推迟刷新」守卫），
+  // 避免这里再维护一套 pending 状态与焦点判断（两套并存会互相触发重复渲染）。
+  function scheduleRefresh() {
+    if (window.WB && window.WB.refresh) window.WB.refresh();
+  }
 
   /* ---------- 配对：把首个端口配置塞进链接，另一台打开即配置好 ---------- */
   function pairLink() {

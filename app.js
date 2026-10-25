@@ -121,6 +121,43 @@ function saveReviewState() {
   } else store.set(K.review, reviewState);
 }
 window.store = store;
+/* ---------- 整页重渲染守卫（解决「查词界面容易跳掉」） ----------
+ * 根因：WB.refresh() = PAGES[CUR]() 会重建整个 #app，
+ *      触发点有多处（云端 push/pull 完成后、visibilitychange/focus/pageshow、
+ *      词库后台加载完成、设置里点保存……），
+ *      每次都会把输入框重建 → 搜索词清空、光标丢失、键盘收起、滚动位置跳变，
+ *      用户体验上就是「界面总是容易跳掉」。
+ * 对策：把守卫下沉到 refresh 的唯一入口（guardedRefresh）：
+ *      ① 正焦点在可编辑控件（input/textarea）上时，不重渲染，记下待刷新；
+ *      ② 失焦后再补一次刷新，让云端合并结果最终呈现，不打断输入。
+ *      查词页另用 dictQ 保存搜索词，即便真的刷新也不丢输入。
+ */
+let pendingRefresh = false;
+function editableFocused() {
+  const ae = document.activeElement;
+  if (!ae) return false;
+  const tag = (ae.tagName || '').toUpperCase();
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA') return false;
+  // contenteditable 也算（少数浏览器/组件会用到）
+  if (ae.isContentEditable) return true;
+  return true;
+}
+function guardedRefresh() {
+  if (editableFocused()) { pendingRefresh = true; return false; }
+  pendingRefresh = false;
+  PAGES[CUR]();
+  return true;
+}
+// 失焦后补刷：把被打断的刷新补上，但若焦点又回到输入框则继续等待
+document.addEventListener('focusout', () => {
+  if (!pendingRefresh) return;
+  setTimeout(() => {
+    if (editableFocused()) return;
+    pendingRefresh = false;
+    try { PAGES[CUR](); } catch (e) { }
+  }, 80);
+});
+
 window.WB = {
   get progress() { return progress; }, set progress(v) { progress = v; },
   get wrongBook() { return wrongBook; }, set wrongBook(v) { wrongBook = v; },
@@ -135,7 +172,7 @@ window.WB = {
   get sessionReset() { return sessionReset; }, set sessionReset(v) { sessionReset = v; },
   get roundReset() { return roundReset; }, set roundReset(v) { roundReset = v; },
   get currentAccount() { return currentAccount; },
-  refresh() { try { PAGES[CUR](); } catch (e) { } },
+  refresh() { try { guardedRefresh(); } catch (e) { } },
   buildReviewPool,
   dayRand,
   learnNext, wrongNext, secNext, refreshNext, isDue, settleReview, calibrateSchedule,
@@ -1246,6 +1283,49 @@ function wordIsLearned(word) {
   if (progress[bankKey(SELFBANK_ID, word)] && progress[bankKey(SELFBANK_ID, word)].firstLearned) return true;
   return false;
 }
+// 加入自建词库的唯一入口：内建去重（已在自建词库则拒绝），并清墓碑。
+// 返回 true=已加入；false=已存在（未做任何改动）。
+function addSelfWord(word, opt) {
+  const w = String(word || '').trim();
+  if (!w) return false;
+  const k = w.toLowerCase();
+  if (selfBank.some(s => String(s.word || '').toLowerCase() === k)) return false;
+  const o = opt || {};
+  selfBank.push({
+    word: w,
+    phonetic_us: o.pu || o.phonetic_us || '',
+    phonetic_uk: o.pk || o.phonetic_uk || '',
+    meaning: o.meaning || '',
+    added: todayStr()
+  });
+  if (window.Sync && Sync.untomb) Sync.untomb(w);   // 清墓碑：曾删过又加回来时，别被并集过滤掉
+  return true;
+}
+// 模糊纠错（typo → 真实词）：在词库索引 + 离线词典里找编辑距离最近的候选。
+// 策略：① 先按首字母 + 长度窗口大幅剪枝；② 容差 q.length<=4 取 1，否则取 2；
+// ③ 同距离时取更长/更常见的词（BANK_MAP 优先于纯词典）。
+// 返回纠正后的词（小写）或 null。用于「批量添加自建单词」时自动匹配词库。
+function fuzzyMatchWord(q) {
+  const ql = String(q || '').toLowerCase();
+  if (ql.length < 3) return null;                 // 太短的词容易误纠错
+  const tol = ql.length <= 4 ? 1 : 2;
+  const lo = ql.length - tol, hi = ql.length + tol;
+  const seen = new Set();
+  let best = null, bestD = tol + 1, bestSrc = 0;
+  const consider = (wk, src) => {
+    if (!wk || seen.has(wk)) return;
+    seen.add(wk);
+    const L = wk.length;
+    if (L < lo || L > hi) return;                 // 长度预剪枝
+    if (wk.charCodeAt(0) !== ql.charCodeAt(0)) return;  // 首字母不同 → 误纠错风险高，直接跳过
+    const d = lev(wk, ql);
+    if (d > tol) return;
+    if (d < bestD || (d === bestD && src === 1 && bestSrc === 0)) { best = wk; bestD = d; bestSrc = src; }
+  };
+  for (const wk in BANK_MAP) consider(wk, 1);      // 词库优先
+  for (const wk in DICT) consider(wk, 0);          // 再看离线词典
+  return best;
+}
 // 编辑距离（容错模糊搜索用）：仅小字符串，带长度预剪枝由调用方保证
 function lev(a, b) {
   const m = a.length, n = b.length;
@@ -1400,6 +1480,9 @@ function seedStudyDone() {
 
 /* ---------- 路由 ---------- */
 let CUR = 'learn';
+let dictQ = '';   // 查词搜索词（跨整页重渲染保留，避免云同步刷新把搜索框清空）
+// 错题本排序/筛选状态（模块级，跨整页重渲染保留）
+let wbSortBy = 'last', wbSortDesc = true, wbFilterDim = 'all', wbFilterVal = 'all';
 const PAGES = { learn, review, wrong, banks, dict };
 function goto(page) {
   CUR = page;
@@ -2457,8 +2540,9 @@ function wrong() {
       <div class="list" id="wrongList"></div>
       ${Object.keys(wrongBook).length ? '' : '<div class="empty">还没有错题，复习答错会自动入库</div>'}
     </div>`;
-  let sortBy = 'last', sortDesc = true;
-  let filterDim = 'all', filterVal = 'all';
+  // 排序/筛选状态放在模块级：整页重渲染（云同步刷新、词库加载完成等）后仍保留用户选择，
+  // 否则一同步就把用户刚设好的筛选重置掉，观感上同样是"界面跳掉"。
+  sortBy = wbSortBy; sortDesc = wbSortDesc; filterDim = wbFilterDim; filterVal = wbFilterVal;
   const list = $('#wrongList');
   const FILTER_OPTS = {
     all: [['all', '全部']],
@@ -2475,6 +2559,7 @@ function wrong() {
     fv.innerHTML = FILTER_OPTS[filterDim].map(([v, t]) => `<div data-v="${v}" class="${v === filterVal ? 'on' : ''}">${t}</div>`).join('');
     fv.querySelectorAll('div').forEach(d => d.onclick = () => {
       filterVal = d.dataset.v;
+      wbFilterVal = filterVal;
       fv.querySelectorAll('div').forEach(x => x.classList.toggle('on', x.dataset.v === filterVal)); // 高亮跟随点击移动
       render();
     });
@@ -2540,10 +2625,11 @@ function wrong() {
     });
     updateBar();
   };
-  document.querySelectorAll('#wbSort div').forEach(d => d.onclick = () => { sortBy = d.dataset.s; render(); });
-  $('#wbDir').onclick = () => { sortDesc = !sortDesc; render(); };
+  document.querySelectorAll('#wbSort div').forEach(d => d.onclick = () => { sortBy = d.dataset.s; wbSortBy = sortBy; render(); });
+  $('#wbDir').onclick = () => { sortDesc = !sortDesc; wbSortDesc = sortDesc; render(); };
   document.querySelectorAll('#wbFilterDim div').forEach(d => d.onclick = () => {
     filterDim = d.dataset.f; filterVal = 'all';
+    wbFilterDim = filterDim; wbFilterVal = filterVal;
     document.querySelectorAll('#wbFilterDim div').forEach(x => x.classList.toggle('on', x.dataset.f === filterDim));
     renderFilterVal(); render();
   });
@@ -2679,31 +2765,62 @@ orange"></textarea>
         const k = w.toLowerCase();
         let m = BANK_MAP[k] || null;
         if (!m && DICT[k]) { const d = DICT[k]; m = { word: w, bank: '词典', meaning: d.meaning, phonetic_us: d.us, phonetic_uk: d.uk }; }
-        return { w, m, inSelf: selfBank.some(s => s.word.toLowerCase() === k), learned: wordIsLearned(w), idx: i };
+        // 精确未命中 → 模糊纠错（编辑距离容错）：把拼写错误自动纠正到词库真实词
+        let fz = null;
+        if (!m) {
+          const cand = fuzzyMatchWord(k);
+          if (cand) {
+            const cm = BANK_MAP[cand] || (DICT[cand] ? { word: cand, bank: '词典', meaning: DICT[cand].meaning, phonetic_us: DICT[cand].us, phonetic_uk: DICT[cand].uk } : null);
+            if (cm) fz = { raw: w, word: cand, m: cm };
+          }
+        }
+        return { w, m, fz, inSelf: selfBank.some(s => s.word.toLowerCase() === k), learned: wordIsLearned(w), idx: i };
       });
-      const unmatched = rows.filter(r => !r.m);
+      const unmatched = rows.filter(r => !r.m && !r.fz);
       const body = rows.map(r => `
         <div class="bulk-row" data-i="${r.idx}">
           <div class="bw">${esc(r.w)}
-            ${r.inSelf ? '<span class="tag">已存在</span>' : ''}
+            ${r.inSelf ? '<span class="tag">已在自建词库</span>' : ''}
             ${r.learned ? '<span class="tag green">已背</span>' : ''}
-            ${!r.m ? '<span class="tag red">未匹配词库</span>' : ''}
+            ${!r.m && !r.fz ? '<span class="tag red">未匹配词库</span>' : ''}
+            ${r.fz ? '<span class="tag">疑似拼写错误</span>' : ''}
           </div>
-          ${r.m ? `<div class="bm">✔ 已匹配 ${esc(r.m.bank)}：${esc(r.m.meaning)}</div>` : `<input class="field sm" data-meaning placeholder="中文释义（词库未收录，请填写）" value="">`}
+          ${r.m ? `<div class="bm">✔ 已匹配 ${esc(r.m.bank)}：${esc(r.m.meaning)}</div>`
+            : r.fz ? `<div class="bm">💡 疑似「<b>${esc(r.fz.word)}</b>」（${esc(r.fz.m.bank)}：${esc(r.fz.m.meaning)}）
+                     <button class="btn ghost sm" data-use-fz="${r.idx}">采用此词</button></div>`
+            : `<input class="field sm" data-meaning placeholder="中文释义（词库未收录，请填写）" value="">`}
         </div>`).join('');
       // 未匹配到词库的词：让用户选择「仅添加已匹配的」还是「添加全部（含未匹配）」
+      // 「已匹配」= 精确命中 或 有可用模糊候选（采用后即有释义）
       let unmatchedMode = 'all';   // 'all' 添加全部（含未匹配）｜ 'matched' 仅添加已匹配的
+      const isMatchedRow = r => !!(r.m || r.fz);
       const ubanner = unmatched.length ? `
         <div class="sub-tip" style="margin:8px 0 4px">有 <b>${unmatched.length}</b> 个词未匹配到词库，如何处理这些词？</div>
         <div class="seg" id="unmatchedSeg" style="margin-bottom:10px">
           <div data-m="all" class="on">添加全部（含未匹配）</div>
-          <div data-m="matched">仅添加已匹配的 ${rows.length - unmatched.length} 个</div>
+          <div data-m="matched">仅添加已匹配的 ${rows.filter(isMatchedRow).length} 个</div>
         </div>` : '';
       openModal(`<h3>核对 ${rows.length} 个单词</h3>
-        <div class="sub-tip">✔ 为自动匹配；未匹配请填释义（可留空，之后在查词里补）。<span class="tag green">已背</span> 表示该词此前已学习过，加入时会被重置为未背并重新推送。</div>
+        <div class="sub-tip">✔ 为自动匹配；<span class="tag">疑似拼写错误</span> 可一键采用纠正后的词；未匹配请填释义（可留空，之后在查词里补）。<span class="tag green">已背</span> 表示该词此前已学习过，加入时会被重置为未背并重新推送；<span class="tag">已在自建词库</span> 的词会被自动跳过，不重复添加。</div>
         ${ubanner}
         <div class="bulk-list" id="bulkRows">${body}</div>
         <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" id="bulkOk">加入自建词库</button></div>`);
+      // 「采用此词」：把疑似词行改为按纠正后的真实词匹配
+      document.querySelectorAll('#bulkRows [data-use-fz]').forEach(btn => {
+        btn.onclick = () => {
+          const r = rows[+btn.dataset.useFz];
+          if (!r || !r.fz) return;
+          r.fz.used = true;
+          r.w = r.fz.word;
+          r.m = r.fz.m;
+          r.inSelf = selfBank.some(s => s.word.toLowerCase() === r.w.toLowerCase());
+          const row = btn.closest('.bulk-row');
+          row.querySelector('.bw').innerHTML = `${esc(r.w)}
+            ${r.inSelf ? '<span class="tag">已在自建词库</span>' : ''}
+            ${r.learned ? '<span class="tag green">已背</span>' : ''}`;
+          row.querySelector('.bm').innerHTML = `✔ 已匹配 ${esc(r.m.bank)}：${esc(r.m.meaning)}`;
+        };
+      });
       if (unmatched.length) {
         const seg = $('#unmatchedSeg');
         seg.querySelectorAll('div').forEach(d => d.onclick = () => {
@@ -2712,37 +2829,41 @@ orange"></textarea>
           // 「仅添加已匹配的」时禁用未匹配行的释义输入（这些词将被跳过）
           document.querySelectorAll('#bulkRows .bulk-row').forEach(row => {
             const wi = row.querySelector('[data-meaning]');
-            if (wi) { const r = rows[+row.dataset.i]; wi.disabled = (unmatchedMode === 'matched' && !r.m); }
+            if (wi) { const r = rows[+row.dataset.i]; wi.disabled = (unmatchedMode === 'matched' && !isMatchedRow(r)); }
           });
         });
       }
       $('#bulkOk').onclick = () => {
-        let dup = 0, reset = 0, skipped = 0;
+        let dup = 0, reset = 0, skipped = 0, corrected = 0;
         const toAdd = [];
         const learnedList = [];
         rows.forEach(r => {
-          // 「仅添加已匹配的」模式：跳过未匹配到词库的词
-          if (!r.m && unmatchedMode === 'matched') { skipped++; return; }
-          // 已存在的词也算"再次加入"：若此前已背过则重置为未背诵，重新推送
-          if (r.inSelf) { dup++; if (resetWordForSelf(r.w)) reset++; return; }
+          // 已在自建词库 → 直接跳过，不再重复添加（也不重置重推，避免变相"再次添加"）
+          if (r.inSelf) { dup++; return; }
+          // 「仅添加已匹配的」模式：跳过既未精确匹配、也无可用模糊候选的词
+          if (!isMatchedRow(r) && unmatchedMode === 'matched') { skipped++; return; }
+          // 采用了模糊候选 → 用纠正后的真实词入库
+          const word = (r.fz && r.fz.used) ? r.fz.word : r.w;
+          if (r.fz && r.fz.used) corrected++;
           let meaning = '', pu = '', pk = '';
           if (r.m) { meaning = r.m.meaning; pu = r.m.phonetic_us; pk = r.m.phonetic_uk; }
+          else if (r.fz && r.fz.used) { meaning = r.fz.m.meaning; pu = r.fz.m.phonetic_us; pk = r.fz.m.phonetic_uk; }
           else { const inp = document.querySelector(`#bulkRows .bulk-row[data-i="${r.idx}"] [data-meaning]`); meaning = inp ? inp.value.trim() : ''; }
-          const learned = wordIsLearned(r.w);
-          toAdd.push({ w: r.w, meaning, pu, pk, learned, matched: !!r.m });
-          if (learned) learnedList.push(r.w);
+          const learned = wordIsLearned(word);
+          toAdd.push({ w: word, meaning, pu, pk, learned, matched: !!r.m });
+          if (learned) learnedList.push(word);
         });
         const commit = (includeLearned) => {
           let added = 0;
           toAdd.forEach(a => {
             if (a.learned && !includeLearned) return;   // 选择「否」：跳过已学单词
-            selfBank.push({ word: a.w, phonetic_us: a.pu, phonetic_uk: a.pk, meaning: a.meaning || '（未填释义）', added: todayStr() });
-            if (window.Sync && Sync.untomb) Sync.untomb(a.w);   // 清墓碑：曾删过又加回来时，别被并集过滤掉
+            // 二次去重（同一批次内可能有大小写不同的重复词），用统一入口保证幂等
+            if (!addSelfWord(a.w, { pu: a.pu, pk: a.pk, meaning: a.meaning || '（未填释义）' })) { dup++; return; }
             if (a.learned) { resetWordForSelf(a.w); reset++; }
             added++;
           });
           saveAll(); closeModal(); banks();
-          toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已存在` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}${skipped ? ` ｜ ${skipped} 个未匹配跳过` : ''}`);
+          toast(`已加入 ${added} 个${dup ? ` ｜ ${dup} 个已在自建词库（跳过）` : ''}${corrected ? ` ｜ ${corrected} 个已纠错` : ''}${reset ? ` ｜ ${reset} 个已重置为未背` : ''}${skipped ? ` ｜ ${skipped} 个未匹配跳过` : ''}`);
         };
         if (learnedList.length) {
           // 已学习过的词弹窗确认：是→重置并加入；否→仅加入未学过的词
@@ -2868,6 +2989,7 @@ function importData(file) {
 
 /* ===================== 查词 ===================== */
 function dict() {
+  const yKeep = window.scrollY;
   app().innerHTML = `${topbar('查词')}
     ${BANKS_READY ? '' : '<div class="sub-tip" style="margin-bottom:10px">词库索引加载中，稍候即可查词…</div>'}
     <div class="card mint">
@@ -2903,7 +3025,8 @@ function dict() {
   chk.onchange = () => { settings.autoSpeak = chk.checked; saveAll(); };
   paintPron();
   $('#q').oninput = e => {
-    const q = e.target.value.trim().toLowerCase(); if (!q) { list.innerHTML = ''; empty.style.display = ''; return; }
+    const q = e.target.value.trim().toLowerCase(); dictQ = q; if (!q) { list.innerHTML = ''; empty.style.display = ''; return; }
+    const ps = list.scrollTop;
     const hit = new Set();
     const res = ALL_INDEX.filter(x => x.word.toLowerCase().includes(q) || (x.meaning || '').toLowerCase().includes(q))
       .slice(0, 30).map(x => {
@@ -2963,7 +3086,7 @@ function dict() {
             ${ph ? `<span class="dh-ph">${esc(ph)}</span>` : ''}
           </div>
           <button class="spk" title="朗读" aria-label="朗读">${icon('i-sound')}</button>
-          <button class="btn ghost sm self-btn">${inSelf ? '已加' : '＋加入'}</button>
+          <button class="btn ghost sm self-btn" ${inSelf ? 'disabled title="已在自建词库，无法重复添加"' : ''}>${inSelf ? '已加' : '＋加入'}</button>
         </div>
         <div class="dict-detail" style="display:none">
           ${detailInner(w)}
@@ -2980,30 +3103,29 @@ function dict() {
       sb.onclick = (e) => {
         e.stopPropagation();
         const word = x.word;
-        // 已在自建词库：点击用于「再次重新学习」（已背过则重置为未背诵，重新推送）
-        if (selfBank.some(s => s.word.toLowerCase() === word.toLowerCase())) {
-          if (resetWordForSelf(word)) { saveAll(); toast('已重置为未背诵，将重新推送'); }
-          else toast('已在自建词库');
-          return;
-        }
+        if (selfBank.some(s => s.word.toLowerCase() === word.toLowerCase())) { toast('已在自建词库，无法重复添加'); return; }
         const doAdd = () => {
-          selfBank.push({ word, phonetic_us: x.us, phonetic_uk: x.uk, meaning: x.meaning, added: todayStr() });
-          if (window.Sync && Sync.untomb) Sync.untomb(word);   // 清墓碑：曾删过又加回来时，别被并集过滤掉
-          saveAll(); sb.textContent = '已加';
+          if (!addSelfWord(word, { pu: x.us, pk: x.uk, meaning: x.meaning })) { toast('已在自建词库，无法重复添加'); return false; }
+          saveAll(); sb.textContent = '已加'; sb.disabled = true;
+          return true;
         };
         if (wordIsLearned(word)) {
           // 已学习过的词：弹窗确认是否重新学习 —— 是→加入并重置重新推送；否→不加
           confirmRelearn(word,
-            () => { doAdd(); resetWordForSelf(word); toast('已加入自建词库（该词已重置为未背诵，将重新推送）'); },
+            () => { if (doAdd()) { resetWordForSelf(word); toast('已加入自建词库（该词已重置为未背诵，将重新推送）'); } },
             () => { toast('已取消加入'); });
         } else {
-          doAdd();
-          toast('已加入自建词库');
+          if (doAdd()) toast('已加入自建词库');
         }
       };
       list.appendChild(it);
     });
+    list.scrollTop = ps;
   };
+  if (dictQ) {
+    const qe = $('#q');
+    if (qe) { qe.value = dictQ; qe.dispatchEvent(new Event('input')); setTimeout(() => { qe.focus(); try { qe.setSelectionRange(qe.value.length, qe.value.length); } catch (e) {} window.scrollTo(0, yKeep); }, 0); }
+  } else { window.scrollTo(0, yKeep); }
 }
 
 /* ===================== 启动 ===================== */

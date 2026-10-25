@@ -436,6 +436,37 @@ function refreshNext(p) {
   const ds = [learnNext(p), wrongNext(p), secNext(p)].filter(Boolean);
   p.nextReview = ds.length ? ds.sort()[0] : '';
 }
+// 判断某词是否「真正已掌握」（可从错题本移出）。
+// ⚠️ 不能只看 p.nextReview 是否为空：
+//    nextReview 为空既可能是「档期走完」，也可能是「锚点缺失/档期算不出」
+//    （如云端合并丢字段、或该词只存在于错题本而 progress 无记录）。
+//    若据此删除错题，就会出现「错题自己消失」。
+// 判定依据（与 nextScheduleDate 的语义对齐）：
+//   档期是以「锚点 + 间隔序列」算出的，取的是**严格晚于上次复习日**的那一档；
+//   当「上次复习日」已越过最后一档时，next 返回空＝该维度档期走完＝已掌握。
+//   ⇒ 故判据用「上次复习日相对锚点的天数 ≥ 最后一档间隔」来判定，
+//     而不是用锚点日期本身（锚点日期算出的档期永远在未来，learnNext 几乎不为空）。
+// 规则：
+//   · 错题维度（wrongAnchor）：必须存在**且**其错题档期确实走完，才算这一维度已走完；
+//     若 wrongAnchor 缺失 → 视为「尚未走完」→ 保守保留错题，绝不误删。
+//   · 学习日维度（firstLearned）：档期走完不影响错题是否可移除，
+//     但它本身若有档期未走完，说明还在复习队列里，同样不满足移除条件。
+//   · 第二轮（secStart && !secDone）：未完成则不满足。
+function anchorScheduleDone(anchor, lastReview, intervals) {
+  if (!anchor) return false;
+  const last = lastReview || anchor;
+  return daysBetween(anchor, last) >= intervals[intervals.length - 1];
+}
+function isFullyMastered(p) {
+  if (!p) return false;
+  // 错题维度：缺锚点 → 不判定为走完（保守：宁可多留一条错题，也不误删）
+  if (!p.wrongAnchor) return false;
+  if (!anchorScheduleDone(p.wrongAnchor, p.lastWrongReview, WRONG_INTERVALS)) return false;
+  // 其他维度：若仍有待推送档期 → 未走完
+  if (p.firstLearned && !anchorScheduleDone(p.firstLearned, p.lastLearnReview, INTERVALS)) return false;
+  if (p.secStart && !p.secDone) return false;
+  return true;
+}
 // 复习结算：correct=是否答对，day=复习日（默认今天）。学习/错题锚点各自独立推进；答错则重置错题锚点
 function settleReview(r, correct, day) {
   day = day || dayOf();
@@ -468,7 +499,9 @@ function settleReview(r, correct, day) {
   }
   refreshNext(p);
   // 已掌握（双锚点档期均走完、不再推送）→ 移出错题本
-  if (!p.nextReview && wrongBook[r.key]) delete wrongBook[r.key];
+  // ⚠️ 必须用 isFullyMastered（严格判据），不能用 `!p.nextReview`：
+  //    nextReview 为空也可能只是锚点缺失/档期算不出，此时删错题会造成「错题自己消失」。
+  if (wrongBook[r.key] && isFullyMastered(p)) delete wrongBook[r.key];
   return p;
 }
 // 基于「词 + 当日日期」的确定性伪随机：用于每日推送排序，保证不同端当天选出的词与顺序一致
@@ -1458,7 +1491,8 @@ function calibrateSchedule() {
     }
     refreshNext(p);
     // 已掌握（不再推送）但仍在错题本中的旧数据 → 清理移出
-    if (!p.nextReview && wrongBook[p.key]) delete wrongBook[p.key];
+    // ⚠️ 同 settleReview：用严格判据 isFullyMastered，锚点缺失时不得删（否则误删错题）。
+    if (wrongBook[p.key] && isFullyMastered(p)) delete wrongBook[p.key];
     n++;
   });
   settings.scheduleV3 = true;

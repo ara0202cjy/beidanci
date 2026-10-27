@@ -27,8 +27,14 @@ const WRONG_INTERVALS = [1, 2, 3, 20, 40];
 // 期间答错则该词退出第二轮、转由错题节奏（WRONG_INTERVALS）继续推送。
 const SECOND_INTERVAL = 10;
 const SELFBANK_ID = '自建';
-const SELF_BATCH_MAX = 2;   // 每次推送（每批次）自建词库最多占 2 个新词名额，其余名额由词库1 补足
-const LEARN_PLAN_VER = 4;   // 选词/排序逻辑版本：变更（字母序兜底→strHash→同档按当日确定性乱序→自建每批上限 2 个）后，旧「粘性批次」失效并重生成当日批次
+// 自建词库每日占额 = 每日新学总数的 1/2（向下取整），其余名额由词库1 补足。
+// 例：总数 5 → 自建 2；总数 4 → 自建 2；总数 10 → 自建 5。
+// 基数是「每日新学总数」(settings.dailyNew)，不是当日剩余可学名额 —— 这样配额每日稳定，不会随学习进度漂移。
+function selfQuota(dailyTotal) {
+  const t = Math.max(0, +dailyTotal || 0);
+  return Math.floor(t / 2);
+}
+const LEARN_PLAN_VER = 5;   // 选词/排序逻辑版本：变更（字母序兜底→strHash→同档按当日确定性乱序→自建每批上限 2 个→自建占每日总数 1/2）后，旧「粘性批次」失效并重生成当日批次
 const K = {
   progress: 'wb_progress', wrong: 'wb_wrong', self: 'wb_selfbank',
   settings: 'wb_settings', history: 'wb_history', learn: 'wb_learnstate', review: 'wb_reviewstate',
@@ -183,6 +189,7 @@ window.WB = {
   nextReviewRoundNeeded,
   markLearned, bankStat, primarySourceBank, migrateSelfBankToOrigin,
   healWrongAnchors, isFullyMastered,
+  selfQuota,
 };
 
 /* ---------- 账号：注册 / 登录 / 登出（每账号数据+同步端口完全隔离，互不干扰） ---------- */
@@ -1101,14 +1108,16 @@ function candidatesForBank(bankId, exclude) {
 //  ② 自建词库优先、占用新学习名额
 //  ③ 词库1 补足到「新学习总词数」上限
 // 词库2（复习词库）不参与新词学习，它只推送已背词做第二轮复习（单列计数、不计入新学习总数）。
-function buildBatch(plan, maxSize, banks) {
+function buildBatch(plan, maxSize, banks, dailyTotal) {
   const out = [];
   const used = new Set();                                  // 库内 key（bank#word）
   const usedWords = new Set();                             // 跨库词形（wnorm(word)）：自建词若也在词库1，补足时跳过，避免同词重复占额
   const learn = (banks || []).slice(0, 1);                 // 只取词库1
   const learnIds = new Set(learn.map(b => b.id));
-  let selfCount = 0;                                       // 本批次已放入的自建词数（上限 SELF_BATCH_MAX）
-  const selfFull = () => selfCount >= SELF_BATCH_MAX;
+  // 自建占额上限 = 每日新学总数的 1/2（向下取整）；再受「当日剩余名额」约束
+  const selfCap = Math.max(0, Math.min(selfQuota(dailyTotal), maxSize));
+  let selfCount = 0;                                       // 本批次已放入的自建词数（上限 selfCap）
+  const selfFull = () => selfCount >= selfCap;
   const add = (bankId, word) => {
     out.push({ bank: bankId, word }); used.add(bankKey(bankId, word)); usedWords.add(wnorm(word));
     if (bankId === SELFBANK_ID) selfCount++;
@@ -1124,7 +1133,7 @@ function buildBatch(plan, maxSize, banks) {
       add(bankId, c.word);
     }
   };
-  // ① 先保留已选中的「自建」词（粘性且优先，但每次最多 SELF_BATCH_MAX 个）
+  // ① 先保留已选中的「自建」词（粘性且优先，但最多占每日总数的 1/2）
   (plan || []).forEach(p => {
     if (p.bank !== SELFBANK_ID) return;
     if (selfFull()) return;
@@ -1133,7 +1142,7 @@ function buildBatch(plan, maxSize, banks) {
     if (out.length >= maxSize) return;
     add(p.bank, p.word);
   });
-  // ② 再加入尚未在批次里的「新」自建词（优先占额，但每次最多 SELF_BATCH_MAX 个）
+  // ② 再加入尚未在批次里的「新」自建词（优先占额，最多占每日总数的 1/2）
   if (out.length < maxSize) {
     for (const w of selfBank) {
       if (out.length >= maxSize || selfFull()) break;
@@ -1279,12 +1288,12 @@ function reconcileLearnPlan(forceResize) {
   let libAvail = 0; learnBanks().forEach(b => { libAvail += unlearned(b.id).length; });
   const expected = Math.min(maxSize, selfAvail + libAvail);
   const selfInPlan = plan.filter(p => p.bank === SELFBANK_ID).length;
-  // 自建优先但每批上限 SELF_BATCH_MAX 个；余额交给词库1 补足
-  const selfShould = Math.min(selfAvail, maxSize, SELF_BATCH_MAX);
-  const stale = plan.length !== expected || selfInPlan < selfShould || selfInPlan > SELF_BATCH_MAX;
+  // 自建优先，但占额 = 每日新学总数的 1/2（向下取整）；余额交给词库1 补足
+  const selfShould = Math.min(selfAvail, maxSize, selfQuota(total));
+  const stale = plan.length !== expected || selfInPlan < selfShould || selfInPlan > selfQuota(total);
   if (changed || plan.length === 0 || stale) {   // 配置变化 / 批次耗尽 / 批次内容过期 → 重新组合（受 maxSize 约束）
     planTarget = sig;
-    plan = buildBatch(plan, maxSize, banks);
+    plan = buildBatch(plan, maxSize, banks, total);
   }
   pendingPlan = plan;
   if (JSON.stringify(pendingPlan) + '|' + planTarget !== before || healed) saveAll();
@@ -1575,7 +1584,7 @@ function topbar(title) {
 function openSettings() {
   openModal(`
     <h3>设置</h3>
-    <div class="sub-tip" style="margin:-6px 0 10px">选择 1–2 个词库：<b>词库1 ＝ 学习词库</b>（产生新词）；<b>词库2 ＝ 复习词库</b>（推送已背词做第二轮复习，单列计数、不计入新学习总数）。自建词库始终优先、占用新学习名额（<b>每批最多 ${SELF_BATCH_MAX} 个</b>，其余由词库1 补足）</div>
+    <div class="sub-tip" style="margin:-6px 0 10px">选择 1–2 个词库：<b>词库1 ＝ 学习词库</b>（产生新词）；<b>词库2 ＝ 复习词库</b>（推送已背词做第二轮复习，单列计数、不计入新学习总数）。自建词库始终优先、占用新学习名额（<b>占每日新学总数的 1/2，向下取整</b>，即当前约 <b id="selfQuotaTip">${selfQuota(studyTotal())}</b> 个，其余由词库1 补足）</div>
     <div class="bank-pick" id="bankPick"></div>
     <div id="bankCounts" style="margin-top:14px"></div>
     <div class="cnt-row" style="margin-top:14px">
@@ -1584,7 +1593,7 @@ function openSettings() {
       <input type="number" min="0" max="100" step="1" value="${studyTotal()}" class="cnt-input" id="totalInput">
       <span class="cnt-label">个</span>
     </div>
-    <div class="sub-tip" style="margin-top:8px">新词分配顺序：自建词库优先占额（<b>每批最多 ${SELF_BATCH_MAX} 个</b>）→ 词库1 补足到该上限（词库2 不产生新词）。词库2 的复习推送数量单独设置、不计入该上限。</div>
+    <div class="sub-tip" style="margin-top:8px">新词分配顺序：自建词库优先占额（<b>每日新学总数的 1/2，向下取整</b>）→ 词库1 补足到该上限（词库2 不产生新词）。词库2 的复习推送数量单独设置、不计入该上限。</div>
     <div class="set-fold">
       <div class="set-fold-head" id="acctHead">👤 账号 <span class="tag ${currentAccount ? 'green' : ''}">${currentAccount ? ('已登录：' + esc(currentAccount)) : '未登录'}</span><span class="chev">▸</span></div>
       <div class="set-fold-body" id="acctHost" style="display:none"></div>
@@ -1659,6 +1668,9 @@ function openSettings() {
   const totalInput = document.getElementById('totalInput');
   if (totalInput) totalInput.oninput = () => {
     settings.dailyNew = Math.max(0, Math.min(100, +totalInput.value || 0));
+    // 实时刷新「自建占额」提示（每日总数的 1/2，向下取整）
+    const tip = document.getElementById('selfQuotaTip');
+    if (tip) tip.textContent = String(selfQuota(settings.dailyNew));
     saveAll(); reconcileLearnPlan(true);
   };
   $('#setOk').onclick = () => { closeModal(); PAGES[CUR](); };
@@ -1798,7 +1810,7 @@ function learn() {
       <h2>今日学习计划</h2>
       <div class="sb-line sb-total"><span class="sb-name">新学习总词数（上限）</span><span class="sb-txt">每日 ${totalPlanned} 个</span></div>
       ${banks.map((b,i) => { const st = bankStat(b.id); const role = i === 0 ? '词库1（学习）' : (i === 1 ? '词库2（复习）' : '词库'); return `<div class="sb-line sb-bank"><span class="sb-name">${role} · ${esc(b.id)}</span><span class="sb-bar"><i style="width:${st.pct}%"></i></span><span class="sb-txt">已背 ${st.learned}/${st.total}</span></div>`; }).join('')}
-      ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（每批最多推 ${SELF_BATCH_MAX} 个，其余由词库1 补足）</div>` : ''}
+      ${selfLeft ? `<div class="sub-tip" style="margin-top:6px">自建词库优先：还有 <b>${selfLeft}</b> 个未背（每日占新学总数的 1/2，即最多推 <b>${selfQuota(totalPlanned)}</b> 个，其余由词库1 补足）</div>` : ''}
       ${sec2Html()}
       <div class="sub-tip" style="margin-top:6px">新词计划：自建优先 ＋ 词库1 补足共 <b>${totalPlanned}</b> 个（词库2 的复习推送单列，不计入）${due ? ' ｜ 待复习 ' + due + ' 词' : ''}</div>
       ${(selfPending || libPending) ? `<div class="sb-line sb-split"><span class="sb-name">今日待学（新建）</span><span class="sb-txt">自建 <b>${selfPending}</b> ＋ ${lib1 ? esc(lib1.id) : '词库1'} <b>${libPending}</b> ＝ <b>${selfPending + libPending}</b></span></div>` : ''}

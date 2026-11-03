@@ -136,6 +136,51 @@ body {
 .eg { background: #fff; border-radius: 14px; padding: 12px 14px; margin-top: 14px; border: 1px solid var(--line); }
 .eg .en { font-size: 15px; line-height: 1.65; }
 .eg .zh { color: var(--sub); font-size: 13px; margin-top: 4px; }
+
+/* ---------- 第二轮复习后 · 错词例句对照 ---------- */
+.item.wl-item { display: block; padding: 14px; }
+.wl-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.wl-word { font-size: 24px; font-weight: 600; letter-spacing: .3px; line-height: 1.25; word-break: break-word; }
+.wl-head .speaker-btn { padding: 7px 12px; font-size: 13px; box-shadow: none; }
+.wl-head .speaker-btn svg { width: 16px; height: 16px; }
+.wl-phon { margin-top: 6px; }
+.wl-mean { margin-top: 8px; }
+.wl-mean .pos { font-size: 14px; }
+.wl-noeg { margin-top: 10px; font-size: 12px; color: var(--sub); }
+
+.eg.lex { background:#FFFDFA; border:1px solid #E6DFD4; }
+.eg.lex .eg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.eg.lex .eg-label { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--sub); letter-spacing:.5px; }
+.eg.lex .eg-label i { display:block; width:3px; height:12px; border-radius:2px; background:var(--brand); opacity:.75; }
+.eg.lex .eg-tools { display:flex; align-items:center; gap:8px; }
+.eg.lex .rate { display:flex; background:var(--brand-soft); border-radius:999px; padding:2px; }
+.eg.lex .rate button { font:inherit; font-size:11px; padding:3px 9px; border:none; border-radius:999px; background:none; color:var(--sub); cursor:pointer; transition:.15s; }
+.eg.lex .rate button.on { background:#fff; color:var(--brand); box-shadow:0 1px 3px rgba(90,82,76,.12); }
+.eg.lex .lex-spk { padding:7px 13px; font-size:13px; box-shadow:none; }
+.eg.lex .lex-spk svg { width:16px; height:16px; }
+.eg.lex .lex-en { margin:2px 0 0; font-size:16.5px; line-height:2; letter-spacing:.2px; color:var(--ink); }
+.eg.lex .ltok { font:inherit; color:inherit; background:none; border:none; padding:1px 2px; margin:0 -1px; border-radius:7px; cursor:pointer; transition:background .16s,color .16s,box-shadow .16s; }
+.eg.lex .ltok:hover { background:var(--brand-soft); }
+.eg.lex .ltok.target { color:var(--brand); font-weight:500; background:#F3E7DC; box-shadow:inset 0 -2px 0 rgba(168,139,122,.45); }
+.eg.lex .ltok.sel { background:#D8BBA6; color:#573526; font-weight:600; box-shadow:inset 0 -2px 0 #7E5A45; }
+.eg.lex .ltok.fn { color:var(--sub); }
+.eg.lex .lsym { color:var(--sub); }
+.eg.lex .eg-div { height:1px; background:#EDE6DB; margin:10px 0 9px; }
+.eg.lex .lex-zh { margin:0; font-size:14.5px; line-height:2; color:var(--sub); letter-spacing:.2px; }
+.eg.lex .lex-zh mark.on { background:#D8BBA6; color:#4A2C1F; font-weight:600; padding:1px 4px; margin:0 -4px; border-radius:7px; box-shadow:0 0 0 1px rgba(120,85,60,.5),inset 0 -2px 0 rgba(120,85,60,.28); animation:lexPulse .32s ease-out; }
+@keyframes lexPulse { 0%{transform:scale(.94)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
+.eg.lex .eg-foot { display:flex; align-items:flex-start; gap:6px; margin-top:11px; font-size:11.5px; line-height:1.5; color:var(--sub); }
+.eg.lex .eg-foot .dot { flex:none; width:5px; height:5px; border-radius:50%; background:var(--brand); opacity:.55; margin-top:6px; }
+.eg.lex .eg-foot.warn { color:var(--red); font-weight:600; }
+.eg.lex.playing .lex-en { animation:lexBreathe 1.6s ease-in-out infinite; }
+@keyframes lexBreathe { 0%,100%{opacity:1} 50%{opacity:.62} }
+.eg.lex .bars { display:inline-flex; align-items:flex-end; gap:2px; height:11px; }
+.eg.lex .bars i { display:block; width:2px; background:#fff; border-radius:1px; animation:lexBar .9s ease-in-out infinite; }
+.eg.lex .bars i:nth-child(1){height:5px;animation-delay:0s}
+.eg.lex .bars i:nth-child(2){height:10px;animation-delay:.15s}
+.eg.lex .bars i:nth-child(3){height:7px;animation-delay:.3s}
+@keyframes lexBar { 0%,100%{transform:scaleY(.5)} 50%{transform:scaleY(1)} }
+@media (max-width:380px){ .eg.lex .lex-en{font-size:15.5px} .eg.lex .lex-zh{font-size:14px} }
 mark { background: #EBD9A8; color: #6B4F1C; border-radius: 4px; padding: 0 2px; font-weight: 600; }
 .stepbar { display: flex; align-items: center; justify-content: space-between; color: var(--sub); font-size: 12px; margin-bottom: 10px; }
 

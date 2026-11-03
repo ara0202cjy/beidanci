@@ -2447,6 +2447,184 @@ function confirmCheck() {
   // 不再自动跳进另一轮：停留在结果页，由用户选择是否继续「第2轮」，避免「核对答案后突然跳转」的突兀感
   renderSummary();
 }
+// ===== 第二轮复习后 · 错词例句对照（单词 / 词义 / 读音 / 例句朗读 / 点词高亮中文） =====
+// 每个错词卡片一套独立状态（多卡片并存，不能用全局单例 / 固定 id）
+let LEX_STATE = [];
+
+// 英文例句按词切分：单词可点，尾随标点 / 孤立符号单独成 token（不可点）
+function tokenizeEn(en) {
+  if (!en) return [];
+  const out = [];
+  for (const p of en.split(/\s+/).filter(Boolean)) {
+    const m = p.match(/^([A-Za-z][A-Za-z'’-]*)(.*)$/);
+    if (m) {
+      out.push({ raw: m[1], norm: m[1].toLowerCase(), sym: false });
+      if (m[2]) out.push({ raw: m[2], norm: '', sym: true });
+    } else {
+      out.push({ raw: p, norm: '', sym: true });
+    }
+  }
+  return out;
+}
+// 从词典 meaning 中抽取中文义项片段（按 ；、，、 与括号断句，仅留含中文的段）
+function glossRuns(mean) {
+  if (!mean) return [];
+  return String(mean)
+    .split(/[；;，,、()（）]/).map(x => x.trim())
+    .filter(x => /[一-鿿]/.test(x));
+}
+// 词典按原形收录：先查原形，查不到再尝试去 -s/-ed/-ing/-ly 等词缀回查词干
+function dictLookup(norm) {
+  const d = (typeof DICT !== 'undefined') ? DICT : null;
+  if (!d) return null;
+  if (d[norm]) return d[norm];
+  const tries = [
+    norm.replace(/es$/, ''), norm.replace(/s$/, ''),
+    norm.replace(/ed$/, ''), norm.replace(/ed$/, '') + 'e', norm.replace(/ied$/, 'y'),
+    norm.replace(/ing$/, ''), norm.replace(/ing$/, '') + 'e', norm.replace(/ying$/, 'y'),
+    norm.replace(/ly$/, '')
+  ];
+  for (const t of tries) { if (t && d[t]) return d[t]; }
+  return null;
+}
+// 为英文词在中文译文里定位对应锚点：扫描词典全部义项，取在译文出现的最长片段
+function resolveZhAnchor(norm, zh) {
+  if (!norm || !zh) return '';
+  const ent = dictLookup(norm);
+  if (!ent || !ent.meaning) return '';
+  let best = '';
+  for (const r of glossRuns(ent.meaning)) {
+    if (r && zh.indexOf(r) >= 0 && r.length > best.length) best = r;
+  }
+  return best;
+}
+// 该 token 是否为「该错词本身」（含常见变形）
+function isTargetTok(norm, word) {
+  if (!norm || !word) return false;
+  if (norm === word.toLowerCase()) return true;
+  const re = variantsRe(word);
+  return re ? re.test(norm) : false;
+}
+// 单条错词的例句块（含朗读、常速/慢速、点词高亮中文）
+function lexExampleBlockHtml(r, idx) {
+  const lc = (r.word || '').toLowerCase();
+  const ex = (EXAMPLES[lc] || [])[0];
+  if (!ex || !ex.en) {
+    LEX_STATE[idx] = null;
+    return `<div class="wl-noeg">该词暂无例句</div>`;
+  }
+  const toks = tokenizeEn(ex.en);
+  const anchors = toks.map(t => t.sym ? '' : resolveZhAnchor(t.norm, ex.zh));
+  LEX_STATE[idx] = { raw: toks.map(t => t.raw), anchors: anchors, zh: ex.zh, active: -1 };
+  const enHtml = toks.map((t, i) => {
+    if (t.sym) return `<span class="lsym">${esc(t.raw)}</span>`;
+    const target = isTargetTok(t.norm, r.word);
+    const has = !!anchors[i];
+    const cls = 'ltok' + (target ? ' target' : '') + (has ? '' : ' fn');
+    return `<button type="button" class="${cls.trim()}" data-i="${i}">${esc(t.raw)}</button>`;
+  }).join(' ');
+  return `<div class="eg lex wl-eg" data-lex="${idx}">
+    <div class="eg-head">
+      <span class="eg-label"><i></i>例句</span>
+      <div class="eg-tools">
+        <div class="rate">
+          <button type="button" class="on" data-rate="0.95">常速</button>
+          <button type="button" data-rate="0.7">慢速</button>
+        </div>
+        <button type="button" class="speaker-btn lex-spk" aria-label="朗读例句">${icon('i-sound')}<span class="lex-spk-label">朗读</span></button>
+      </div>
+    </div>
+    <p class="lex-en" lang="en">${enHtml}</p>
+    <div class="eg-div"></div>
+    <p class="lex-zh">${esc(ex.zh)}</p>
+    <div class="eg-foot"><span class="dot"></span><span class="lex-hint">点句中的英文单词，中文对应处会高亮</span></div>
+  </div>`;
+}
+// 单条错词完整卡片：单词 + 读音 + 词义 + 例句
+function lexWrongItemHtml(r, idx) {
+  const lc = (r.word || '').toLowerCase();
+  const d = (typeof DICT !== 'undefined' && DICT[lc]) || {};
+  const us = r.phonetic_us || d.us || '';
+  const uk = r.phonetic_uk || d.uk || '';
+  const meaning = r.meaning || d.meaning || '';
+  const wAttr = esc(r.word);
+  return `<div class="wl-head">
+      <div class="wl-word">${esc(r.word)}</div>
+      <button type="button" class="speaker-btn wl-spk" data-w="${wAttr}" aria-label="朗读单词">${icon('i-sound')}<span>朗读</span></button>
+    </div>
+    <div class="learn-phon wl-phon">
+      ${us ? `<span class="p" data-w="${wAttr}" data-lang="en-US">美音 ${esc(us)}</span>` : ''}
+      ${uk ? `<span class="p" data-w="${wAttr}" data-lang="en-GB">英音 ${esc(uk)}</span>` : ''}
+      ${(!us && !uk) ? `<span class="p" data-w="${wAttr}" data-lang="en-US">${icon('i-sound')} 朗读</span>` : ''}
+    </div>
+    <div class="wl-mean">${renderMeaning(meaning)}</div>
+    ${lexExampleBlockHtml(r, idx)}`;
+}
+// 绑定某容器内所有错词卡片（例句点词高亮 / 速率 / 朗读 / 单词与音标发音）
+function bindLexCards(root) {
+  if (!root) return;
+  root.querySelectorAll('.wl-eg').forEach(card => {
+    const idx = +card.dataset.lex;
+    const st = LEX_STATE[idx];
+    if (!st) return;
+    const en = card.querySelector('.lex-en');
+    const zh = card.querySelector('.lex-zh');
+    const hint = card.querySelector('.lex-hint');
+    const foot = card.querySelector('.eg-foot');
+    const spk = card.querySelector('.lex-spk');
+    const lab = card.querySelector('.lex-spk-label');
+    const rate = card.querySelector('.rate');
+    let rateVal = 0.95;
+    const clearSel = () => {
+      st.active = -1;
+      en.querySelectorAll('.ltok.sel').forEach(e => e.classList.remove('sel'));
+      zh.innerHTML = esc(st.zh);
+      if (hint) hint.textContent = '点句中的英文单词，中文对应处会高亮';
+      if (foot) foot.classList.remove('warn');
+    };
+    en.querySelectorAll('.ltok').forEach(btn => {
+      btn.onclick = () => {
+        const i = +btn.dataset.i;
+        if (st.active === i) { clearSel(); return; }     // 再点同一词 → 取消
+        clearSel();
+        st.active = i;
+        btn.classList.add('sel');
+        const anchor = st.anchors[i];
+        if (!anchor) {                                   // 虚词 / 合并表达：译文无单独对应
+          if (hint) hint.textContent = `“${st.raw[i]}” 是虚词或与其他词合并表达，译文里没有单独对应`;
+          if (foot) foot.classList.add('warn');
+          return;
+        }
+        const a = esc(anchor);
+        zh.innerHTML = esc(st.zh).split(a).join('<mark class="on">' + a + '</mark>');
+        if (hint) hint.textContent = `${st.raw[i]} → ${anchor}`;
+        if (foot) foot.classList.remove('warn');
+      };
+    });
+    if (rate) rate.querySelectorAll('button').forEach(b => {
+      b.onclick = () => {
+        rateVal = +b.dataset.rate;
+        rate.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      };
+    });
+    if (spk) spk.onclick = () => {
+      const text = st.raw.filter(t => /[A-Za-z]/i.test(t)).join(' ');
+      speak(text, 'en-US', rateVal);
+      card.classList.add('playing');
+      if (lab) lab.innerHTML = '<span class="bars"><i></i><i></i><i></i></span>';
+      setTimeout(() => {
+        card.classList.remove('playing');
+        if (lab) lab.innerHTML = '朗读';
+      }, 6000);
+    };
+  });
+  root.querySelectorAll('.wl-spk').forEach(b => {
+    b.onclick = () => speak(b.dataset.w, 'en-US');
+  });
+  root.querySelectorAll('.wl-phon .p').forEach(p => {
+    p.onclick = () => speak(p.dataset.w, p.dataset.lang || 'en-US');
+  });
+}
 function renderSummary() {
   const st = reviewState;
   const wrong = (st.check || st.pool).filter(r => !r.ok);
@@ -2478,11 +2656,23 @@ function renderSummary() {
   html += `<button class="btn ghost sm" style="margin-top:10px" id="backHome">返回首页</button>`;
   box.innerHTML = html;
   const list = $('#doneList');
-  if (list) wrong.forEach(r => {
-    const it = document.createElement('div'); it.className = 'item';
-    it.innerHTML = `<div><div class="w">${esc(r.word)}</div><div class="m">${esc(r.meaning)}</div></div></div>`;
-    list.appendChild(it);
-  });
+  if (list) {
+    // 第二轮（情境填词）结束后的错词：展示 单词/词义/读音/例句（朗读 + 点词高亮中文）
+    const isSecond = !!(st.pool && st.pool[0] && st.pool[0].type === 'sentence');
+    LEX_STATE = [];
+    wrong.forEach((r, i) => {
+      const it = document.createElement('div');
+      if (isSecond) {
+        it.className = 'item wl-item';
+        it.innerHTML = lexWrongItemHtml(r, i);
+      } else {
+        it.className = 'item';
+        it.innerHTML = `<div><div class="w">${esc(r.word)}</div><div class="m">${esc(r.meaning)}</div></div>`;
+      }
+      list.appendChild(it);
+    });
+    if (isSecond) bindLexCards(list);
+  }
   if ($('#nextRound')) $('#nextRound').onclick = () => {
     // ⚠️ 第 2 轮必须严格用「当天全量复习词」（history[d].review，必要 firstRound 兜底）重建，
     // 绝不能用 st.pool（当前会话池）——重练错词(reWrong)会替换 reviewState 为少量错词，

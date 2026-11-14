@@ -187,7 +187,7 @@ window.WB = {
   secondRoundBank, secondRoundQuota, secondRoundStat, reconcileSecondRound,
   cleanupProbeData,
   nextReviewRoundNeeded,
-  markLearned, bankStat, primarySourceBank, migrateSelfBankToOrigin,
+  markLearned, bankStat, primarySourceBank, migrateSelfBankToOrigin, migrateV68BankKeys,
   healWrongAnchors, isFullyMastered,
   selfQuota,
 };
@@ -1511,6 +1511,116 @@ function migrateSelfBankToOrigin() {
   });
   saveAll();
 }
+
+/* ---------- wb-v68：考纲词库重构后的进度 key 迁移（幂等自愈） ----------
+ * 背景：CET4 / 六级 / 考研 / 雅思 / 托福 / 短语动词库中属于高考考纲的词被真移出并入高中库，
+ * progress / wrongBook / 会话 / 历史里的 key 仍是「旧库::word」，不迁移会让已背词变回未学。
+ * 云端 merge 对 progress 做的是「按 key 并集」，删除无法靠同步下发 → 采用设备端自愈：
+ * 启动时（本地数据）与每次 pull 合并后（远端数据）各跑一次；旧 key 删净后再次执行即无操作。
+ * 只迁「该词确实已在新高中库」的旧 key，其余一律保留，绝不丢数据。
+ */
+const V68_OLD_BANKS = ['CET4', '六级', '考研', '雅思', '托福', '短语动词'];
+
+function v68HighMap() {
+  const mp = {};
+  const words = (BANK_DATA['高中'] || {}).words || [];
+  for (const w of words) mp[wnorm(w.word)] = w.word;
+  return mp;
+}
+
+function v68IsOldBank(b) { return V68_OLD_BANKS.indexOf(b) >= 0; }
+
+// 与 Sync.merge 完全一致的字段级合并：基础取较新、锚点取更早、复习日取更晚、stage 取大
+function v68MergeProgress(src, dst, newKey) {
+  const dx = dst.lastReview || dst.firstLearned || '';
+  const dy = src.lastReview || src.firstLearned || '';
+  const base = dy > dx ? src : (dx > dy ? dst : ((src.stage || 0) > (dst.stage || 0) ? src : dst));
+  Object.keys(base).forEach(f => { if (dst[f] === undefined) dst[f] = base[f]; });
+  const earliest = (f) => {
+    const a = src[f], b = dst[f];
+    if (!a) return b || '';
+    if (!b) return a;
+    return a < b ? a : b;
+  };
+  const latest = (f) => {
+    const a = src[f], b = dst[f];
+    if (!a) return b || '';
+    if (!b) return a;
+    return a > b ? a : b;
+  };
+  ['firstLearned', 'wrongAnchor'].forEach(f => { if (src[f] || dst[f]) dst[f] = earliest(f); });
+  ['lastLearnReview', 'lastWrongReview', 'lastReview'].forEach(f => { if (src[f] || dst[f]) dst[f] = latest(f); });
+  dst.stage = Math.max(src.stage || 0, dst.stage || 0);
+  dst.bank = '高中';
+  dst.key = newKey;
+}
+
+function migrateV68BankKeys() {
+  const high = v68HighMap();
+  if (!Object.keys(high).length) return 0;    // 高中库未就绪 → 不迁移（幂等，下次再跑）
+  let n = 0;
+  const oldWord = (o, k) => wnorm(o.word || String(k || '').split('::').slice(1).join('::'));
+  const fixRef = (o) => {
+    if (!o || !v68IsOldBank(o.bank)) return false;
+    const hw = high[wnorm(o.word || '')];
+    if (!hw) return false;
+    o.bank = '高中';
+    o.key = bankKey('高中', hw);
+    return true;
+  };
+
+  // 1) progress：旧 key 字段级合并进 高中::word，然后删旧 key
+  Object.keys(progress).forEach(k => {
+    const p = progress[k];
+    if (!p || !v68IsOldBank(p.bank || String(k).split('::')[0])) return;
+    const hw = high[oldWord(p, k)];
+    if (!hw) return;
+    const nk = bankKey('高中', hw);
+    if (k === nk) return;
+    const dst = progress[nk];
+    if (!dst) progress[nk] = Object.assign({}, p, { bank: '高中', key: nk, word: hw });
+    else v68MergeProgress(p, dst, nk);
+    delete progress[k];
+    n++;
+  });
+
+  // 2) 错题本：key / bank 一并迁移，冲突时 wrongCount 取大、lastWrong 取晚
+  Object.keys(wrongBook).forEach(k => {
+    const w = wrongBook[k];
+    if (!w || !v68IsOldBank(w.bank || String(k).split('::')[0])) return;
+    const hw = high[oldWord(w, k)];
+    if (!hw) return;
+    const nk = bankKey('高中', hw);
+    const dst = wrongBook[nk];
+    if (!dst) wrongBook[nk] = Object.assign({}, w, { bank: '高中', key: nk, word: hw });
+    else {
+      dst.wrongCount = Math.max(dst.wrongCount || 0, w.wrongCount || 0);
+      dst.lastWrong = [dst.lastWrong || '', w.lastWrong || ''].sort().pop();
+      dst.bank = '高中'; dst.key = nk; dst.word = hw;
+    }
+    if (k !== nk) { delete wrongBook[k]; n++; }
+  });
+
+  // 3) 会话 / 待学批次 / 历史：只改 bank + key 引用
+  if (reviewState && Array.isArray(reviewState.pool)) reviewState.pool.forEach(r => { if (fixRef(r)) n++; });
+  if (learnState && Array.isArray(learnState.queue)) learnState.queue.forEach(r => { if (fixRef(r)) n++; });
+  if (Array.isArray(pendingPlan)) {
+    pendingPlan.forEach(r => { if (fixRef(r)) n++; });
+    pendingPlan = pendingPlan.filter(r => {
+      const p = progress[bankKey(r.bank, r.word)];
+      return !(p && p.firstLearned);
+    });
+  }
+  Object.keys(history || {}).forEach(d => {
+    const h = history[d];
+    if (!h) return;
+    ['new', 'review', 'firstRound'].forEach(f => {
+      if (Array.isArray(h[f])) h[f].forEach(r => { if (fixRef(r)) n++; });
+    });
+  });
+  return n;   // 只改内存，落盘与云推送由调用方 saveAll() 负责
+}
+
 // 一次性校准：改为「双锚点」后，把既有单词的学习日/错题日两个锚点字段补全并重排。
 // 档期只取决于锚点日期与上次复习日，与某天复习了几轮无关；幂等，仅执行一次。
 function calibrateSchedule() {
@@ -3452,12 +3562,14 @@ function dict() {
       return;
     }
     migrateSelfBankToOrigin();   // 自建词库学完的词同步到原词库进度（幂等；需在 BANK_DATA 就绪后）
+    // wb-v68：本地存档里的旧库 key 先自愈一次（真移出会让已背词变回未学）
+    if (migrateV68BankKeys()) saveAll();
     reconcileLearnPlan();        // 词库就绪后再跑一次：healSelfBank 需要 BANK_DATA 才能判断「该词是否已在某词库学过」
     // 云端合并在后台进行；即使请求卡住也不影响已渲染的界面，完成后刷新视图
     if (window.Sync && Sync.on()) {
       Sync.sync()
         .catch(() => { })
-        .then(() => { migrateSelfBankToOrigin(); healWrongAnchors(); calibrateSchedule(); try { reconcileLearnPlan(); } catch (e) { } try { WB.refresh(); } catch (e) { } });
+        .then(() => { migrateSelfBankToOrigin(); if (migrateV68BankKeys()) saveAll(); healWrongAnchors(); calibrateSchedule(); try { reconcileLearnPlan(); } catch (e) { } try { WB.refresh(); } catch (e) { } });
     } else {
       try { WB.refresh(); } catch (e) { }   // 词库就绪后刷新当前页，补全学习/词库/查词
     }

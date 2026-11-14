@@ -111,6 +111,10 @@ const Sync = (function () {
     if (Array.isArray(s.roundReset)) a.roundReset = s.roundReset;   // 账户级「撤销某一轮完成标记」命令
     if (s.settings) a.settings = Object.assign(a.settings || {}, s.settings);
     if (s.selfTomb) store.set('wb_selftomb', s.selfTomb);
+    // wb-v68：pull 的 merge 是「按 key 并集」，云端旧库 key 会被并回本地。
+    // 必须在 applyState 内立刻自愈，再让后续 saveAll / push 把迁移后的状态回传云端；
+    // 若等到 sync().then() 才做，本次 push 推的仍是含旧 key 的状态。
+    if (window.WB && window.WB.migrateV68BankKeys) { try { window.WB.migrateV68BankKeys(); } catch (e) { } }
     // 关键：拉取合并后，用「最新进度」重新校正本地待学批次 pendingPlan。
     // 否则另一台已学完的词仍留在本机 pendingPlan 里 → 首页显示"尚未学习"，与"学习完成"矛盾。
     // pendingPlan 是「按日待学清单」（可从 progress 推导），不是进行中的会话；必须跨端收敛，

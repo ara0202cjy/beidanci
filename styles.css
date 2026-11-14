@@ -131,6 +131,20 @@ body {
 .speaker-btn:active { transform: scale(.97); }
 .speaker-btn svg { width: 19px; height: 19px; stroke: #fff; fill: none; }
 .mean-list { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
+
+/* ---------- 学习页：词形变形 / 固定搭配 / 其他 ---------- */
+.word-forms, .word-colloc, .other-meta { margin-top: 14px; border-radius: 14px; padding: 11px 14px; border: 1px solid var(--line); background: #fff; }
+.word-forms { border-color: #D6DECA; background: #F4F7F0; }
+.word-colloc { border-color: #E6DAC8; background: #FAF5EC; }
+.wf-head, .wc-head, .om-head { font-size: 13px; font-weight: 700; margin-bottom: 7px; letter-spacing: .3px; }
+.wf-head { color: #7E9468; }
+.wc-head { color: var(--obs-head); }
+.om-head { color: var(--sub); }
+.wf-body, .wc-body { font-size: 14px; line-height: 1.7; color: var(--ink); word-break: break-word; }
+.other-meta { background: #F7F5F1; }
+.om-row { display: flex; gap: 8px; font-size: 13px; line-height: 1.6; color: var(--sub); margin-top: 4px; }
+.om-row b { flex: none; color: var(--icon); font-weight: 600; }
+
 .pos { padding-left: 11px; border-left: 3px solid var(--brand); line-height: 1.5; font-size: 15px; }
 .pos .pt { color: var(--brand); font-weight: 600; margin-right: 6px; }
 .eg { background: #fff; border-radius: 14px; padding: 12px 14px; margin-top: 14px; border: 1px solid var(--line); }

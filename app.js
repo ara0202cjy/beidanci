@@ -644,6 +644,33 @@ function obscureHtml(w) {
   </div>`;
 }
 
+// Excel 词形变形 / 拓展（学习页展示）
+function formsHtml(w) {
+  const t = (w && w.forms) ? String(w.forms).trim() : '';
+  if (!t) return '';
+  return `<div class="word-forms">
+    <div class="wf-head">🔁 词形变形 / 拓展</div>
+    <div class="wf-body">${esc(t).replace(/\n/g, '<br>')}</div>
+  </div>`;
+}
+// Excel 常用搭配 / 固定短语（学习页展示）
+function collocationsHtml(w) {
+  const t = (w && w.collocations) ? String(w.collocations).trim() : '';
+  if (!t) return '';
+  return `<div class="word-colloc">
+    <div class="wc-head">🧩 固定搭配</div>
+    <div class="wc-body">${esc(t).replace(/\n/g, '<br>')}</div>
+  </div>`;
+}
+// 其他补充信息（近义/反义、教材单元）
+function otherHtml(w) {
+  const rows = [];
+  if (w && w.syn_ant) rows.push(`<div class="om-row"><b>近义 / 反义</b><span>${esc(w.syn_ant).replace(/\n/g, '<br>')}</span></div>`);
+  if (w && w.unit) rows.push(`<div class="om-row"><b>教材单元</b><span>${esc(w.unit)}</span></div>`);
+  if (!rows.length) return '';
+  return `<div class="other-meta"><div class="om-head">其他</div>${rows.join('')}</div>`;
+}
+
 /* ---------- 补充词典（搭配/同义词/短语动词）详情 ---------- */
 function phraseDetail(lc) {
   const ph = PHRASE[lc];
@@ -1906,10 +1933,13 @@ function renderLearnBox() {
       <span class="p" onclick="speak('${jsAttr(w.word)}','en-US')">美音 ${esc(w.phonetic_us || '—')}</span>
       <span class="p" onclick="speak('${jsAttr(w.word)}','en-GB')">英音 ${esc(w.phonetic_uk || '—')}</span>
     </div>
-    <div class="mean-list">${renderMeaning(w.meaning)}</div>
     ${affixHtml(w)}
-    ${obscureHtml(w)}
+    <div class="mean-list">${renderMeaning(w.meaning)}</div>
+    ${formsHtml(w)}
+    ${collocationsHtml(w)}
     ${exampleHtml(w, 1)}
+    ${obscureHtml(w)}
+    ${otherHtml(w)}
     <div class="row" style="margin-top:18px">
       <button class="btn ghost" id="prevBtn" ${st.idx === 0 ? 'disabled' : ''}>${icon('i-prev')}上一个</button>
       <button class="btn ${last ? 'green' : 'primary'}" id="nextBtn">${last ? '学习完毕' : '下一个'}${last ? '' : icon('i-next')}</button>

@@ -579,20 +579,100 @@ function pron(word, kind) {
   else speak(word, a, r);
 }
 function exampleHtml(w, limit) {
-  const ex = (EXAMPLES[(w.word || '').toLowerCase()] || []).slice(0, limit || 1);
-  return ex.length ? `<div class="eg">${ex.map(e => `<div class="en">${highlight(e.en, w.word)}</div><div class="zh">${esc(e.zh)}</div>`).join('')}</div>` : '';
+  const n = limit || 1;
+  const arr = [];
+  const best = pickExample(w.word, dayOf(), 7);   // wb-v69：第一条走优选，确保含目标词且不太短
+  if (best) arr.push(best);
+  for (const e of (EXAMPLES[(w.word || '').toLowerCase()] || [])) {
+    if (arr.length >= n) break;
+    if (e && e.en && !arr.some(x => x.en === e.en)) arr.push(e);
+  }
+  return arr.length ? `<div class="eg">${arr.map(e => `<div class="en">${highlight(e.en, w.word)}</div><div class="zh">${esc(e.zh)}</div>`).join('')}</div>` : '';
 }
-// 目标词的常见变形：复数/三单 -s -es、过去式 -ed -d、进行时 -ing、去 e + ing/ed、双写尾辅音 + ing/ed
+// wb-v69：常用不规则变形（与 scripts/_optimize_examples.py 的 IRREGULAR 保持一致）
+const V69_IRREGULAR = {
+  be: ['am', 'is', 'are', 'was', 'were', 'been', 'being'],
+  go: ['went', 'gone', 'going'], buy: ['bought'], bring: ['brought'],
+  take: ['took', 'taken', 'taking'], write: ['wrote', 'written', 'writing'],
+  see: ['saw', 'seen', 'seeing'], come: ['came', 'coming'],
+  get: ['got', 'gotten', 'getting'], give: ['gave', 'given', 'giving'],
+  find: ['found'], think: ['thought'], know: ['knew', 'known'], feel: ['felt'],
+  become: ['became'], leave: ['left'], put: ['put'], say: ['said'], tell: ['told'],
+  speak: ['spoke', 'spoken'], read: ['read'], break: ['broke', 'broken'],
+  build: ['built'], catch: ['caught'], draw: ['drew', 'drawn'],
+  drive: ['drove', 'driven'], eat: ['ate', 'eaten'], fall: ['fell', 'fallen'],
+  forget: ['forgot', 'forgotten'], grow: ['grew', 'grown'], hear: ['heard'],
+  hide: ['hid', 'hidden'], hold: ['held'], keep: ['kept'], lose: ['lost'],
+  make: ['made'], meet: ['met'], pay: ['paid'], run: ['ran', 'running'],
+  send: ['sent'], set: ['set'], show: ['showed', 'shown'], sit: ['sat', 'sitting'],
+  sleep: ['slept'], stand: ['stood'], teach: ['taught'], understand: ['understood'],
+  wear: ['wore', 'worn'], win: ['won'], wind: ['wound'],
+  child: ['children'], man: ['men'], woman: ['women'], foot: ['feet'],
+  tooth: ['teeth'], mouse: ['mice'], goose: ['geese'], person: ['people'],
+  ox: ['oxen'], sheep: ['sheep'], deer: ['deer'], fish: ['fish'],
+  good: ['better', 'best'], bad: ['worse', 'worst'], little: ['less', 'least'],
+  much: ['more', 'most'], many: ['more', 'most'],
+  far: ['farther', 'farthest', 'further', 'furthest'],
+  study: ['studies', 'studied', 'studying'],
+};
+// 单词的屈折形式正则片段（不含派生词）：复数/三单、时态、进行时、比较级，以及不规则变形
+function wordAltPattern(word) {
+  const w = (word || '').trim().toLowerCase();
+  if (!w) return '';
+  const e = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const alts = new Set([w, w + 's', w + 'es', w + 'ed', w + 'd', w + 'ing', w + 'er', w + 'est']);
+  if (/e$/i.test(w)) {
+    alts.add(w + 'r'); alts.add(w + 'st');
+    if (w.length > 3) { alts.add(w.slice(0, -1) + 'ing'); alts.add(w.slice(0, -1) + 'ed'); alts.add(w.slice(0, -1) + 'es'); }
+  }
+  if (w.length > 2 && /y$/i.test(w) && !/[aeiou]y$/i.test(w)) {
+    const b = w.slice(0, -1);
+    ['ies', 'ied', 'ier', 'iest', 'ying'].forEach(x => alts.add(b + x));
+  }
+  if (w.length > 2 && /f$/i.test(w)) alts.add(w.slice(0, -1) + 'ves');
+  if (w.length > 3 && /fe$/i.test(w)) alts.add(w.slice(0, -2) + 'ves');
+  if (w.length > 2 && /o$/i.test(w)) alts.add(w + 'es');
+  if (/[bcdfghjklmnpqrstvwxyz]$/i.test(w)) {
+    const c = w.slice(-1);
+    ['ed', 'ing', 'er', 'est'].forEach(x => alts.add(w + c + x));
+  }
+  (V69_IRREGULAR[w] || []).forEach(x => alts.add(String(x).toLowerCase()));
+  return Array.from(alts).filter(Boolean).sort((a, b) => b.length - a.length).map(e).join('|');
+}
+// 目标词变形（含不规则）与短语变形：短语各词相邻，中间最多容 2 个虚词
 function variantsRe(word) {
   const w = (word || '').trim();
   if (!w || w.length < 2) return null;
-  const e = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const alts = [e(w) + '(?:s|es|ed|d|ing)?'];
-  if (/e$/i.test(w) && w.length > 3) alts.push(e(w.slice(0, -1)) + '(?:ing|ed|s)?');
-  const m = w.match(/[bcdfghjklmnpqrstvwxyz]$/i);
-  if (m) alts.push(e(w + m[0]) + '(?:ed|ing)?');
-  return new RegExp('\\b(' + alts.join('|') + ')\\b', 'gi');
+  if (/\s/.test(w)) {
+    const pats = w.split(/\s+/).map(wordAltPattern).filter(Boolean);
+    if (!pats.length) return null;
+    return new RegExp('\\b' + pats.join('\\s+(?:\\w+\\s+){0,2}') + '\\b', 'gi');
+  }
+  const p = wordAltPattern(w);
+  return p ? new RegExp('\\b(' + p + ')\\b', 'gi') : null;
 }
+// wb-v69：统一例句入口。examples.json 已按「Excel 优先 → 词典回退 → 简单词优先」排序；
+// 这里只取确实含目标词（含完整变形）且足够长的句子，确保情境轮能挖空、隐藏后句意仍可判断。
+function pickExample(word, day, minWords) {
+  const lc = (word || '').toLowerCase().trim();
+  if (!lc) return null;
+  const arr = EXAMPLES[lc] || [];
+  if (!arr.length) return null;
+  const re = variantsRe(word);
+  const has = (en) => { if (!re) return false; re.lastIndex = 0; return re.test(String(en)); };
+  const long = arr.filter(e => e && e.en && String(e.en).trim()
+    && String(e.en).trim().split(/\s+/).length >= (minWords || 7) && has(e.en));
+  // 数据已按质量排序：只在最优前 3 条里按「词 + 当日」确定性挑选，兼顾质量与多端一致
+  if (long.length) {
+    const top = long.slice(0, 3);
+    const i = Math.min(top.length - 1, Math.floor(dayRandOn(lc, day || dayOf()) * top.length));
+    return top[i];
+  }
+  // 放宽长度，但仍必须含目标词（短句至少保证能挖空）
+  const any = arr.filter(e => e && e.en && String(e.en).trim() && has(e.en));
+  return any.length ? any[0] : null;
+}
+
 // 情境复习：把例句中目标词（含变形）挖空，返回 {html, hasBlank, variantBlank, variantText}
 function blankSentence(en, word) {
   if (!en) return { html: '', hasBlank: false, variantBlank: false, variantText: '' };
@@ -2282,14 +2362,9 @@ function contextSentence(word, meaning, day) {
   const d = day || dayOf();
   const lc = (word || '').toLowerCase();
   if (lc) {
-    const exs = EXAMPLES[lc];
-    // 只取「英文句非空」的例句：空串会让情境题退化成听写题（情境轮必须每题都有横线句）
-    const usable = (exs && exs.length) ? exs.filter(x => x && x.en && String(x.en).trim()) : [];
-    if (usable.length) {
-      // 例句按「词 + 当日日期」确定性挑选（不用 Math.random）：各端当天看到同一句，多端一致
-      const i = Math.min(usable.length - 1, Math.floor(dayRandOn(lc, d) * usable.length));
-      return { en: usable[i].en, zh: (usable[i] && usable[i].zh) || (usable[0] && usable[0].zh) || '' };
-    }
+    // wb-v69：统一走优选入口——Excel 优先、过短用词典句、简单词优先，且必须含目标词（可挖空）
+    const picked = pickExample(word, d, 7);
+    if (picked) return { en: picked.en, zh: (picked.zh || '') };
     const th = THES[lc];
     if (Array.isArray(th)) {
       for (const e of th) {
@@ -2492,7 +2567,7 @@ function renderCheck() {
     const lc = r.word.toLowerCase();
     const d = DICT[lc] || {};
     const meaning = r.meaning || d.meaning || '';
-    const ex = (EXAMPLES[lc] || [])[0];
+    const ex = pickExample(r.word, dayOf(), 7) || contextSentence(r.word, meaning, dayOf());
     const ph = r.bank === '短语动词' ? PHRASE[lc] : null;
     const phEx = ph && ph.senses && ph.senses[0] && ph.senses[0].ex && ph.senses[0].ex[0];
     let prompt;
@@ -2641,14 +2716,23 @@ function resolveZhAnchor(norm, zh) {
 // 该 token 是否为「该错词本身」（含常见变形）
 function isTargetTok(norm, word) {
   if (!norm || !word) return false;
-  if (norm === word.toLowerCase()) return true;
-  const re = variantsRe(word);
+  const lw = word.toLowerCase().trim();
+  if (norm === lw) return true;
+  if (/\s/.test(lw)) {
+    // wb-v69：短语按组成词逐词判断，accounted / absorbed 等变形也算目标
+    return lw.split(/\s+/).some(p => {
+      const re = variantsRe(p);
+      return re ? re.test(norm) : false;
+    });
+  }
+  const re = variantsRe(lw);
   return re ? re.test(norm) : false;
 }
 // 单条错词的例句块（含朗读、常速/慢速、点词高亮中文）
 function lexExampleBlockHtml(r, idx) {
   const lc = (r.word || '').toLowerCase();
-  const ex = (EXAMPLES[lc] || [])[0];
+  // wb-v69：优先合格例句；实在没有则用 contextSentence 的含词模板兜底，保证一定能挖空
+  const ex = pickExample(r.word, dayOf(), 7) || contextSentence(r.word, r.meaning, dayOf());
   if (!ex || !ex.en) {
     LEX_STATE[idx] = null;
     return `<div class="wl-noeg">该词暂无例句</div>`;
@@ -2841,7 +2925,7 @@ function openReviewRecap(day, note) {
     const lc = (r.word || '').toLowerCase();
     const meaning = r.meaning || (DICT[lc] && DICT[lc].meaning) || '';
     const s = contextSentence(r.word, meaning, day);
-    const ex = (EXAMPLES[lc] || [])[0];
+    const ex = pickExample(r.word, day, 7) || s;
     let eg = '';
     if (s && s.en) eg = `<div class="eg"><div class="en">${highlightVariants(s.en, r.word)}</div>${s.zh ? `<div class="zh">${esc(s.zh)}</div>` : ''}</div>`;
     else if (ex) eg = `<div class="eg"><div class="en">${esc(ex.en)}</div><div class="zh">${esc(ex.zh)}</div></div>`;

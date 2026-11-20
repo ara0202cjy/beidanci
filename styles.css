@@ -446,3 +446,103 @@ input[type=range] { accent-color: var(--brand); }
 .sb-line.sb-split .sb-name { width: auto; flex: 0 0 auto; white-space: nowrap; font-size: 12px; }
 .sb-line.sb-split .sb-txt { margin-left: auto; font-size: 12px; white-space: nowrap; }
 .sb-line.sb-split .sb-txt b { color: var(--brand); }
+
+/* ===================== 桌面宽屏阅读版（≥900px） =====================
+   窄屏完全沿用上面的移动端布局；宽屏只在这里重排，不动任何 JS 与 DOM。 */
+@media (min-width: 900px) {
+  html { background: #EAE5DE; }
+  body {
+    max-width: none; margin: 0;
+    background: #EAE5DE; font-size: 16px; line-height: 1.75;
+  }
+  .app { max-width: 1160px; margin: 0 auto; padding: 88px 30px 70px; }
+
+  /* 底部导航 → 顶部胶囊导航 */
+  .tabbar {
+    position: fixed; top: 0; bottom: auto; left: 0; right: 0; transform: none;
+    width: 100%; max-width: none; margin: 0; padding: 10px 24px; gap: 6px;
+    justify-content: center; border-top: 0; border-bottom: 1px solid var(--line);
+    background: rgba(246, 242, 236, .94); backdrop-filter: blur(14px);
+    box-shadow: 0 2px 14px rgba(90, 82, 76, .05);
+  }
+  .tabbar .tab {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 22px; border-radius: 999px; font-size: 14px; font-weight: 500;
+    color: var(--sub); transition: background .15s, color .15s;
+  }
+  .tabbar .tab:hover { background: rgba(168, 139, 122, .10); color: var(--brand); }
+  .tabbar .tab.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  .tabbar .tab svg { width: 19px; height: 19px; margin: 0; }
+
+  /* 顶栏标题 */
+  .topbar { padding: 2px 0 22px; }
+  .topbar h1 { font-size: 27px; letter-spacing: .3px; }
+  .topbar .date { font-size: 13px; margin-top: 4px; }
+  .icon-btn { width: 46px; height: 46px; }
+  .icon-btn svg { width: 24px; height: 24px; }
+
+  /* 卡片留白更舒展 */
+  .card { padding: 22px 26px; border-radius: 20px; margin-bottom: 18px; }
+  .card h2 { font-size: 18px; margin-bottom: 16px; }
+  .card h2 .r { font-size: 13px; }
+  .sub-tip { font-size: 13px; line-height: 1.8; }
+
+  /* 统计卡片一行铺开 */
+  .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .stat-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stat { padding: 18px 20px; border-radius: 18px; }
+  .stat .n { font-size: 32px; }
+  .stat .l { font-size: 13px; }
+  .stat-grid.three .stat .n { font-size: 28px; }
+  .stat-grid.three .stat .l { font-size: 12px; }
+  .sb-line .sb-name { width: 90px; }
+  .sb-line.sb-bank .sb-name { min-width: 132px; font-size: 13px; }
+  .sb-line.sb-split .sb-name { font-size: 13px; }
+  .sb-line .sb-txt { font-size: 14px; }
+
+  /* 学习卡：单词与释义放大，正文行宽受控便于阅读 */
+  .learn-word { font-size: 42px; }
+  .learn-phon { font-size: 15px; margin-top: 10px; }
+  .mean-list { max-width: 78ch; }
+  .word-forms, .word-colloc, .other-meta { padding: 14px 18px; font-size: 14.5px; line-height: 1.8; }
+  .obscure { padding: 14px 18px; }
+  .obscure .ob-en, .obscure .ob-zh { font-size: 15px; }
+
+  /* 例句区：双语对照更清晰 */
+  .eg { padding: 16px 20px; }
+  .eg .en { font-size: 18px; line-height: 1.85; }
+  .eg .zh { font-size: 15px; line-height: 1.85; margin-top: 6px; }
+  .eg.lex .lex-en { font-size: 19px; line-height: 2.05; }
+  .eg.lex .lex-zh { font-size: 16px; line-height: 2.05; }
+  .eg.lex .ltok { padding: 2px 3px; }
+  .eg.lex .eg-foot { font-size: 12.5px; }
+  .blank { padding: 0 10px; letter-spacing: 2px; }
+
+  /* 查词 / 词库 / 错题：宽屏列表双栏 */
+  body:has(.tabbar .tab[data-page="dict"].active) #app .list,
+  body:has(.tabbar .tab[data-page="banks"].active) #app .list,
+  body:has(.tabbar .tab[data-page="wrong"].active) #app .list {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;
+  }
+  .item { border-radius: 14px; }
+  .item .w { font-size: 17px; }
+  .item .m { font-size: 14px; }
+
+  /* 弹窗居中，不再贴底 */
+  .modal-mask { align-items: center; justify-content: center; }
+  .modal {
+    width: min(560px, calc(100% - 40px)); max-width: none; margin: 0;
+    border-radius: 20px; padding: 24px 26px; max-height: 84vh;
+  }
+  .modal h3 { font-size: 20px; }
+  .field { font-size: 16px; padding: 12px 14px; }
+  .seg > div { font-size: 14px; padding: 10px 6px; }
+
+  /* 提示条 */
+  .toast { bottom: 30px; font-size: 15px; padding: 12px 22px; }
+}
+
+/* 超宽屏再收一收，避免行过长 */
+@media (min-width: 1440px) {
+  .app { max-width: 1240px; }
+}

@@ -402,8 +402,9 @@ input[type=range] { accent-color: var(--brand); }
 .paper-prompt { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 18px; margin-top: 6px; }
 .paper-prompt .pp-label { font-size: 13px; color: var(--sub); margin-bottom: 8px; }
 .paper-prompt .mean-list { margin-top: 0; gap: 7px; }
-/* 空格只保留字符下划线（细线），不再叠加 border 粗横线 */
-.blank { color: var(--brand); font-weight: 600; padding: 0 2px; }
+/* 情境挖空：一个单词一条实线，两个单词两条线（由 blankSentence 按词数生成 <i>） */
+.blank { display: inline-flex; align-items: center; gap: 7px; margin: 0 4px; vertical-align: -0.16em; }
+.blank i { display: inline-block; width: 3.4em; height: 1.05em; border-bottom: 2px solid var(--brand); }
 
 /* ---------- 核对页：对错勾选 ---------- */
 .chk-item.bad { border-color: var(--red); background: var(--red-soft); }
@@ -516,7 +517,8 @@ input[type=range] { accent-color: var(--brand); }
   .eg.lex .lex-zh { font-size: 16px; line-height: 2.05; }
   .eg.lex .ltok { padding: 2px 3px; }
   .eg.lex .eg-foot { font-size: 12.5px; }
-  .blank { padding: 0 10px; letter-spacing: 2px; }
+  .blank { gap: 9px; margin: 0 5px; }
+  .blank i { width: 4em; border-bottom-width: 2.5px; }
 
   /* 查词 / 词库 / 错题：宽屏列表双栏 */
   body:has(.tabbar .tab[data-page="dict"].active) #app .list,

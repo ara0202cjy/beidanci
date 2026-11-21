@@ -644,7 +644,12 @@ function variantsRe(word) {
   const w = (word || '').trim();
   if (!w || w.length < 2) return null;
   if (/\s/.test(w)) {
-    const pats = w.split(/\s+/).map(wordAltPattern).filter(Boolean);
+    // 每个组成词的备选必须包进非捕获组：否则 | 优先级会脱离 \b 边界，
+    // 把 accounted for 里的 for、absorbed 里的 be、in 等虚词各自单独挖掉（wb-v72 修复）
+    const pats = w.split(/\s+/).map(p => {
+      const alt = wordAltPattern(p);
+      return alt ? '(?:' + alt + ')' : '';
+    }).filter(Boolean);
     if (!pats.length) return null;
     return new RegExp('\\b' + pats.join('\\s+(?:\\w+\\s+){0,2}') + '\\b', 'gi');
   }
@@ -679,11 +684,14 @@ function blankSentence(en, word) {
   const re = variantsRe(word);
   if (!re) return { html: esc(en), hasBlank: false, variantBlank: false, variantText: '' };
   const base = (word || '').trim().toLowerCase();
+  // wb-v72：一个单词一条实线、两个单词两条线，以此类推（按目标词词数，不按匹配到的变形长度）
+  const wordCount = Math.max(1, (word || '').trim().split(/\s+/).filter(Boolean).length);
+  const blankHtml = '<span class="blank">' + '<i></i>'.repeat(wordCount) + '</span>';
   let has = false, variant = false, variantText = '';
   const html = esc(en).replace(re, m => {
     has = true;
     if (m.toLowerCase() !== base) { variant = true; if (!variantText) variantText = m; }
-    return '<span class="blank">＿＿＿＿＿</span>';
+    return blankHtml;
   });
   return { html, hasBlank: has, variantBlank: variant, variantText };
 }

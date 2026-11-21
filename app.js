@@ -642,7 +642,12 @@ function wordAltPattern(word) {
 // 目标词变形（含不规则）与短语变形：短语各词相邻，中间最多容 2 个虚词
 function variantsRe(word) {
   const w = (word || '').trim();
-  if (!w || w.length < 2) return null;
+  if (!w) return null;
+  // 单字母词（a / I）只匹配自身：套用屈折规则会让 I→is 之类误挖其他词（wb-v73 修复）
+  if (w.length === 1) {
+    const escOne = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('\\b' + escOne(w) + '\\b', 'gi');
+  }
   if (/\s/.test(w)) {
     // 每个组成词的备选必须包进非捕获组：否则 | 优先级会脱离 \b 边界，
     // 把 accounted for 里的 for、absorbed 里的 be、in 等虚词各自单独挖掉（wb-v72 修复）
